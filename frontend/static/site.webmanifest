@@ -1,0 +1,16 @@
+{
+  "name": "Comparative Legislative Data Platform",
+  "short_name": "LegislativeData",
+  "description": "Global Open Parliamentary Data Audit & Mapping Atlas",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0f19",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

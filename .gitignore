@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Build outputs
+frontend/.svelte-kit/
+frontend/build/
+dist/
+*.egg-info/
+
+# Environment files & secret logs
+.env
+.env.*
+!.env.example
+*.log
+
+# OS & IDE metadata
+.DS_Store
+.vscode/
+.idea/

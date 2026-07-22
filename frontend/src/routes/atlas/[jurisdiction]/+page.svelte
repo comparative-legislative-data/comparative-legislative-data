@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { ArrowLeft, CheckCircle2, FileText, Globe, Layers, ShieldCheck, Database, Server, Cpu, Check, AlertCircle } from 'lucide-svelte';
+  import { ArrowLeft, CheckCircle2, FileText, Globe, Layers, ShieldCheck, Database, Server, Cpu, Check, AlertCircle, RefreshCw } from 'lucide-svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 
   let bp = $derived(data.blueprint);
+  let metrics = $derived(data.liveDatasetMetrics);
 
   let datasetSchema = $derived({
     '@context': 'https://schema.org',
@@ -82,7 +83,9 @@
         <span class="badge badge-bicd">{data.jurisdiction}</span>
         <span class="badge badge-live">Option 3 Hybrid Blueprint</span>
         <span class="badge badge-direct">API & DB Probed</span>
-        <span class="badge badge-enriched">3-Tier Provenance</span>
+        {#if metrics}
+          <span class="badge badge-enriched">Phase 1 Live Ingested</span>
+        {/if}
       </div>
       {#if bp}
         <span class="schema-version-badge">Schema v{bp.schema_version} &bull; Updated {bp.last_updated}</span>
@@ -111,6 +114,47 @@
       </div>
     </div>
   </div>
+
+  <!-- Live Ingested Dataset Stats Card (Vertical Slice Active) -->
+  {#if metrics}
+    <section class="blueprint-section">
+      <div class="card live-metrics-card">
+        <div class="live-metrics-header">
+          <div class="title-with-icon">
+            <Database size={22} color="#10b981" />
+            <h3>Phase 1 Live Ingested Database Metrics (PostgreSQL Mirror)</h3>
+          </div>
+          <span class="live-status-badge">
+            <span class="pulse-dot"></span> LIVE INGESTED
+          </span>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-box">
+            <span class="metric-num text-accent">{metrics.total_bills_cohort}</span>
+            <span class="metric-title">2019–2024 Total Bills Ingested</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-num text-success">{metrics.enacted_acts}</span>
+            <span class="metric-title">Enacted Acts (Stage 3 Passed)</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-num text-warning">{metrics.pending_bills}</span>
+            <span class="metric-title">In Progress / Defeated / Pending</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-num text-purple">{metrics.provenance_hashes_count}</span>
+            <span class="metric-title">SHA-256 Provenance Audit Hashes</span>
+          </div>
+        </div>
+
+        <div class="live-metrics-footer">
+          <span><RefreshCw size={14} /> Last Ingestion Sync: <strong>{metrics.last_ingestion_sync}</strong></span>
+          <span>Cohort Boundary: <strong>{metrics.cohort_window}</strong></span>
+        </div>
+      </div>
+    </section>
+  {/if}
 
   <!-- Structured Declarative Blueprint Render -->
   {#if bp}
@@ -274,7 +318,7 @@
   .back-link:hover { color: var(--accent-cyan); }
 
   .header-card {
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
     background: linear-gradient(135deg, rgba(31, 41, 55, 0.9) 0%, rgba(17, 24, 39, 0.95) 100%);
     border: 1px solid var(--border-subtle);
   }
@@ -305,6 +349,79 @@
   .meta-item { display: flex; flex-direction: column; gap: 0.25rem; }
   .meta-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
   .meta-value { font-size: 0.9rem; color: var(--text-main); font-weight: 500; }
+
+  .live-metrics-card {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(17, 24, 39, 0.95) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    padding: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .live-metrics-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+
+  .title-with-icon { display: flex; align-items: center; gap: 0.65rem; }
+  .title-with-icon h3 { font-size: 1.15rem; color: #ffffff; }
+
+  .live-status-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    padding: 0.25rem 0.65rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .pulse-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: #10b981;
+    box-shadow: 0 0 8px #10b981;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .metric-box {
+    background: rgba(11, 15, 25, 0.6);
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.65rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.25rem;
+  }
+
+  .metric-num { font-size: 2rem; font-weight: 800; line-height: 1; }
+  .metric-title { font-size: 0.775rem; color: var(--text-muted); font-weight: 500; }
+
+  .text-success { color: #10b981; }
+  .text-warning { color: #f59e0b; }
+  .text-purple { color: #a855f7; }
+
+  .live-metrics-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.825rem;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 0.85rem;
+  }
 
   .blueprint-section { margin-bottom: 2.5rem; }
 
@@ -377,6 +494,6 @@
   .placeholder-card { text-align: center; padding: 4rem 2rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
 
   @media (max-width: 1024px) {
-    .audit-meta-grid, .two-col-grid, .assembly-grid { grid-template-columns: 1fr; }
+    .audit-meta-grid, .two-col-grid, .assembly-grid, .metrics-grid { grid-template-columns: 1fr; }
   }
 </style>

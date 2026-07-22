@@ -7,46 +7,65 @@ assembly:
   location: "Edinburgh, Holyrood"
   chamber_type: "DEVOLVED_UNICAMERAL"
   official_portal_url: "https://www.parliament.scot/bills-and-laws/bills"
-  license_type: "Open Government Licence v3.0 / Open Parliament Licence"
+  license_type: "Open Parliament Licence v3.0 / Open Government Licence v3.0"
   target_cohort: "2019-2024 BICD Cohort 1"
 
 endpoints:
-  - name: "Bills XML Feed"
-    url: "https://www.parliament.scot/api/bills/xml"
+  - name: "Bills Master API"
+    url: "https://data.parliament.scot/api/bills"
     http_method: "GET"
     auth_required: false
-    rate_limit_per_min: 300
-    response_format: "XML"
-  - name: "Bills Web API"
-    url: "https://www.parliament.scot/api/bills"
+    rate_limit_per_min: 600
+    response_format: "JSON"
+  - name: "Bill Stages API"
+    url: "https://data.parliament.scot/api/billstages"
     http_method: "GET"
     auth_required: false
-    rate_limit_per_min: 300
+    rate_limit_per_min: 600
+    response_format: "JSON"
+  - name: "Bill Stage Types Lookup"
+    url: "https://data.parliament.scot/api/billstagetypes"
+    http_method: "GET"
+    auth_required: false
+    rate_limit_per_min: 600
+    response_format: "JSON"
+  - name: "Bill Types Lookup"
+    url: "https://data.parliament.scot/api/billtypes"
+    http_method: "GET"
+    auth_required: false
+    rate_limit_per_min: 600
+    response_format: "JSON"
+  - name: "Members Master API"
+    url: "https://data.parliament.scot/api/members"
+    http_method: "GET"
+    auth_required: false
+    rate_limit_per_min: 600
     response_format: "JSON"
 
 field_mappings:
   - canonical_field: "normalized.title"
-    native_key: "Title"
+    native_key: "ShortName"
     provenance_tier: "NATIVE_DIRECT"
     derivation_confidence: "HIGH"
   - canonical_field: "normalized.parliament_term"
     native_key: "Session"
     provenance_tier: "ENRICHED_BY_PIPELINE"
     derivation_confidence: "HIGH"
-    notes: "Session 6 (2021-2026)"
+    notes: "Session 5 (2016-2021) / Session 6 (2021-2026)"
   - canonical_field: "normalized.initiator_type"
-    native_key: "BillType"
+    native_key: "BillTypeID"
     provenance_tier: "ENRICHED_BY_PIPELINE"
     derivation_confidence: "HIGH"
-    notes: "Executive (Government Bill) vs Member Bill vs Committee Bill"
+    notes: "Mapped from billtypes lookup (1=Executive, 2=Member's, 3=Budget, etc.)"
   - canonical_field: "normalized.final_status"
-    native_key: "CurrentStatus"
+    native_key: "BillStages"
     provenance_tier: "ENRICHED_BY_PIPELINE"
     derivation_confidence: "HIGH"
+    notes: "Derived from latest StageType (e.g. Royal Assent -> ENACTED)"
 
 hansard:
   transcript_format: "XML / HTML"
-  speaker_disambiguation_method: "MSP ID / Wikidata QID"
+  speaker_disambiguation_method: "MSP ID / PersonID"
   timestamp_granularity: "SPEECH_LEVEL"
   interruption_flags_available: true
 

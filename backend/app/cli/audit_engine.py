@@ -10,6 +10,7 @@ import httpx
 import psycopg
 
 from app.models.audit_blueprint import AuditBlueprint
+from app.ingestion.scottish_parliament import ScottishParliamentIngestor
 
 # Database Connection Details
 DB_HOST = os.environ.get("DB_HOST", "/var/run/postgresql")
@@ -92,7 +93,7 @@ def probe_endpoints():
         with get_db_conn() as conn:
             with conn.cursor() as cur:
                 for code, name, url, method in endpoints:
-                    target_url = url.replace("{id}", "1").replace("{number}", "1")
+                    target_url = url.replace("{id}", "381").replace("{number}", "1")
                     print(f"  --> Probing {code} [{name}]: {target_url}...")
                     start_time = time.time()
                     try:
@@ -117,16 +118,86 @@ def probe_endpoints():
             conn.commit()
     print("[+] All API probes completed and probe logs recorded!")
 
+def ingest_jurisdiction(jurisdiction_code: str):
+    code = jurisdiction_code.upper()
+    print(f"[*] Starting Phase 1 Live Ingestion vertical slice for {code} (2019-2024 cohort)...")
+
+    if code == "GB-SCT":
+        ingestor = ScottishParliamentIngestor()
+        bills = ingestor.fetch_all()
+        print(f"[+] Fetched {len(bills)} canonical bill records for Holyrood (2019-2024).")
+
+        with get_db_conn() as conn:
+            with conn.cursor() as cur:
+                for b in bills:
+                    n = b.normalized
+                    nat = b.native
+                    prov = b.provenance
+
+                    # Upsert Bill
+                    cur.execute("""
+                        INSERT INTO bills (
+                            canonical_id, jurisdiction_code, normalized_title, parliament_term, session_subperiod,
+                            session_start_date, session_end_date, initiator_type, initiator_party_governance_role,
+                            date_introduced, date_final_outcome, duration_calendar_days, duration_sitting_days,
+                            suspension_interrupted, final_status, termination_mechanism, rebellions_flag,
+                            cross_party_sponsorship_count, derivation_confidence, native_payload, created_at, updated_at
+                        )
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                        ON CONFLICT (canonical_id) DO UPDATE SET
+                            normalized_title = EXCLUDED.normalized_title,
+                            final_status = EXCLUDED.final_status,
+                            date_final_outcome = EXCLUDED.date_final_outcome,
+                            duration_calendar_days = EXCLUDED.duration_calendar_days,
+                            native_payload = EXCLUDED.native_payload,
+                            updated_at = NOW();
+                    """, (
+                        b.canonical_id, b.jurisdiction_code, n.title, n.parliament_term, n.session_subperiod,
+                        n.session_start_date, n.session_end_date, n.initiator_type.value, n.initiator_party_governance_role.value,
+                        n.date_introduced, n.date_final_outcome, n.duration_calendar_days, n.duration_sitting_days,
+                        n.suspension_interrupted, n.final_status.value, n.termination_mechanism.value, n.rebellions_flag,
+                        n.cross_party_sponsorship_count, n.derivation_confidence.value, psycopg.types.json.Jsonb(b.model_dump(mode="json"))
+                    ))
+
+                    # Re-insert Stages
+                    cur.execute("DELETE FROM stage_milestones WHERE canonical_id = %s", (b.canonical_id,))
+                    for idx, st in enumerate(n.stage_milestones, 1):
+                        cur.execute("""
+                            INSERT INTO stage_milestones (canonical_id, stage_canonical, stage_raw, chamber, date_stage, proceedings_url, seq_order)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s);
+                        """, (b.canonical_id, st.stage_canonical.value, st.stage_raw, st.chamber.value, st.date_stage, st.proceedings_url, idx))
+
+                    # Re-insert Sponsors
+                    cur.execute("DELETE FROM sponsors WHERE canonical_id = %s", (b.canonical_id,))
+                    cur.execute("""
+                        INSERT INTO sponsors (canonical_id, member_name, member_id, party, is_primary)
+                        VALUES (%s, %s, %s, %s, %s);
+                    """, (b.canonical_id, nat.initiator_name, nat.initiator_member_id, nat.initiator_party, True))
+
+                    # Provenance Audit Log Entry
+                    cur.execute("""
+                        INSERT INTO provenance_audit_log (canonical_id, source_url, retrieved_at, raw_payload_hash, scraper_version, zenodo_doi, license)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s);
+                    """, (b.canonical_id, prov.source_url, prov.retrieved_at, prov.raw_payload_hash, prov.scraper_version, getattr(prov, "zenodo_doi", None), prov.license))
+
+            conn.commit()
+        print(f"[+] Ingestion complete for {code}! {len(bills)} bills written to PostgreSQL.")
+    else:
+        print(f"[!] Ingestion pipeline for {code} is not yet implemented.")
+
 def main():
-    parser = argparse.ArgumentParser(description="Comparative Legislative Data Audit Engine (Option 3 Hybrid Model)")
-    parser.add_argument("action", choices=["sync", "probe", "all"], help="Action to perform: sync YAML audits or run health probes")
+    parser = argparse.ArgumentParser(description="Comparative Legislative Data Audit & Ingestion Engine")
+    parser.add_argument("action", choices=["sync", "probe", "ingest", "all"], help="Action to perform: sync, probe, or ingest")
     parser.add_argument("--audits-dir", default="docs/audits", help="Directory containing YAML audit blueprints")
+    parser.add_argument("--jurisdiction", default="GB-SCT", help="Jurisdiction code to ingest (e.g. GB-SCT)")
     args = parser.parse_args()
 
     if args.action in ["sync", "all"]:
         sync_audits(args.audits_dir)
     if args.action in ["probe", "all"]:
         probe_endpoints()
+    if args.action in ["ingest"]:
+        ingest_jurisdiction(args.jurisdiction)
 
 if __name__ == "__main__":
     main()

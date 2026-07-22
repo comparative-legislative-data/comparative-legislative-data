@@ -1,183 +1,207 @@
-# Canonical Legislative Data Schema
+# Canonical Legislative Data Schema Specification
 
-This document serves as the **Single Source of Truth (SSOT)** for data models across all phases of the Comparative Legislative Data API project.
-
----
-
-## Technical Stack & Architectural Context
-
-- **Backend & Ingestion Engine:** Python 3.11+ (FastAPI + Pydantic v2).
-- **Databases:** PostgreSQL 16 (Primary Relational Store) + DuckDB (In-Process OLAP & Parquet Generation).
-- **Frontend & Data Graphics:** SvelteKit (Svelte 5) with D3 / LayerCake visualization engine.
-- **Deployment:** Native Systemd User Isolation on Primary VPS (`45.152.161.153`) with Caddy reverse proxy.
-- **Documentation SSOT Suite:**
-  - [`docs/schema.md`](file:///home/steven/Documents/github/comparativelegislativedata/docs/schema.md) (Canonical Schema)
-  - [`docs/parliament_and_data_mapping.md`](file:///home/steven/Documents/github/comparativelegislativedata/docs/parliament_and_data_mapping.md) (Phase 0 Global Audit & Mapping Atlas)
-  - [`docs/pilot.md`](file:///home/steven/Documents/github/comparativelegislativedata/docs/pilot.md) (Phase 1 BICD Pilot Strategy)
-  - [`docs/stack.md`](file:///home/steven/Documents/github/comparativelegislativedata/docs/stack.md) (Stack & Host Specifications)
-  - [`docs/ARCHITECTURE.md`](file:///home/steven/Documents/github/comparativelegislativedata/docs/ARCHITECTURE.md) (Systemd Architecture & Security)
-  - [`docs/MONITORING.md`](file:///home/steven/Documents/github/comparativelegislativedata/docs/MONITORING.md) (Observability, Pruning & Backups)
-  - [`docs/API.md`](file:///home/steven/Documents/github/comparativelegislativedata/docs/API.md) (REST API Specification & Commercial Tiering)
-  - [`PeerReview/PEER_REVIEW_INVITATION.md`](file:///home/steven/Documents/github/comparativelegislativedata/PeerReview/PEER_REVIEW_INVITATION.md) (Peer Review Commissioning Briefing)
+**Comparative Legislative Data Platform**  
+*Version 2.0.0 (North Star Reset)*
 
 ---
 
-## Peer Review Design Principles & Infrastructure Philosophy
+## 1. Overview & Architectural Principles
 
-Following external academic peer review, the schema enforces three core design principles:
+This document specifies the **Pydantic v2 Canonical Data Schema** for the Comparative Legislative Data Platform. The schema models all legislative data ingested, mirrored, and served by the platform across 8 Quantitative Research Domains established in the [Master Canonical Variable Catalog](file:///home/steven/Documents/github/comparativelegislativedata/docs/canonical_variable_catalog.md).
 
-1. **Atomic Data Generation over Imposed Indices:** The platform does **not** impose pre-calculated scalar indices (e.g., Executive Dominance Scores). Instead, it generates clean, high-fidelity atomic variables (`author_type`, `author_party_role`, `disposal_outcome`, `rebellions_flag`, `cross_party_sponsorship_count`, `duration_sitting_days`) so researchers can construct custom indices for their specific research designs.
-2. **Dual-Layer Payload Model:**
-   - **Normalized Comparative Layer (`normalized.*`):** Standardised, globally neutral canonical terms (`ENACTED`, `EXECUTIVE`, `GOVERNING_PARTY`, `NON_PARTISAN`, `COMMITTEE_PROPOSED`).
-   - **Native Country-Specific Layer (`native.*`):** Unmodified local terms, native stage descriptions, local status phrasing, and official Hansard citations (`official_publication_ref`, `official_proceedings_url`).
-3. **Transparent Data Derivation & Provenance:**
-   - Every generated field carries a `derivation_confidence` level (`HIGH`, `MEDIUM`, `LOW`).
-   - Member identities are resolved to persistent IDs (Wikidata QIDs / native IDs) before joining against historical Executive Rosters.
-   - Raw JSON/XML payloads on disk (`/data/raw/`) are verified with SHA-256 hashes and mirrored to Zenodo/OSF for permanent DOI minting.
+### The 5-Tier Data Availability & Provenance Framework
 
----
+Every field in the canonical bill record is assigned a provenance classification evaluating host API availability:
 
-## Phase 1: Bill Quantitative Data Schema
-
-Focuses on the macro legislative record: Bill metadata, persistent sponsor identification, sessional dates, procedural timestamps, stage milestones, proceedings citations, document length, sitting days, and final outcome mechanisms.
-
-### Entity: `StageMilestone`
-
-Representing key procedural progression steps in official parliamentary proceedings.
-
-| Field Name | Type | Description |
-| :--- | :--- | :--- |
-| `stage_canonical` | Enum | `FIRST_READING`, `SECOND_READING`, `COMMITTEE_STAGE`, `REPORT_STAGE`, `THIRD_READING`, `SECOND_CHAMBER_REVIEW`, `CONCILIATION`, `FINAL_PASSAGE`, `PROMULGATION` |
-| `stage_raw` | String | Native stage name (e.g. "Public Bill Committee", "Stage 1 Consideration", "Ping-Pong", "Lesung"). |
-| `chamber` | Enum | `PRIMARY_CHAMBER`, `SECONDARY_CHAMBER`, `JOINT_SESSION`, `DEVOLVED_UNICAMERAL` |
-| `date_stage` | Date | Date of stage event/completion (`YYYY-MM-DD`). |
-| `proceedings_url` | String (Optional) | Direct URL to official Hansard/Journal debate transcript for this stage. |
+- **`NATIVE_DIRECT`:** Available directly in the host assembly's official API or raw feed (JSON/XML).
+- **`DERIVED_DETERMINISTIC`:** Derived deterministically via pipeline joins, date arithmetic, or lookup tables (e.g. Executive Rosters). Includes an explicit `derivation_confidence` rating (`HIGH`, `MEDIUM`, `LOW`).
+- **`DERIVED_SYNTHETIC_AI`:** Synthesized using advanced NLP/LLM text processing, topic modeling, or structural parsing of unstructured Hansard/PDF text.
+- **`UNAVAILABLE_HARD_GAP`:** Missing natively from the host assembly, unrecorded, or resource-prohibitive to generate (Documented Open Data Gap).
 
 ---
 
-### Entity: `Bill` API Response Payload Structure
+## 2. Core Enum Definitions
 
-```json
-{
-  "canonical_id": "GB-SCT-S6-SPB13",
-  "jurisdiction_code": "GB-SCT",
-  
-  "normalized": {
-    "title": "Gender Recognition Reform (Scotland) Bill",
-    "parliament_term": "Session 6",
-    "session_subperiod": "Session 6",
-    "session_start_date": "2021-05-13",
-    "session_end_date": "2026-05-07",
-    "initiator_type": "EXECUTIVE",
-    "initiator_party_governance_role": "GOVERNING_PARTY",
-    "date_introduced": "2022-03-03",
-    "date_final_outcome": "2022-12-22",
-    "duration_calendar_days": 294,
-    "duration_sitting_days": 82,
-    "suspension_interrupted": false,
-    "final_status": "ENACTED",
-    "termination_mechanism": "ENACTMENT",
-    "rebellions_flag": false,
-    "cross_party_sponsorship_count": 0,
-    "derivation_confidence": "HIGH",
-    "stage_milestones": [
-      {
-        "stage_canonical": "FIRST_READING",
-        "stage_raw": "Introduced",
-        "chamber": "DEVOLVED_UNICAMERAL",
-        "date_stage": "2022-03-03",
-        "proceedings_url": "https://www.parliament.scot/bills/5"
-      },
-      {
-        "stage_canonical": "COMMITTEE_STAGE",
-        "stage_raw": "Stage 1 (Committee Consideration)",
-        "chamber": "DEVOLVED_UNICAMERAL",
-        "date_stage": "2022-10-06",
-        "proceedings_url": "https://www.parliament.scot/bills/5#stage1"
-      },
-      {
-        "stage_canonical": "FINAL_PASSAGE",
-        "stage_raw": "Stage 3 (Passed)",
-        "chamber": "DEVOLVED_UNICAMERAL",
-        "date_stage": "2022-12-22",
-        "proceedings_url": "https://www.parliament.scot/bills/5#stage3"
-      }
-    ]
-  },
-  
-  "native": {
-    "local_bill_id": "SP Bill 13",
-    "title_native": "Gender Recognition Reform (Scotland) Bill",
-    "initiator_raw": "Cabinet Secretary for Social Justice, Housing and Local Government",
-    "initiator_name": "Shona Robison MSP",
-    "initiator_member_id": "Q59385108",
-    "initiator_party": "Scottish National Party",
-    "raw_status": "Passed (Subject to Section 35 Order)",
-    "parliament_term_raw": "Session 6 (2021-2026)",
-    "official_proceedings_url": "https://www.parliament.scot/bills-and-laws/bills/gender-recognition-reform-scotland-bill",
-    "official_publication_ref": "SP Bill 13 Session 6 (2022)"
-  },
-  
-  "provenance": {
-    "source_url": "https://www.parliament.scot/api/bills/5",
-    "retrieved_at": "2026-07-22T08:30:00Z",
-    "raw_payload_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "scraper_version": "0.1.0-gb-sct",
-    "zenodo_doi": "10.5281/zenodo.1234567",
-    "license": "Open Government Licence v3.0"
-  }
-}
+```python
+from enum import Enum
+
+class InitiatorType(str, Enum):
+    """Globally neutral classification of the originating sponsor/author."""
+    EXECUTIVE = "EXECUTIVE"
+    INDIVIDUAL_MEMBER = "INDIVIDUAL_MEMBER"
+    GROUP_MEMBERS = "GROUP_MEMBERS"
+    COMMITTEE = "COMMITTEE"
+    CITIZEN_INITIATIVE = "CITIZEN_INITIATIVE"
+    PRIVATE_HYBRID = "PRIVATE_HYBRID"
+    OTHER = "OTHER"
+
+class InitiatorGovernanceRole(str, Enum):
+    """Alignment of the primary sponsor relative to executive power at introduction."""
+    GOVERNING_PARTY = "GOVERNING_PARTY"
+    OPPOSITION_PARTY = "OPPOSITION_PARTY"
+    CROSS_PARTY = "CROSS_PARTY"
+    NON_PARTISAN = "NON_PARTISAN"
+    COMMITTEE_PROPOSED = "COMMITTEE_PROPOSED"
+    UNKNOWN = "UNKNOWN"
+
+class FinalStatus(str, Enum):
+    """Standardized terminal disposition or pending status of the legislation."""
+    ENACTED = "ENACTED"
+    DEFEATED = "DEFEATED"
+    WITHDRAWN = "WITHDRAWN"
+    LAPSED = "LAPSED"
+    PENDING = "PENDING"
+
+class TerminationMechanism(str, Enum):
+    """Specific procedural mechanism resulting in bill termination or enactment."""
+    ENACTMENT = "ENACTMENT"
+    EXECUTIVE_WITHDRAWAL = "EXECUTIVE_WITHDRAWAL"
+    VOTE_DEFEAT = "VOTE_DEFEAT"
+    SESSION_EXPIRY = "SESSION_EXPIRY"
+    SECTION_35_VETO = "SECTION_35_VETO"
+    SUSPENSION_TERMINATION = "SUSPENSION_TERMINATION"
+    PENDING = "PENDING"
+
+class StageCanonical(str, Enum):
+    """Globally neutral stage milestones in parliamentary proceedings."""
+    FIRST_READING = "FIRST_READING"
+    SECOND_READING = "SECOND_READING"
+    COMMITTEE_STAGE = "COMMITTEE_STAGE"
+    REPORT_STAGE = "REPORT_STAGE"
+    THIRD_READING = "THIRD_READING"
+    SECOND_CHAMBER_REVIEW = "SECOND_CHAMBER_REVIEW"
+    CONCILIATION = "CONCILIATION"
+    FINAL_PASSAGE = "FINAL_PASSAGE"
+    PROMULGATION = "PROMULGATION"
+
+class ProvenanceTier(str, Enum):
+    """5-Tier Data Availability & Provenance Classification."""
+    NATIVE_DIRECT = "NATIVE_DIRECT"
+    DERIVED_DETERMINISTIC = "DERIVED_DETERMINISTIC"
+    DERIVED_SYNTHETIC_AI = "DERIVED_SYNTHETIC_AI"
+    UNAVAILABLE_HARD_GAP = "UNAVAILABLE_HARD_GAP"
+
+class DerivationConfidence(str, Enum):
+    """Confidence level of pipeline-derived fields."""
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
 ```
 
 ---
 
-## Phase 2: Amendment Quantitative Data Schema
+## 3. Pydantic Model Hierarchy
 
-Focuses on the scrutiny engine: amendment counts, persistent author origins, stage progression, decision outcomes, voting statistics, and proceedings citations.
+### A. Stage Milestone Model
+```python
+from datetime import date
+from typing import Optional
+from pydantic import BaseModel, Field
 
-### Entity: `Amendment`
+class StageMilestone(BaseModel):
+    stage_canonical: StageCanonical = Field(..., description="Standardized stage milestone")
+    stage_raw: str = Field(..., description="Native stage name from host feed")
+    chamber: str = Field(default="PRIMARY_CHAMBER", description="Chamber where stage occurred")
+    date_stage: date = Field(..., description="Date stage was completed")
+    proceedings_url: Optional[str] = Field(None, description="URL to official Hansard/Journal transcript")
+    seq_order: int = Field(..., description="Sequential order in bill progression (1-indexed)")
+```
 
-| Field Name | Type | Canonical Enum / Format | Description & Harmonisation Rule |
-| :--- | :--- | :--- | :--- |
-| `amendment_id` | String | `[CANONICAL_BILL_ID]-AMD-[NO]` | Unique identifier for the amendment. |
-| `bill_canonical_id` | String | FK to `Bill` | Reference to parent Bill. |
-| `author_type` | Enum | `EXECUTIVE`<br>`GOVERNING_BACKBENCH`<br>`OPPOSITION`<br>`COMMITTEE_PROPOSED`<br>`CROSS_PARTY` | Categorization of the amendment sponsor(s). |
-| `author_raw` | String | Text | Native author/sponsor string. |
-| `author_member_id` | String | Text (Wikidata QID / Native ID) | Persistent member ID for sponsor disambiguation. |
-| `stage_canonical` | Enum | `PRE_LEGISLATIVE`<br>`INITIAL_CONSIDERATION`<br>`COMMITTEE_STAGE`<br>`REPORT_STAGE`<br>`FINAL_CONSIDERATION`<br>`SECOND_CHAMBER_REVIEW`<br>`CONCILIATION` | Neutral stage classification across single/multi-chamber systems. |
-| `stage_raw` | String | Text | Native stage name (e.g., "Committee Stage", "Mark-up", "Ping-Pong"). |
-| `decision_outcome` | Enum | `AGREED`<br>`REJECTED`<br>`WITHDRAWN`<br>`UNCONSIDERED`<br>`SUPERSEDED` | Standardised disposition of the amendment. |
-| `decision_raw` | String | Text | Native outcome string. |
-| `was_divided` | Boolean | True/False | Whether a formal recorded vote (division) was taken. |
-| `votes_for` | Integer | Count | Number of votes in favour (Ayes/Yeas). |
-| `votes_against` | Integer | Count | Number of votes opposed (Noes/Nays). |
-| `votes_abstain` | Integer | Count | Number of abstentions/present. |
-| `proceedings_paper_ref` | String | Text | Official amendment paper / marshalled list publication citation. |
-| `proceedings_division_ref` | String | Text | Official Hansard division / vote reference number. |
+### B. Sponsor Information Model
+```python
+class SponsorInfo(BaseModel):
+    member_name: str = Field(..., description="Name string of the sponsor/minister")
+    member_id: Optional[str] = Field(None, description="Persistent member ID (Wikidata QID / native ID)")
+    party: Optional[str] = Field(None, description="Political party affiliation")
+    is_primary: bool = Field(default=True, description="True if primary sponsor, False if co-sponsor")
+```
 
----
+### C. Division Record Model
+```python
+class DivisionRecord(BaseModel):
+    division_id: str = Field(..., description="Local division/roll-call vote identifier")
+    stage_raw: str = Field(..., description="Stage where division vote occurred")
+    date_division: date = Field(..., description="Date of division vote")
+    yeas_count: int = Field(..., description="Total Yea / For votes")
+    nays_count: int = Field(..., description="Total Nay / Against votes")
+    abstentions_count: int = Field(default=0, description="Total Abstentions / Present")
+    passed_flag: bool = Field(..., description="True if division motion carried")
+    rebellions_flag: bool = Field(default=False, description="True if >=5% party defiance occurred")
+```
 
-## Phase 3: Qualitative Data Layer Schema
+### D. Normalized Bill Model
+```python
+class NormalizedBill(BaseModel):
+    title: str = Field(..., description="Primary title in English (Domain 2)")
+    parliament_term: str = Field(..., description="Macro electoral period, e.g. Session 6 (Domain 1)")
+    session_subperiod: Optional[str] = Field(None, description="Sessional sub-period (Domain 1)")
+    session_start_date: Optional[date] = Field(None, description="Opening date of session (Domain 1)")
+    session_end_date: Optional[date] = Field(None, description="Dissolution date of session (Domain 1)")
+    
+    # Origin & Sponsorship (Domain 2)
+    initiator_type: InitiatorType = Field(..., description="Standardized sponsor classification")
+    initiator_party_governance_role: InitiatorGovernanceRole = Field(
+        default=InitiatorGovernanceRole.UNKNOWN,
+        description="Sponsor alignment relative to executive"
+    )
+    co_sponsorship_count: int = Field(default=0, description="Total co-sponsors attached")
+    cross_party_sponsorship_count: int = Field(default=0, description="Opposition co-sponsors attached")
+    
+    # Timelines (Domain 3)
+    date_introduced: date = Field(..., description="Introduction date")
+    date_final_outcome: Optional[date] = Field(None, description="Final outcome date")
+    duration_calendar_days: Optional[int] = Field(None, description="Elapsed calendar days")
+    duration_sitting_days: Optional[int] = Field(None, description="Elapsed sitting days")
+    suspension_interrupted_flag: bool = Field(default=False, description="Spanned parliamentary recess")
+    stage_milestones: List[StageMilestone] = Field(default_factory=list, description="Stage timeline array")
+    
+    # Final Disposition (Domain 4)
+    final_status: FinalStatus = Field(..., description="Terminal status")
+    termination_mechanism: TerminationMechanism = Field(default=TerminationMechanism.PENDING)
+    royal_assent_date: Optional[date] = Field(None, description="Royal assent date")
+    
+    # Documents Chain (Domain 5)
+    doc_as_introduced_url: Optional[str] = Field(None)
+    doc_as_passed_url: Optional[str] = Field(None)
+    doc_policy_memorandum_url: Optional[str] = Field(None)
+    doc_financial_memorandum_url: Optional[str] = Field(None)
+    doc_explanatory_notes_url: Optional[str] = Field(None)
+    doc_marshalled_amendments_urls: List[str] = Field(default_factory=list)
+    
+    # Committee Proceedings (Domain 6)
+    lead_committee_name: Optional[str] = Field(None)
+    committee_referral_date: Optional[date] = Field(None)
+    committee_report_date: Optional[date] = Field(None)
+    committee_report_url: Optional[str] = Field(None)
+    committee_evidence_submissions_count: Optional[int] = Field(None)
+    
+    # Amendments (Domain 7)
+    amendments_tabled_count: Optional[int] = Field(None)
+    amendments_agreed_count: Optional[int] = Field(None)
+    amendments_rejected_count: Optional[int] = Field(None)
+    amendments_executive_count: Optional[int] = Field(None)
+    amendments_backbench_count: Optional[int] = Field(None)
+    bill_text_alteration_score: Optional[float] = Field(None)
+    
+    # Divisions & Hansard (Domain 8)
+    divisions_count: Optional[int] = Field(None)
+    division_records: List[DivisionRecord] = Field(default_factory=list)
+    rebellions_flag: bool = Field(default=False)
+    voting_coalition_type: Optional[str] = Field(None)
+    hansard_debate_urls: List[str] = Field(default_factory=list)
+    
+    derivation_confidence: DerivationConfidence = Field(default=DerivationConfidence.HIGH)
+```
 
-Layers semantic content, textual diffs, policy topic coding, and executive responsiveness tagging on top of the quantitative foundation.
+### E. Root Canonical Bill Model
+```python
+from datetime import datetime
+from app.core.provenance import Provenance
 
-### Entity: `AmendmentQualitative`
-
-| Field Name | Type | Description |
-| :--- | :--- | :--- |
-| `amendment_id` | String | Foreign key to `Amendment`. |
-| `text_diff` | Object | Full text inserted, deleted, or substituted. |
-| `structural_target` | String | Target section/clause reference. |
-| `substantive_classification` | Enum | `SUBSTANTIVE_POLICY`<br>`TECHNICAL_DRAFTING`<br>`PROCEDURAL`<br>`FINANCIAL` |
-| `cap_topic_code` | Integer | Comparative Agendas Project 21 major topic code. |
-| `cap_subtopic_code` | Integer | CAP detailed subtopic code. |
-| `executive_concession_match` | String | Optional ID of an earlier withdrawn non-executive amendment that this executive amendment responds to. |
-| `executive_concession_notes` | Text | Qualitative rationale and evidence for concession tagging. |
-
----
-
-## Document Revision History
-
-- **2026-07-22 (v2.0):** Incorporated Peer Review findings: removed pre-calculated $EDS$, added `duration_sitting_days`, `suspension_interrupted`, `termination_mechanism`, `rebellions_flag`, `cross_party_sponsorship_count`, `derivation_confidence`, persistent `member_id`, and Zenodo DOI archiving metadata.
-- **2026-07-22 (v1.1):** Updated SSOT header referencing `docs/parliament_and_data_mapping.md`.
-- **2026-07-21 (v0.1):** Initial draft of canonical schema.
+class Bill(BaseModel):
+    canonical_id: str = Field(..., description="Global unique ID '[JURISDICTION]-[TERM]-[LOCAL_ID]'")
+    jurisdiction_code: str = Field(..., description="ISO-style jurisdiction code (e.g. GB-SCT, GB-UKP)")
+    normalized: NormalizedBill = Field(..., description="Harmonized 8-domain comparative record")
+    native: dict = Field(default_factory=dict, description="Unmodified native host feed payload")
+    provenance: Provenance = Field(..., description="Audit trail and SHA-256 provenance block")
+```

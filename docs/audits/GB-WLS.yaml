@@ -1,0 +1,58 @@
+schema_version: "1.0.0"
+last_updated: "2026-07-22"
+
+assembly:
+  jurisdiction_code: "GB-WLS"
+  name: "Senedd Cymru (Welsh Parliament)"
+  location: "Cardiff, Senedd"
+  chamber_type: "DEVOLVED_UNICAMERAL"
+  official_portal_url: "https://senedd.wales/senedd-business/bills-and-acts/"
+  license_type: "Open Government Licence v3.0 / Open Data Senedd"
+  target_cohort: "2019-2024 BICD Cohort 1"
+
+endpoints:
+  - name: "Senedd Open Data API"
+    url: "https://record.senedd.wales/api/bills"
+    http_method: "GET"
+    auth_required: false
+    rate_limit_per_min: 300
+    response_format: "JSON"
+  - name: "Senedd Record Endpoint"
+    url: "https://record.senedd.wales/api/business"
+    http_method: "GET"
+    auth_required: false
+    rate_limit_per_min: 300
+    response_format: "JSON"
+
+field_mappings:
+  - canonical_field: "normalized.title"
+    native_key: "title_en"
+    provenance_tier: "NATIVE_DIRECT"
+    derivation_confidence: "HIGH"
+  - canonical_field: "normalized.parliament_term"
+    native_key: "assembly_period"
+    provenance_tier: "ENRICHED_BY_PIPELINE"
+    derivation_confidence: "HIGH"
+    notes: "Sixth Senedd (2021-2026)"
+  - canonical_field: "normalized.initiator_type"
+    native_key: "member_role"
+    provenance_tier: "ENRICHED_BY_PIPELINE"
+    derivation_confidence: "HIGH"
+    notes: "Welsh Government Minister vs Member Bill"
+
+hansard:
+  transcript_format: "XML / HTML"
+  speaker_disambiguation_method: "MS ID (Senedd Member ID)"
+  timestamp_granularity: "SPEECH_LEVEL"
+  interruption_flags_available: true
+
+typology_tests:
+  - bill_id: "WLS-S6-01"
+    title: "Senedd Cymru (Members and Elections) Act 2024"
+    typology_category: "Government Constitutional Bill"
+    expected_stages_count: 4
+    notes: "Passed under supermajority requirement (36+ MS votes required)."
+
+procedural_notes:
+  - "Unicameral 4-stage process: Stage 1 (Principle), Stage 2 (Committee Amendment), Stage 3 (Plenary Amendment), Stage 4 (Final Vote)."
+  - "Bilingual requirement: All legislation published in both Welsh (Cymraeg) and English."

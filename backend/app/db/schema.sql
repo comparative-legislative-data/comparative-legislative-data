@@ -1,5 +1,9 @@
 -- Comparative Legislative Data Platform
--- PostgreSQL Canonical Database Schema (matching docs/schema.md)
+-- PostgreSQL Canonical & Audit Engine Schema (matching Option 3 Hybrid Architecture)
+
+-- ============================================================================
+-- 1. CANONICAL INGESTION TABLES
+-- ============================================================================
 
 CREATE TABLE IF NOT EXISTS bills (
     canonical_id VARCHAR(128) PRIMARY KEY,
@@ -32,7 +36,6 @@ CREATE TABLE IF NOT EXISTS bills (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Stage Milestones Table
 CREATE TABLE IF NOT EXISTS stage_milestones (
     id BIGSERIAL PRIMARY KEY,
     canonical_id VARCHAR(128) NOT NULL REFERENCES bills(canonical_id) ON DELETE CASCADE,
@@ -44,7 +47,6 @@ CREATE TABLE IF NOT EXISTS stage_milestones (
     seq_order INT NOT NULL
 );
 
--- Sponsors & Initiators Table
 CREATE TABLE IF NOT EXISTS sponsors (
     id BIGSERIAL PRIMARY KEY,
     canonical_id VARCHAR(128) NOT NULL REFERENCES bills(canonical_id) ON DELETE CASCADE,
@@ -54,7 +56,6 @@ CREATE TABLE IF NOT EXISTS sponsors (
     is_primary BOOLEAN DEFAULT FALSE
 );
 
--- Provenance Audit Log Table
 CREATE TABLE IF NOT EXISTS provenance_audit_log (
     id BIGSERIAL PRIMARY KEY,
     canonical_id VARCHAR(128) NOT NULL REFERENCES bills(canonical_id) ON DELETE CASCADE,
@@ -66,10 +67,64 @@ CREATE TABLE IF NOT EXISTS provenance_audit_log (
     license VARCHAR(128) NOT NULL DEFAULT 'Open Government Licence v3.0'
 );
 
--- Indexes for high-speed queries
+-- ============================================================================
+-- 2. OPERATIONAL AUDIT ENGINE TABLES (Option 3 Hybrid Model)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS assembly_audits (
+    jurisdiction_code VARCHAR(32) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    location VARCHAR(255) NOT NULL,
+    chamber_type VARCHAR(64) NOT NULL,
+    official_portal_url TEXT NOT NULL,
+    license_type VARCHAR(128) NOT NULL,
+    target_cohort VARCHAR(128) NOT NULL DEFAULT '2019-2024 BICD Cohort 1',
+    schema_version VARCHAR(32) NOT NULL DEFAULT '1.0.0',
+    last_synced_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS audit_endpoints (
+    id BIGSERIAL PRIMARY KEY,
+    jurisdiction_code VARCHAR(32) NOT NULL REFERENCES assembly_audits(jurisdiction_code) ON DELETE CASCADE,
+    name VARCHAR(128) NOT NULL,
+    url TEXT NOT NULL,
+    http_method VARCHAR(16) NOT NULL DEFAULT 'GET',
+    auth_required BOOLEAN DEFAULT FALSE,
+    rate_limit_per_min INT,
+    response_format VARCHAR(32) DEFAULT 'JSON',
+    pagination_mechanism VARCHAR(128)
+);
+
+CREATE TABLE IF NOT EXISTS audit_field_mappings (
+    id BIGSERIAL PRIMARY KEY,
+    jurisdiction_code VARCHAR(32) NOT NULL REFERENCES assembly_audits(jurisdiction_code) ON DELETE CASCADE,
+    canonical_field VARCHAR(128) NOT NULL,
+    native_key TEXT NOT NULL,
+    provenance_tier VARCHAR(32) NOT NULL,
+    derivation_confidence VARCHAR(16) NOT NULL DEFAULT 'HIGH',
+    notes TEXT
+);
+
+CREATE TABLE IF NOT EXISTS audit_probe_logs (
+    id BIGSERIAL PRIMARY KEY,
+    jurisdiction_code VARCHAR(32) NOT NULL REFERENCES assembly_audits(jurisdiction_code) ON DELETE CASCADE,
+    endpoint_url TEXT NOT NULL,
+    probed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    http_status_code INT NOT NULL,
+    latency_ms INT NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'HEALTHY', -- HEALTHY, DRIFT_DETECTED, DOWN
+    response_hash VARCHAR(64),
+    error_summary TEXT
+);
+
+-- Indexes for performance & query speed
 CREATE INDEX IF NOT EXISTS idx_bills_jurisdiction ON bills(jurisdiction_code);
 CREATE INDEX IF NOT EXISTS idx_bills_term ON bills(parliament_term);
-CREATE INDEX IF NOT EXISTS idx_bills_date_introduced ON bills(date_introduced);
 CREATE INDEX IF NOT EXISTS idx_stage_milestones_canonical ON stage_milestones(canonical_id);
 CREATE INDEX IF NOT EXISTS idx_sponsors_canonical ON sponsors(canonical_id);
 CREATE INDEX IF NOT EXISTS idx_provenance_canonical ON provenance_audit_log(canonical_id);
+
+CREATE INDEX IF NOT EXISTS idx_audit_endpoints_jurisdiction ON audit_endpoints(jurisdiction_code);
+CREATE INDEX IF NOT EXISTS idx_audit_field_mappings_jurisdiction ON audit_field_mappings(jurisdiction_code);
+CREATE INDEX IF NOT EXISTS idx_audit_probe_logs_jurisdiction ON audit_probe_logs(jurisdiction_code);
+CREATE INDEX IF NOT EXISTS idx_audit_probe_logs_probed_at ON audit_probe_logs(probed_at);

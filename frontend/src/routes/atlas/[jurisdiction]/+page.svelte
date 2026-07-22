@@ -1,8 +1,10 @@
 <script lang="ts">
-  import { ArrowLeft, CheckCircle2, FileText, Globe, Layers, ShieldCheck, Database } from 'lucide-svelte';
+  import { ArrowLeft, CheckCircle2, FileText, Globe, Layers, ShieldCheck, Database, Server, Cpu, Check, AlertCircle } from 'lucide-svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
+
+  let bp = $derived(data.blueprint);
 
   let datasetSchema = $derived({
     '@context': 'https://schema.org',
@@ -56,13 +58,13 @@
   <meta property="og:title" content="{data.jurisdiction} Assembly Data Audit — Global Parliamentary Data Atlas" />
   <meta property="og:description" content="Field-by-field 3-tier provenance matrix, Hansard transcript resolution rules, and structural API schema for {data.jurisdiction}." />
 
-  <!-- Google Scholar / Academic Citation Meta Tags -->
+  <!-- Google Scholar Citation Meta Tags -->
   <meta name="citation_title" content="{data.jurisdiction} Parliamentary Data Mapping & Audit Profile" />
   <meta name="citation_publisher" content="Comparative Legislative Data Project" />
   <meta name="citation_technical_report_number" content="Phase 0 Audit Profile: {data.jurisdiction}" />
   <meta name="citation_language" content="en" />
 
-  <!-- Page Structured Data (JSON-LD) -->
+  <!-- Structured Data (JSON-LD) -->
   {@html `<script type="application/ld+json">${JSON.stringify(datasetSchema)}</script>`}
   {@html `<script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}</script>`}
 </svelte:head>
@@ -78,39 +80,174 @@
     <div class="header-top">
       <div class="badge-group">
         <span class="badge badge-bicd">{data.jurisdiction}</span>
-        <span class="badge badge-live">Phase 0 Mapping</span>
-        <span class="badge badge-direct">REST API / XML</span>
+        <span class="badge badge-live">Option 3 Hybrid Blueprint</span>
+        <span class="badge badge-direct">API & DB Probed</span>
         <span class="badge badge-enriched">3-Tier Provenance</span>
       </div>
+      {#if bp}
+        <span class="schema-version-badge">Schema v{bp.schema_version} &bull; Updated {bp.last_updated}</span>
+      {/if}
     </div>
 
-    <h1 class="audit-title">{data.jurisdiction} Parliamentary Data Mapping & Audit Profile</h1>
+    <h1 class="audit-title">
+      {bp ? bp.assembly.name : data.jurisdiction} Data Audit Blueprint
+    </h1>
     <p class="audit-sub">
-      Field-by-field 3-tier provenance matrix, Hansard transcript resolution rules, rate limits, and 5-bill typology audit results.
+      Declarative field mappings, API endpoints, rate limits, Hansard disambiguation rules, and continuous drift health probe status.
     </p>
 
     <div class="audit-meta-grid">
       <div class="meta-item">
-        <span class="meta-label">Audit Status</span>
-        <span class="meta-value">Phase 0 Mapping Blueprint</span>
+        <span class="meta-label">Location / Chamber</span>
+        <span class="meta-value">{bp ? `${bp.assembly.location} (${bp.assembly.chamber_type})` : 'Phase 0 Audit'}</span>
       </div>
       <div class="meta-item">
         <span class="meta-label">Open License</span>
-        <span class="meta-value">Open Parliament Licence v3.0 / OGL v3.0</span>
+        <span class="meta-value">{bp ? bp.assembly.license_type : 'Open Parliament Licence v3.0 / OGL v3.0'}</span>
       </div>
       <div class="meta-item">
         <span class="meta-label">Target Cohort</span>
-        <span class="meta-value">2019–2024 BICD Cohort 1</span>
+        <span class="meta-value">{bp ? bp.assembly.target_cohort : '2019–2024 BICD Cohort 1'}</span>
       </div>
     </div>
   </div>
 
-  <!-- Markdown Audit Content -->
-  {#if data.content}
+  <!-- Structured Declarative Blueprint Render -->
+  {#if bp}
+    <!-- Section 1: Endpoints & Rate Limits -->
+    <section class="blueprint-section">
+      <div class="section-title-row">
+        <Server size={20} color="#38bdf8" />
+        <h2>API Endpoints & Access Specifications</h2>
+      </div>
+
+      <div class="table-card card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Endpoint Name</th>
+              <th>Target URL</th>
+              <th>Method</th>
+              <th>Rate Limit</th>
+              <th>Format</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each bp.endpoints as ep}
+              <tr>
+                <td class="font-bold">{ep.name}</td>
+                <td><code class="url-code">{ep.url}</code></td>
+                <td><span class="badge badge-direct">{ep.http_method}</span></td>
+                <td>{ep.rate_limit_per_min ? `${ep.rate_limit_per_min} req/min` : 'Unspecified'}</td>
+                <td><span class="badge badge-bicd">{ep.response_format}</span></td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 2: Dual-Layer Field Mappings -->
+    <section class="blueprint-section">
+      <div class="section-title-row">
+        <Layers size={20} color="#6366f1" />
+        <h2>Dual-Layer Field Mappings & Provenance Matrix</h2>
+      </div>
+
+      <div class="table-card card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Canonical Field</th>
+              <th>Native Key Path</th>
+              <th>Provenance Tier</th>
+              <th>Confidence</th>
+              <th>Notes / Transformation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each bp.field_mappings as fm}
+              <tr>
+                <td class="font-mono font-bold text-accent">{fm.canonical_field}</td>
+                <td class="font-mono">{fm.native_key}</td>
+                <td>
+                  {#if fm.provenance_tier === 'NATIVE_DIRECT'}
+                    <span class="badge badge-direct">NATIVE_DIRECT</span>
+                  {:else if fm.provenance_tier === 'ENRICHED_BY_PIPELINE'}
+                    <span class="badge badge-enriched">ENRICHED</span>
+                  {:else}
+                    <span class="badge badge-pending">UNAVAILABLE_GAP</span>
+                  {/if}
+                </td>
+                <td><span class="confidence-tag">{fm.derivation_confidence}</span></td>
+                <td class="text-subtle">{fm.notes || '—'}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 3: Hansard & Typology Tests Grid -->
+    <div class="two-col-grid">
+      <!-- Hansard Disambiguation -->
+      <section class="blueprint-section">
+        <div class="section-title-row">
+          <FileText size={20} color="#10b981" />
+          <h2>Hansard Resolution</h2>
+        </div>
+        <div class="card spec-box">
+          <div class="spec-line"><span class="spec-label">Format:</span> <strong>{bp.hansard.transcript_format}</strong></div>
+          <div class="spec-line"><span class="spec-label">Disambiguation:</span> <strong>{bp.hansard.speaker_disambiguation_method}</strong></div>
+          <div class="spec-line"><span class="spec-label">Timestamp Granularity:</span> <strong>{bp.hansard.timestamp_granularity}</strong></div>
+          <div class="spec-line"><span class="spec-label">Interruption Flags:</span> <strong>{bp.hansard.interruption_flags_available ? 'Available' : 'None'}</strong></div>
+        </div>
+      </section>
+
+      <!-- Procedural Notes -->
+      <section class="blueprint-section">
+        <div class="section-title-row">
+          <ShieldCheck size={20} color="#a855f7" />
+          <h2>Procedural Rules</h2>
+        </div>
+        <div class="card spec-box">
+          <ul class="notes-list">
+            {#each bp.procedural_notes as note}
+              <li><Check size={15} color="#10b981" /> {note}</li>
+            {/each}
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <!-- Section 4: Typology Test Cohorts -->
+    <section class="blueprint-section">
+      <div class="section-title-row">
+        <Cpu size={20} color="#f59e0b" />
+        <h2>5-Bill Typology Empirical Audit Tests</h2>
+      </div>
+      <div class="assembly-grid">
+        {#each bp.typology_tests as test}
+          <div class="card test-card">
+            <div class="test-top">
+              <span class="badge badge-bicd">{test.bill_id}</span>
+              <span class="badge badge-live">{test.expected_stages_count} Stages</span>
+            </div>
+            <h3 class="test-title">{test.title}</h3>
+            <p class="test-category">{test.typology_category}</p>
+            <p class="test-notes">{test.notes || ''}</p>
+          </div>
+        {/each}
+      </div>
+    </section>
+
+  {:else if data.content}
+    <!-- Raw Markdown Audit Fallback -->
     <div class="card content-card prose">
       <pre class="raw-markdown">{data.content}</pre>
     </div>
   {:else}
+    <!-- Placeholder Card -->
     <div class="card placeholder-card">
       <FileText size={48} color="#6366f1" />
       <h3>{data.jurisdiction} Audit Profile</h3>
@@ -121,9 +258,7 @@
 </div>
 
 <style>
-  .page-padding {
-    padding: 3rem 1.5rem;
-  }
+  .page-padding { padding: 3rem 1.5rem; }
 
   .back-link {
     display: inline-flex;
@@ -139,7 +274,7 @@
   .back-link:hover { color: var(--accent-cyan); }
 
   .header-card {
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
     background: linear-gradient(135deg, rgba(31, 41, 55, 0.9) 0%, rgba(17, 24, 39, 0.95) 100%);
     border: 1px solid var(--border-subtle);
   }
@@ -151,22 +286,11 @@
     margin-bottom: 1.25rem;
   }
 
-  .badge-group {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
+  .badge-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .schema-version-badge { font-size: 0.8rem; color: var(--text-dim); }
 
-  .audit-title {
-    font-size: 2.25rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .audit-sub {
-    color: var(--text-muted);
-    font-size: 1.05rem;
-    margin-bottom: 1.75rem;
-  }
+  .audit-title { font-size: 2.25rem; margin-bottom: 0.5rem; }
+  .audit-sub { color: var(--text-muted); font-size: 1.05rem; margin-bottom: 1.75rem; }
 
   .audit-meta-grid {
     display: grid;
@@ -178,50 +302,81 @@
     padding: 1.25rem;
   }
 
-  .meta-item {
+  .meta-item { display: flex; flex-direction: column; gap: 0.25rem; }
+  .meta-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+  .meta-value { font-size: 0.9rem; color: var(--text-main); font-weight: 500; }
+
+  .blueprint-section { margin-bottom: 2.5rem; }
+
+  .section-title-row {
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .meta-label {
-    font-size: 0.75rem;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .meta-value {
-    font-size: 0.9rem;
-    color: var(--text-main);
-    font-weight: 500;
-  }
-
-  .content-card {
-    padding: 2.5rem;
-  }
-
-  .raw-markdown {
-    white-space: pre-wrap;
-    font-family: var(--font-body);
-    font-size: 0.95rem;
-    line-height: 1.7;
-    color: #e5e7eb;
-    background: transparent;
-    border: none;
-    padding: 0;
-  }
-
-  .placeholder-card {
-    text-align: center;
-    padding: 4rem 2rem;
-    display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+  }
+  .section-title-row h2 { font-size: 1.35rem; }
+
+  .table-card { padding: 0; overflow-x: auto; }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    text-align: left;
   }
 
-  @media (max-width: 768px) {
-    .audit-meta-grid { grid-template-columns: 1fr; }
+  .data-table th, .data-table td {
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .data-table th {
+    background: #0d1117;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+  }
+
+  .font-mono { font-family: monospace; }
+  .font-bold { font-weight: 600; }
+  .text-accent { color: var(--accent-cyan); }
+  .text-subtle { color: var(--text-muted); font-size: 0.825rem; }
+  .url-code { background: #0d1117; padding: 0.2rem 0.4rem; border-radius: 0.35rem; color: #38bdf8; font-size: 0.825rem; }
+  .confidence-tag { background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 0.15rem 0.5rem; border-radius: 0.35rem; font-size: 0.75rem; font-weight: 600; }
+
+  .two-col-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .spec-box { display: flex; flex-direction: column; gap: 0.85rem; padding: 1.25rem; }
+  .spec-line { display: flex; justify-content: space-between; font-size: 0.875rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; }
+  .spec-label { color: var(--text-muted); }
+
+  .notes-list { list-style: none; display: flex; flex-direction: column; gap: 0.65rem; }
+  .notes-list li { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.875rem; color: var(--text-main); }
+
+  .assembly-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+
+  .test-card { display: flex; flex-direction: column; gap: 0.5rem; }
+  .test-top { display: flex; align-items: center; justify-content: space-between; }
+  .test-title { font-size: 1.05rem; color: #ffffff; }
+  .test-category { font-size: 0.8rem; color: var(--accent-cyan); font-weight: 500; }
+  .test-notes { font-size: 0.825rem; color: var(--text-muted); }
+
+  .content-card { padding: 2.5rem; }
+  .raw-markdown { white-space: pre-wrap; font-family: var(--font-body); font-size: 0.95rem; line-height: 1.7; color: #e5e7eb; background: transparent; border: none; padding: 0; }
+  .placeholder-card { text-align: center; padding: 4rem 2rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+
+  @media (max-width: 1024px) {
+    .audit-meta-grid, .two-col-grid, .assembly-grid { grid-template-columns: 1fr; }
   }
 </style>

@@ -1,6 +1,6 @@
 <script lang="ts">
   import '../app.css';
-  import { Database, Globe, FileCode2, Layers } from 'lucide-svelte';
+  import { Database, Globe, FileCode2, Layers, BookOpen, Mail } from 'lucide-svelte';
   import { page } from '$app/state';
 
   let { children } = $props();
@@ -13,7 +13,7 @@
     'name': 'Comparative Legislative Data Project',
     'url': 'https://legislativedata.org',
     'logo': 'https://legislativedata.org/favicon.svg',
-    'description': 'An open academic research project mapping data availability, API access, and canonical schemas across international legislatures.'
+    'description': 'An open academic research infrastructure standardising, auditing, and mapping quantitative legislative data across international parliamentary and presidential assemblies.'
   };
 
   const websiteSchema = {
@@ -37,7 +37,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@LegislativeData" />
   <meta name="twitter:title" content="Comparative Legislative Data Platform" />
-  <meta name="twitter:description" content="Global Open Parliamentary Data Audit & Mapping Atlas establishing clean, harmonised foundations for legislative research." />
+  <meta name="twitter:description" content="Global Open Parliamentary Data Audit & Mapping Atlas establishing clean, harmonised foundations for comparative legislative research." />
 
   <!-- Global Structured Data (JSON-LD) -->
   {@html `<script type="application/ld+json">${JSON.stringify(organizationSchema)}</script>`}
@@ -54,7 +54,7 @@
         </div>
         <div class="brand-text">
           <span class="brand-title">Comparative Legislative Data</span>
-          <span class="brand-sub">Research Platform & Mapping Atlas</span>
+          <span class="brand-sub">Research Infrastructure & Mapping Atlas</span>
         </div>
       </a>
 
@@ -63,10 +63,16 @@
           <Globe size={16} /> Data Atlas
         </a>
         <a href="/schema" class="nav-link">
-          <Layers size={16} /> Schema
+          <Layers size={16} /> Wishlist Schema
+        </a>
+        <a href="/peer-review" class="nav-link">
+          <BookOpen size={16} /> Peer Review
         </a>
         <a href="/api-docs" class="nav-link">
-          <FileCode2 size={16} /> API & Bulk Data
+          <FileCode2 size={16} /> Platform API
+        </a>
+        <a href="https://github.com/comparative-legislative-data/comparative-legislative-data" target="_blank" rel="noopener noreferrer" class="nav-link nav-github">
+          <svg size="16" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg> GitHub
         </a>
       </nav>
     </div>
@@ -82,27 +88,33 @@
     <div class="container footer-content">
       <div class="footer-col">
         <div class="brand-title">Comparative Legislative Data Platform</div>
-        <p class="footer-desc">An open research project mapping data availability, API access, and canonical schemas across international legislatures.</p>
+        <p class="footer-desc">An open academic research infrastructure standardising, auditing, and mapping quantitative legislative data across international parliamentary and presidential assemblies.</p>
         <p class="copyright">&copy; 2026 Comparative Legislative Data Project. Hosted at <a href="https://legislativedata.org" class="footer-link">legislativedata.org</a> under OGL v3.0 / Open Parliament Licence v3.0.</p>
       </div>
 
       <div class="footer-col">
-        <h4>Project Structure</h4>
+        <h4>Platform Navigation</h4>
         <ul>
           <li><a href="/atlas">Parliament Data Atlas</a></li>
-          <li><a href="/schema">Canonical Schema Specification</a></li>
-          <li><a href="/api-docs">API Specification & Access</a></li>
+          <li><a href="/schema">Master Canonical Variable Catalog</a></li>
+          <li><a href="/peer-review">Peer Review Commission Brief</a></li>
+          <li><a href="/api-docs">API Specification & Payload Explorer</a></li>
         </ul>
       </div>
 
       <div class="footer-col">
-        <h4>Phase 0 BICD Focus</h4>
+        <h4>Academic Contact & GitHub</h4>
         <ul>
-          <li><a href="/atlas/GB-UKP">UK Parliament (Westminster)</a></li>
-          <li><a href="/atlas/GB-SCT">Scottish Parliament (Holyrood)</a></li>
-          <li><a href="/atlas/GB-WLS">Senedd Cymru (Wales)</a></li>
-          <li><a href="/atlas/GB-NIR">Northern Ireland Assembly</a></li>
-          <li><a href="/atlas/IM-TYN">Isle of Man Tynwald</a></li>
+          <li>
+            <a href="https://github.com/comparative-legislative-data/comparative-legislative-data" target="_blank" rel="noopener noreferrer" class="footer-icon-link">
+              <svg size="14" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg> GitHub Repository
+            </a>
+          </li>
+          <li>
+            <a href="mailto:peer-review@legislativedata.org" class="footer-icon-link">
+              <Mail size={14} /> peer-review@legislativedata.org
+            </a>
+          </li>
         </ul>
       </div>
     </div>
@@ -170,7 +182,7 @@
   .main-nav {
     display: flex;
     align-items: center;
-    gap: 1.75rem;
+    gap: 1.5rem;
   }
 
   .nav-link {
@@ -178,7 +190,7 @@
     align-items: center;
     gap: 0.45rem;
     color: var(--text-muted);
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     font-weight: 500;
     text-decoration: none;
     transition: color 0.2s ease;
@@ -186,6 +198,17 @@
 
   .nav-link:hover {
     color: var(--text-main);
+  }
+
+  .nav-github {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-subtle);
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.375rem;
+  }
+  .nav-github:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
   }
 
   main {
@@ -209,6 +232,7 @@
     color: var(--text-muted);
     font-size: 0.85rem;
     margin: 0.75rem 0 1.25rem;
+    line-height: 1.5;
   }
 
   .copyright {
@@ -246,6 +270,12 @@
 
   .footer-col a:hover {
     color: var(--accent-cyan);
+  }
+
+  .footer-icon-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
   }
 
   @media (max-width: 768px) {

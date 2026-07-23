@@ -14,15 +14,16 @@
   }
 
   const domains = [
-    { code: 'ALL', name: 'All 8 Research Domains' },
+    { code: 'ALL', name: 'All 9 Research Domains' },
     { code: 'D1', name: 'Domain 1: Assembly, Electoral & Executive Context' },
     { code: 'D2', name: 'Domain 2: Bill Identification, Sponsorship & Temporal Origin' },
-    { code: 'D3', name: 'Domain 3: Progression, Timelines & Procedural Control' },
+    { code: 'D3', name: 'Domain 3: Progression, Timelines & Stage Milestones' },
     { code: 'D4', name: 'Domain 4: Final Disposition & Inter-Chamber Mechanisms' },
-    { code: 'D5', name: 'Domain 5: Bill Documentation & Impact Papers' },
+    { code: 'D5', name: 'Domain 5: Bill Documentation & Text Size Analytics' },
     { code: 'D6', name: 'Domain 6: Committee Scrutiny & Evidence' },
-    { code: 'D7', name: 'Domain 7: Decision-Point Amendments & Text Alteration' },
-    { code: 'D8', name: 'Domain 8: Temporal Divisions & Voting Coalitions' }
+    { code: 'D7', name: 'Domain 7: Macro Amendment Aggregates & Text Alteration' },
+    { code: 'D8', name: 'Domain 8: Temporal Divisions & Voting Coalitions' },
+    { code: 'D9', name: 'Domain 9: Micro Amendment Entity Records (CanonicalAmendment)' }
   ];
 
   const variables: VariableDef[] = [
@@ -45,22 +46,23 @@
     { name: 'date_final_outcome', domainCode: 'D3', domain: 'Domain 3: Progression & Control', type: 'Date (ISO 8601)', description: 'Date of final passage, defeat, or withdrawal.' },
     { name: 'duration_calendar_days', domainCode: 'D3', domain: 'Domain 3: Progression & Control', type: 'Integer', description: 'Calendar days elapsed from introduction to final outcome.' },
     { name: 'duration_sitting_days', domainCode: 'D3', domain: 'Domain 3: Progression & Control', type: 'Integer', description: 'Formal parliamentary sitting days elapsed.' },
+    { name: 'stage_milestones', domainCode: 'D3', domain: 'Domain 3: Progression & Control', type: 'Array of Objects', description: 'Stage-by-stage progression interval breakdown (stage_canonical, date_start, date_end, duration_sitting_days).' },
     { name: 'programme_motion_flag', domainCode: 'D3', domain: 'Domain 3: Progression & Control', type: 'Boolean', description: 'Indicates whether a formal timetabling or programme motion was imposed.' },
     { name: 'guillotine_invoked_flag', domainCode: 'D3', domain: 'Domain 3: Progression & Control', type: 'Boolean', description: 'Indicates whether a debate closure or guillotine motion was invoked.' },
     { name: 'emergency_procedure_flag', domainCode: 'D3', domain: 'Domain 3: Progression & Control', type: 'Boolean', description: 'Indicates whether the bill passed under fast-track or urgency procedures.' },
-    { name: 'prior_executive_consent_required_flag', domainCode: 'D3', domain: 'Domain 3: Progression & Control', type: 'Boolean', description: 'Indicates whether prior executive or Crown consent was required.' },
 
     // Domain 4
     { name: 'final_status', domainCode: 'D4', domain: 'Domain 4: Disposition & Ping-Pong', type: 'Enum', description: 'Terminal procedural status (ENACTED, DEFEATED, WITHDRAWN, LAPSED, PENDING, VETOED).' },
     { name: 'termination_mechanism', domainCode: 'D4', domain: 'Domain 4: Disposition & Ping-Pong', type: 'Enum', description: 'Specific procedural event terminating consideration (ENACTMENT, VOTE_DEFEAT, EXECUTIVE_WITHDRAWAL).' },
-    { name: 'head_of_state_promulgation_date', domainCode: 'D4', domain: 'Domain 4: Disposition & Ping-Pong', type: 'Date (ISO 8601)', description: 'Date of Royal Assent, Presidential Signature, or Promulgation. (Alias: royal_assent_date).' },
-    { name: 'chamber_ping_pong_count', domainCode: 'D4', domain: 'Domain 4: Disposition & Ping-Pong', type: 'Integer', description: 'For bicameral systems: number of amendment exchanges between chambers.' },
+    { name: 'head_of_state_promulgation_date', domainCode: 'D4', domain: 'Domain 4: Disposition & Ping-Pong', type: 'Date (ISO 8601)', description: 'Date of Royal Assent, Presidential Signature, or Promulgation.' },
 
     // Domain 5
     { name: 'doc_as_introduced_url', domainCode: 'D5', domain: 'Domain 5: Documentation & Impact', type: 'URL', description: 'Official text of the Bill as introduced.' },
     { name: 'doc_as_passed_url', domainCode: 'D5', domain: 'Domain 5: Documentation & Impact', type: 'URL', description: 'Official text of the Bill as enacted or passed.' },
-    { name: 'cap_topic_code', domainCode: 'D5', domain: 'Domain 5: Documentation & Impact', type: 'String', description: 'Policy topic code mapped to Comparative Agendas Project taxonomy.' },
-    { name: 'fiscal_impact_flag', domainCode: 'D5', domain: 'Domain 5: Documentation & Impact', type: 'Boolean', description: 'Flag indicating binding fiscal expenditure or taxation impact.' },
+    { name: 'word_count_introduced', domainCode: 'D5', domain: 'Domain 5: Documentation & Impact', type: 'Integer', description: 'Word count of official bill text at introduction.' },
+    { name: 'word_count_post_committee', domainCode: 'D5', domain: 'Domain 5: Documentation & Impact', type: 'Integer', description: 'Word count of bill text following committee stage amendments.' },
+    { name: 'word_count_enacted', domainCode: 'D5', domain: 'Domain 5: Documentation & Impact', type: 'Integer', description: 'Word count of final enacted Act.' },
+    { name: 'text_expansion_ratio', domainCode: 'D5', domain: 'Domain 5: Documentation & Impact', type: 'Float', description: 'Ratio of enacted text size vs introduced text size.' },
 
     // Domain 6
     { name: 'lead_committee_name', domainCode: 'D6', domain: 'Domain 6: Committee Scrutiny', type: 'String', description: 'Name of the primary scrutinising committee assigned.' },
@@ -69,14 +71,20 @@
     // Domain 7
     { name: 'amendments_tabled_count', domainCode: 'D7', domain: 'Domain 7: Amendments & Alteration', type: 'Integer', description: 'Total count of formal amendments tabled across all stages.' },
     { name: 'amendments_agreed_count', domainCode: 'D7', domain: 'Domain 7: Amendments & Alteration', type: 'Integer', description: 'Total count of amendments formally adopted into the bill text.' },
-    { name: 'amendments_non_executive_count', domainCode: 'D7', domain: 'Domain 7: Amendments & Alteration', type: 'Integer', description: 'Count of amendments tabled by non-executive members evaluated on tabling date.' },
     { name: 'committee_amendments_executive_acceptance_rate', domainCode: 'D7', domain: 'Domain 7: Amendments & Alteration', type: 'Float (0-1)', description: 'Proportion of non-executive committee amendments supported by government.' },
-    { name: 'bill_text_alteration_score', domainCode: 'D7', domain: 'Domain 7: Amendments & Alteration', type: 'Float (0-1)', description: 'Similarity metric comparing introduced vs enacted text.' },
 
     // Domain 8
     { name: 'divisions_count', domainCode: 'D8', domain: 'Domain 8: Divisions & Coalitions', type: 'Integer', description: 'Total recorded roll-call division votes held on the bill.' },
     { name: 'effective_majority_margin_at_event_date', domainCode: 'D8', domain: 'Domain 8: Divisions & Coalitions', type: 'Integer', description: 'Mathematical floor majority margin (Governing Seats - Opposition Seats) evaluated on vote date.' },
-    { name: 'voting_coalition_type', domainCode: 'D8', domain: 'Domain 8: Divisions & Coalitions', type: 'Enum', description: 'Voting alignment classification (UNANIMOUS, GOVERNMENT_PARTY_LINE, CROSS_PARTY_MAJORITY) evaluated on vote date.' }
+
+    // Domain 9: Granular Amendment Entity Records (CanonicalAmendment)
+    { name: 'canonical_amendment_id', domainCode: 'D9', domain: 'Domain 9: Micro Amendment Records', type: 'String (UUID/URN)', description: 'Unique persistent canonical amendment identifier (e.g. GB-SCT-S6-SPB13-AMD-042).' },
+    { name: 'local_amendment_number', domainCode: 'D9', domain: 'Domain 9: Micro Amendment Records', type: 'String', description: 'Native marshaled amendment number (e.g. Amd 42, LOD 104).' },
+    { name: 'sponsor_governance_role', domainCode: 'D9', domain: 'Domain 9: Micro Amendment Records', type: 'Enum', description: 'Amendment sponsor alignment (EXECUTIVE_MINISTER, GOVERNING_BACKBENCH, OPPOSITION_MEMBER, CROSS_PARTY).' },
+    { name: 'amendment_action_type', domainCode: 'D9', domain: 'Domain 9: Micro Amendment Records', type: 'Enum', description: 'Proposed text alteration type (INSERTION, DELETION, SUBSTITUTION, PROBING).' },
+    { name: 'government_position', domainCode: 'D9', domain: 'Domain 9: Micro Amendment Records', type: 'Enum', description: 'Executive stance during debate (SUPPORTED, OPPOSED, NEUTRAL_NO_STANCE, MINISTERIAL_OWN_AMENDMENT).' },
+    { name: 'disposition_canonical', domainCode: 'D9', domain: 'Domain 9: Micro Amendment Records', type: 'Enum', description: 'Final amendment disposition outcome (AGREED_TO, DEFEATED, WITHDRAWN, NOT_MOVED, FALLEN).' },
+    { name: 'party_dissent_rate_on_amendment', domainCode: 'D9', domain: 'Domain 9: Micro Amendment Records', type: 'Float (0-1)', description: 'Proportion of governing party members rebelling against frontbench whip on this amendment division.' }
   ];
 
   let filteredVariables = $derived(
@@ -92,7 +100,7 @@
 
 <svelte:head>
   <title>Master Canonical Variable Catalog — Comparative Legislative Data</title>
-  <meta name="description" content="Master Wishlist Catalog defining ~40 target quantitative research variables across 8 legislative domains." />
+  <meta name="description" content="Master Wishlist Catalog defining target quantitative research variables across 9 legislative domains (Dual-Entity Bill + Amendment)." />
   <script src="https://giscus.app/client.js"
         data-repo="comparative-legislative-data/comparative-legislative-data"
         data-category="General"
@@ -111,11 +119,11 @@
 <div class="container py-8">
   <div class="page-header">
     <div class="header-badge">
-      <Layers size={14} /> Wishlist Catalog v2.3.0
+      <Layers size={14} /> Wishlist Catalog v2.5.0 (Dual-Entity: Bill + Amendment)
     </div>
     <h1>Master Canonical Variable Catalog</h1>
     <p class="lead">
-      The universal target wishlist of quantitative variables sought by legislative scholars across 8 research domains.
+      The universal target wishlist of quantitative variables sought by legislative scholars across 9 research domains, modeling both <strong>CanonicalBill</strong> and <strong>CanonicalAmendment</strong> entities.
     </p>
 
     <!-- Provenance Architecture Clarification Banner -->

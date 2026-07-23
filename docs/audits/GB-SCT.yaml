@@ -1,6 +1,7 @@
 # Scottish Parliament (GB-SCT) Audit Blueprint
-# Comparative Legislative Data Platform — Version 2.4.0
+# Comparative Legislative Data Platform — Version 2.5.0
 # Scientific Classification: Definitive Constants, Closed Enums, Result-Dependent Dynamic, Binary Flags, Persistent Identifiers
+# Dual Entity Model: CanonicalBill (Macro Level) & CanonicalAmendment (Micro Level)
 
 assembly_metadata:
   jurisdiction_code: "GB-SCT"
@@ -47,27 +48,23 @@ native_data_sources:
     format: "CSV/Parquet"
     provenance_tier: "DERIVED_HUMAN_CODED"
 
-institutional_variables:
-  # --- CATEGORY 1: DEFINITIVE CONSTANTS ---
+# --- ENTITY 1: MACRO BILL LEVEL VARIABLES ---
+bill_entity_variables:
+  # Definitive Constants
   - key: "jurisdiction_code"
-    name: "Jurisdiction Code"
     scientific_category: "DEFINITIVE_CONSTANT"
     type: "String (ISO 3166-2)"
     provenance_tier: "NATIVE_DIRECT"
-    description: "Fixed assembly code (GB-SCT)."
     canonical_mapping: "jurisdiction_code"
 
   - key: "statutory_seats_total"
-    name: "Statutory Plenary Seats Total"
     scientific_category: "DEFINITIVE_CONSTANT"
     type: "Integer"
     provenance_tier: "NATIVE_DIRECT"
-    description: "Total statutory MSP seats in Holyrood (129)."
     canonical_mapping: "statutory_seats_total"
 
-  # --- CATEGORY 2: CLOSED-SET ENUMS (Exhaustive Choice Declarations) ---
+  # Closed-Set Enums
   - key: "government_type"
-    name: "Executive Arrangement Typology"
     scientific_category: "CLOSED_ENUM"
     allowed_values:
       - "SINGLE_PARTY_MAJORITY"
@@ -78,23 +75,19 @@ institutional_variables:
       - "COOPERATION_AGREEMENT" # e.g. Bute House Agreement
       - "CARETAKER_TECHNOCRATIC"
     provenance_tier: "LINKED_EXTERNAL_AUTHORITY"
-    description: "Classification of executive governance arrangement on event date T."
     canonical_mapping: "government_type"
 
   - key: "initiator_type"
-    name: "Bill Initiator / Sponsor Typology"
     scientific_category: "CLOSED_ENUM"
     allowed_values:
-      - "EXECUTIVE"            # Government Bill (Cabinet Secretary / Minister)
+      - "EXECUTIVE"            # Government Bill
       - "INDIVIDUAL_MEMBER"    # Member's Bill
       - "COMMITTEE"            # Committee Bill
       - "PRIVATE_ORGANISATION" # Private Bill / Hybrid Bill
     provenance_tier: "DERIVED_DETERMINISTIC"
-    description: "Sponsor classification for Holyrood bill."
     canonical_mapping: "initiator_type"
 
   - key: "final_status"
-    name: "Terminal Procedural Status"
     scientific_category: "CLOSED_ENUM"
     allowed_values:
       - "ENACTED"    # Passed Stage 3 and received Royal Assent
@@ -104,143 +97,158 @@ institutional_variables:
       - "PENDING"    # Currently undergoing consideration
       - "VETOED"     # Blocked by Section 35 Scotland Act Order
     provenance_tier: "NATIVE_DIRECT"
-    description: "Final procedural outcome of the bill."
     canonical_mapping: "final_status"
 
-  - key: "motion_type"
-    name: "Stage Division Motion Typology"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "STAGE_1_AGREEMENT"           # Motion to agree general principles
-      - "FINANCIAL_RESOLUTION"        # Motion under Rule 9.12
-      - "EMERGENCY_BILL_DESIGNATION"  # Motion under Rule 9.21
-      - "STAGE_2_AMENDMENT"           # Committee amendment vote
-      - "STAGE_3_PASSAGE"             # Final plenary passage vote
-    provenance_tier: "DERIVED_DETERMINISTIC"
-    description: "Procedural classification of roll-call division votes."
-    canonical_mapping: "motion_type"
-
-  # --- CATEGORY 3: RESULT-DEPENDENT DYNAMIC MEASURES ---
+  # Result-Dependent Dynamic Measures
   - key: "date_introduced"
-    name: "Bill Introduction Date"
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
     type: "Date (ISO 8601)"
     provenance_tier: "NATIVE_DIRECT"
-    description: "Date bill introduced to Scottish Parliament."
     canonical_mapping: "date_introduced"
 
   - key: "stage_1_lead_committee_report_date"
-    name: "Stage 1 Lead Committee Report Date"
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
     type: "Date (ISO 8601)"
     provenance_tier: "NATIVE_DIRECT"
-    description: "Date of publication of Stage 1 report by lead committee."
     canonical_mapping: "stage_milestones[0].date_end"
 
   - key: "bill_as_introduced_word_count"
-    name: "Bill Text Word Count at Introduction"
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
     type: "Integer"
     provenance_tier: "DERIVED_DETERMINISTIC"
-    description: "Word count of official PDF/HTML text as introduced."
     canonical_mapping: "word_count_introduced"
 
   - key: "bill_as_amended_stage_2_word_count"
-    name: "Bill Text Word Count Post-Stage 2"
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
     type: "Integer"
     provenance_tier: "DERIVED_DETERMINISTIC"
-    description: "Word count after committee stage amendments."
     canonical_mapping: "word_count_post_committee"
 
   - key: "bill_as_enacted_word_count"
-    name: "Bill Text Word Count Post-Royal Assent"
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
     type: "Integer"
     provenance_tier: "DERIVED_DETERMINISTIC"
-    description: "Word count of final enacted Act."
     canonical_mapping: "word_count_enacted"
 
   - key: "duration_sitting_days"
-    name: "Parliamentary Sitting Days Elapsed"
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
     type: "Integer"
     provenance_tier: "DERIVED_DETERMINISTIC"
-    description: "Sitting days elapsed from introduction to outcome."
     canonical_mapping: "duration_sitting_days"
 
   - key: "amendments_tabled_stage_2_count"
-    name: "Stage 2 Committee Amendments Tabled"
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
     type: "Integer"
     provenance_tier: "NATIVE_DIRECT"
-    description: "Count of formal amendments tabled for Stage 2 committee."
     canonical_mapping: "amendments_tabled_count"
 
-  - key: "non_executive_amendments_government_acceptance_rate"
-    name: "Non-Executive Committee Amendment Acceptance Rate"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Float (0.0 to 1.0)"
-    provenance_tier: "DERIVED_HUMAN_CODED"
-    description: "Proportion of opposition/backbench amendments accepted by Ministers (from PhD dataset)."
-    canonical_mapping: "committee_amendments_executive_acceptance_rate"
-
-  - key: "party_dissent_rate_at_event_date"
-    name: "Party Backbench Dissent Rate on Division Date T"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Float (0.0 to 1.0)"
-    provenance_tier: "DERIVED_DETERMINISTIC"
-    description: "Proportion of party MSPs voting against frontbench whip on vote date T."
-    canonical_mapping: "party_dissent_rate_at_event_date"
-
-  # --- CATEGORY 4: BINARY FLAGS ---
+  # Binary Flags
   - key: "financial_resolution_motion_flag"
-    name: "Financial Resolution Required (Rule 9.12)"
     scientific_category: "BINARY_FLAG"
     type: "Boolean"
     provenance_tier: "NATIVE_DIRECT"
-    description: "Indicates whether Financial Resolution motion was required before Stage 2."
     canonical_mapping: "financial_resolution_invoked_flag"
 
   - key: "emergency_bill_declaration_flag"
-    name: "Emergency Bill Designation (Rule 9.21)"
     scientific_category: "BINARY_FLAG"
     type: "Boolean"
     provenance_tier: "NATIVE_DIRECT"
-    description: "Indicates whether Bill was treated as Emergency Bill bypassing normal Stage 1 timelines."
     canonical_mapping: "emergency_procedure_flag"
 
   - key: "section_35_order_triggered_flag"
-    name: "Section 35 Scotland Act Order Triggered"
     scientific_category: "BINARY_FLAG"
     type: "Boolean"
     provenance_tier: "NATIVE_DIRECT"
-    description: "Indicates whether Secretary of State issued Section 35 Order blocking Royal Assent."
     canonical_mapping: "inter_governmental_veto_flag"
 
-  # --- CATEGORY 5: PERSISTENT IDENTIFIERS ---
-  - key: "initiator_member_id"
-    name: "Primary Sponsor MSP Persistent Identifier"
+# --- ENTITY 2: MICRO AMENDMENT LEVEL VARIABLES ---
+amendment_entity_variables:
+  - key: "local_amendment_number"
+    name: "Holyrood Marshalled List Amendment Number"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "String"
+    provenance_tier: "NATIVE_DIRECT"
+    description: "Native amendment number on Holyrood Marshalled List (e.g. Amd 42, LOD 104)."
+    canonical_mapping: "local_amendment_number"
+
+  - key: "stage_canonical"
+    name: "Stage of Consideration"
+    scientific_category: "CLOSED_ENUM"
+    allowed_values:
+      - "COMMITTEE_STAGE" # Holyrood Stage 2
+      - "REPORT_STAGE"
+      - "FINAL_PASSAGE"   # Holyrood Stage 3
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "stage_canonical"
+
+  - key: "sponsor_member_id"
+    name: "Lead MSP Sponsor ID"
     scientific_category: "PERSISTENT_IDENTIFIER"
     type: "String (Wikidata QID)"
     provenance_tier: "LINKED_EXTERNAL_AUTHORITY"
-    description: "Persistent Wikidata identifier for lead MSP sponsor."
-    canonical_mapping: "initiator_member_id"
+    canonical_mapping: "sponsor_member_id"
 
-  - key: "parlgov_cabinet_id"
-    name: "ParlGov Cabinet Identifier"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "String"
-    provenance_tier: "LINKED_EXTERNAL_AUTHORITY"
-    description: "Linked cabinet ID from ParlGov benchmark dataset."
-    canonical_mapping: "parlgov_cabinet_id"
+  - key: "sponsor_governance_role"
+    name: "Sponsor Institutional Alignment"
+    scientific_category: "CLOSED_ENUM"
+    allowed_values:
+      - "EXECUTIVE_MINISTER"
+      - "GOVERNING_BACKBENCH"
+      - "OPPOSITION_MEMBER"
+      - "CROSS_PARTY"
+    provenance_tier: "DERIVED_DETERMINISTIC"
+    canonical_mapping: "sponsor_governance_role"
 
-  # --- CATEGORY 6: INSTITUTIONAL HARD GAPS ---
-  - key: "committee_stage_2_informal_paper_gap"
-    name: "Committee Stage 2 Informal Working Paper Gap"
-    scientific_category: "INSTITUTIONAL_HARD_GAP"
-    type: "Null"
-    provenance_tier: "UNAVAILABLE_HARD_GAP"
-    hard_gap_reason: "RECORDED_BUT_UNDIGITIZED"
-    description: "Informal Stage 2 committee working notes are not published in open API format."
-    canonical_mapping: "null"
+  - key: "amendment_action_type"
+    name: "Text Alteration Action Type"
+    scientific_category: "CLOSED_ENUM"
+    allowed_values:
+      - "INSERTION"
+      - "DELETION"
+      - "SUBSTITUTION"
+      - "PROBING"
+    provenance_tier: "DERIVED_HUMAN_CODED"
+    description: "Classification of text alteration (ingested from PhD hand-coded dataset)."
+    canonical_mapping: "amendment_action_type"
+
+  - key: "government_position"
+    name: "Executive Stance during Debate"
+    scientific_category: "CLOSED_ENUM"
+    allowed_values:
+      - "SUPPORTED"
+      - "OPPOSED"
+      - "NEUTRAL_NO_STANCE"
+      - "MINISTERIAL_OWN_AMENDMENT"
+    provenance_tier: "DERIVED_HUMAN_CODED"
+    description: "Government position on opposition/backbench amendment."
+    canonical_mapping: "government_position"
+
+  - key: "disposition_canonical"
+    name: "Final Amendment Disposition"
+    scientific_category: "CLOSED_ENUM"
+    allowed_values:
+      - "AGREED_TO"
+      - "DEFEATED"
+      - "WITHDRAWN"
+      - "NOT_MOVED"
+      - "FALLEN"
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "disposition_canonical"
+
+  - key: "decision_mechanism"
+    name: "Decision Mechanism"
+    scientific_category: "CLOSED_ENUM"
+    allowed_values:
+      - "VOICE_VOTE_UNANIMOUS"
+      - "DIVISION_ROLL_CALL"
+      - "WITHDRAWN_WITHOUT_VOTE"
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "decision_mechanism"
+
+  - key: "party_dissent_rate_on_amendment"
+    name: "Governing MSP Rebellion Rate on Amendment Division"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Float (0.0 to 1.0)"
+    provenance_tier: "DERIVED_DETERMINISTIC"
+    description: "Proportion of governing party members voting against frontbench whip on this amendment."
+    canonical_mapping: "party_dissent_rate_on_amendment"

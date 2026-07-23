@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Globe, Database, BookOpen, ShieldCheck, ArrowRight, Layers, FileCode2, CheckCircle2, Mail, Sparkles, AlertTriangle } from 'lucide-svelte';
+  import { Globe, Database, BookOpen, ShieldCheck, ArrowRight, Layers, FileCode2, CheckCircle2, Mail, Sparkles, AlertTriangle, Code2 } from 'lucide-svelte';
 
   const assemblies = [
     { code: 'GB-UKP', name: 'UK Parliament', location: 'Westminster', type: 'Sovereign Bicameral', status: 'In Audit', tier: 'Phase 0' },
@@ -46,8 +46,8 @@
 <section class="hero-section">
   <div class="container hero-content">
     <div class="hero-badge">
-      <span class="badge badge-bicd">Academic Consultation v2.3.0</span>
-      <span class="hero-badge-text">6-Tier Data Availability & Provenance Engine</span>
+      <span class="badge badge-bicd">Academic Consultation v2.4.0</span>
+      <span class="hero-badge-text">Dual-Layer Data Engine & 6-Tier Provenance</span>
     </div>
 
     <h1 class="hero-title">
@@ -57,7 +57,7 @@
 
     <p class="hero-subtitle">
       Standardising, mirroring, and auditing quantitative legislative data across international parliamentary and presidential assemblies. 
-      Built around a 6-tier provenance spectrum and point-in-time decision tracking.
+      Built around a <strong>Dual-Layer Data Architecture</strong> and point-in-time decision tracking.
     </p>
 
     <div class="hero-cta">
@@ -75,12 +75,12 @@
     <!-- Stats Bar -->
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-num">8</div>
-        <div class="stat-label">Research Domains</div>
+        <div class="stat-num">2</div>
+        <div class="stat-label">Data Layers (Native & Canonical)</div>
       </div>
       <div class="stat-card">
-        <div class="stat-num">~40</div>
-        <div class="stat-label">Canonical Target Variables</div>
+        <div class="stat-num">8</div>
+        <div class="stat-label">Research Domains</div>
       </div>
       <div class="stat-card">
         <div class="stat-num">6</div>
@@ -89,6 +89,44 @@
       <div class="stat-card">
         <div class="stat-num">100%</div>
         <div class="stat-label">Open Access Research</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Dual-Layer Architecture Section -->
+<section class="section section-dual-layer">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">The Dual-Layer Architecture: "Riding Two Horses"</h2>
+      <p class="section-sub">
+        Serving single-country legislative specialists with 100% native institutional resolution while empowering cross-national quantitative political scientists with harmonised comparative metrics.
+      </p>
+    </div>
+
+    <div class="layers-grid">
+      <div class="layer-card layer-native">
+        <div class="layer-badge">Layer A</div>
+        <h3>High-Resolution Native Institutional Layer</h3>
+        <p class="layer-desc">Preserves 100% of raw assembly-specific fields, Hansard timestamps, document word counts, motion texts, and roll-call votes without stripping native detail.</p>
+        <ul class="layer-list">
+          <li><CheckCircle2 size={15} color="#22c55e" /> Raw Hansard API payloads & official publication links</li>
+          <li><CheckCircle2 size={15} color="#22c55e" /> Assembly-specific stage codes (e.g. Holyrood Stage 1/2/3)</li>
+          <li><CheckCircle2 size={15} color="#22c55e" /> Native motion titles (Financial Resolutions, Stage 1 Reports)</li>
+          <li><CheckCircle2 size={15} color="#22c55e" /> Member-level roll-call vote records & party status at date T</li>
+        </ul>
+      </div>
+
+      <div class="layer-card layer-canonical">
+        <div class="layer-badge">Layer B</div>
+        <h3>Harmonised Canonical Comparative Layer</h3>
+        <p class="layer-desc">Abstracts quantitative metrics across 8 research domains, evaluating every variable against our 6-tier provenance spectrum for comparative modeling.</p>
+        <ul class="layer-list">
+          <li><CheckCircle2 size={15} color="#38bdf8" /> Standardised stage progression milestones & sitting day intervals</li>
+          <li><CheckCircle2 size={15} color="#38bdf8" /> Bill text word counts (`introduced`, `post_committee`, `enacted`)</li>
+          <li><CheckCircle2 size={15} color="#38bdf8" /> Point-in-time decision-point floor majority margins</li>
+          <li><CheckCircle2 size={15} color="#38bdf8" /> Party unity, dissent rates & cross-party coalition typologies</li>
+        </ul>
       </div>
     </div>
   </div>
@@ -155,7 +193,7 @@
         <h2>Call for External Academic Review Reports</h2>
         <p>
           We invite legislative scholars, political scientists, and data engineering experts to review our 
-          <strong>Master Canonical Variable Catalog</strong> and <strong>6-Tier Provenance Model</strong>. 
+          <strong>Dual-Layer Architecture</strong>, <strong>Master Canonical Variable Catalog</strong>, and <strong>6-Tier Provenance Model</strong>. 
           Read our self-contained briefing document and submit a written evaluation report.
         </p>
         <div class="callout-actions">
@@ -332,11 +370,16 @@
     font-size: 0.775rem;
     color: var(--text-muted);
     margin-top: 0.25rem;
+    text-align: center;
   }
 
   .section {
     padding: 4rem 0;
     border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .section-dual-layer {
+    background: rgba(15, 23, 42, 0.4);
   }
 
   .section-header {
@@ -356,6 +399,69 @@
   .section-sub {
     font-size: 1rem;
     color: var(--text-muted);
+  }
+
+  .layers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .layer-card {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .layer-native { border-top: 3px solid #22c55e; }
+  .layer-canonical { border-top: 3px solid #38bdf8; }
+
+  .layer-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.2rem 0.6rem;
+    border-radius: 0.25rem;
+    margin-bottom: 0.75rem;
+
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+  }
+
+  .layer-card h3 {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+  }
+
+  .layer-desc {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 1.25rem;
+  }
+
+  .layer-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .layer-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-main);
   }
 
   .typology-display {
@@ -520,5 +626,6 @@
   @media (max-width: 768px) {
     .hero-title { font-size: 2rem; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .layers-grid { grid-template-columns: 1fr; }
   }
 </style>

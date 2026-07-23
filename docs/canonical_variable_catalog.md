@@ -1,172 +1,126 @@
 # Master Canonical Variable Catalog
 
 **Comparative Legislative Data Platform**  
-*Canonical Target Wishlist & Research Variable Standard*  
-*Version 2.3.0 (Master Wishlist & 6-Tier Provenance Spectrum Specification)*
+**Version:** 2.4.0  
+**Specification:** Dual-Layer Architecture & Master Variable Dictionary
 
 ---
 
-## 1. Overview & Conceptual Scope
+## 1. Dual-Layer Architecture & Methodology
 
-The **Master Canonical Variable Catalog** defines the target wishlist of quantitative variables sought by legislative scholars, political scientists, and policy analysts studying bills, legislative productivity, executive dominance, procedural control, voting coalitions, and legislative alteration across global parliamentary and presidential assemblies.
-
-The Wishlist represents the **target schema** of variables we seek to measure. Every variable value in this catalog is instantiated and evaluated per parliament, per session, and **at every specific decision point** (bill introduction, committee stage amendment, marshalled list vote, division, and final passage) against our **6-Tier Data Availability & Provenance Spectrum**:
+The platform operates on a **Dual-Layer Data Architecture** designed to serve both single-country legislative specialists and cross-national quantitative political scientists:
 
 ```
- MASTER CANONICAL VARIABLE WISHLIST (Target Dictionary of Quantitative Variables)
- └─ The ideal set of variables sought by comparative legislative researchers.
-                                    │
-                  EVALUATED PER PARLIAMENT / DECISION-POINT
-                                    │
-  ┌─────────────────────────────────┴─────────────────────────────────┐
-  │         THE 6-TIER DATA AVAILABILITY & PROVENANCE SPECTRUM        │
-  └─────────────────────────────────┬─────────────────────────────────┘
-                                    │
-    ┌────────────────┬──────────────┼──────────────┬──────────────────┬──────────────────┐
-    ▼                ▼              ▼              ▼                  ▼                  ▼
-┌──────────────┐┌──────────────┐┌──────────────┐┌──────────────┐   ┌──────────────┐   ┌──────────────┐
-│ 1. NATIVE    ││ 2. DERIVED   ││ 3. DERIVED   ││ 4. DERIVED   │   │ 5. LINKED    │   │ 6. HARD GAP  │
-│    DIRECT    ││ DETERMINISTIC││  HUMAN-CODED ││ SYNTHETIC-AI │   │ EXTERNAL     │   │ UNAVAILABLE  │
-├──────────────┤├──────────────┤├──────────────┤├──────────────┤   ├──────────────┤   ├──────────────┤
-│ Served out-  ││ Rule-based   ││ Expert hand- ││ NLP/LLM text │   │ Peer-        ││ Missing,     │
-│ of-the-box   ││ joins, date  ││ coding & PhD ││ extractions  │   │ reviewed     ││ unrecorded,  │
-│ in API/feed  ││ math & roster││ dataset      ││ with AI      │   │ datasets     ││ or non-      │
-│ (JSON/XML).  ││ lookups.     ││ ingestion    ││ Validation   │   │ (ParlGov,    ││ digitized    │
-│              ││              ││ (Gold).      ││ Lifecycle.   │   │ CAP, QID).   ││ (with reason)│
-└──────────────┘└──────────────┘└──────────────┘└──────────────┘   └──────────────┘└──────────────┘
+                  ┌─────────────────────────────────────────────────────────┐
+                  │   HIGH-RESOLUTION NATIVE INSTITUTIONAL LAYER (Layer A) │
+                  │  └─ 100% granular assembly data, raw Hansard feeds,      │
+                  │     native stage codes, motion texts, word counts,      │
+                  │     and individual roll-call vote choice records.       │
+                  └────────────────────────────┬────────────────────────────┘
+                                               │
+                                MAPPED & EVALUATED PER DECISION POINT (T)
+                                               │
+                                               ▼
+                  ┌─────────────────────────────────────────────────────────┐
+                  │    HARMONISED CANONICAL COMPARATIVE LAYER (Layer B)    │
+                  │  └─ Abstract quantitative research metrics mapped       │
+                  │     against the 6-Tier Data Availability Spectrum.      │
+                  └─────────────────────────────────────────────────────────┘
 ```
 
-1. **`NATIVE_DIRECT`:** Served out-of-the-box in host assembly API/feed (JSON/XML).
-2. **`DERIVED_DETERMINISTIC`:** Generated deterministically via simple pipeline joins, lookup tables, or date arithmetic.
-3. **`DERIVED_HUMAN_CODED`:** Manually hand-coded by human researchers, domain experts, or PhD coders (serving as ground truth).
-4. **`DERIVED_SYNTHETIC_AI`:** Synthesized using NLP/LLM text processing, tagged with an explicit **AI Validation Lifecycle Status** (`UNVERIFIED_DRAFT`, `SAMPLE_VALIDATED`, `GOLD_BENCHMARKED`).
-5. **`LINKED_EXTERNAL_AUTHORITY`:** Linked deterministically from peer-reviewed external benchmark databases (e.g. ParlGov, Wikidata, Comparative Agendas Project - CAP, Manifesto Project - MARPOR).
-6. **`UNAVAILABLE_HARD_GAP`:** Missing or unrecorded data, categorized by sub-reason (`NOT_RECORDED_BY_ASSEMBLY`, `RECORDED_BUT_UNDIGITIZED`, `RESTRICTED_ACCESS`, `COST_PROHIBITIVE`).
+* **Layer A (Native Institutional Layer):** Preserves 100% of the raw, assembly-specific data served by host APIs, parliamentary feeds, and academic PhD datasets (`payload.native`). No native detail is ever stripped or distorted.
+* **Layer B (Canonical Comparative Layer):** Standardises quantitative variables across legislatures (`payload.canonical`) into 8 core research domains, evaluating each variable value against the **6-Tier Data Availability & Provenance Spectrum** (`NATIVE_DIRECT`, `DERIVED_DETERMINISTIC`, `DERIVED_HUMAN_CODED`, `DERIVED_SYNTHETIC_AI`, `LINKED_EXTERNAL_AUTHORITY`, `UNAVAILABLE_HARD_GAP`).
 
 ---
 
-## 2. Research Domain Catalogs
+## 2. Master Wishlist Variable Catalog by Domain
 
 ### Domain 1: Assembly, Electoral & Executive Context
-*Macro constitutional, electoral, chamber-level structural metrics, and government formation typologies.*
-
-| Variable Name | Type / Enum Values | Expected Primary Provenance | Description |
-| :--- | :--- | :--- | :--- |
-| `jurisdiction_code` | `String` (ISO 3166-2 style) | `NATIVE_DIRECT` | Unique assembly identifier (e.g. `GB-UKP`, `GB-SCT`, `DE-BT`, `US-HR`). |
-| `parliament_term` | `String` | `NATIVE_DIRECT` | Electoral legislative period (e.g. `Session 6`, `58th Parliament`). |
-| `session_start_date` | `Date` (ISO 8601) | `NATIVE_DIRECT` | Official opening date of the legislative session/term. |
-| `session_end_date` | `Date` (ISO 8601) | `NATIVE_DIRECT` | Official closing or dissolution date of the session/term. |
-| `chamber_type` | `Enum` (`SOVEREIGN_BICAMERAL`, `DEVOLVED_UNICAMERAL`, `FEDERAL_UPPER`, `FEDERAL_LOWER`, `CONCURRENT_ELECTED`) | `DERIVED_DETERMINISTIC` | Classification of the assembly's constitutional chamber structure. |
-| `government_type` | `Enum` (`SINGLE_PARTY_MAJORITY`, `SINGLE_PARTY_MINORITY`, `FORMAL_COALITION_MAJORITY`, `FORMAL_COALITION_MINORITY`, `CONFIDENCE_AND_SUPPLY`, `COOPERATION_AGREEMENT`, `CARETAKER_TECHNOCRATIC`) | `LINKED_EXTERNAL_AUTHORITY` | Executive arrangement typology (e.g. `COOPERATION_AGREEMENT` for SNP/Green Bute House Agreement). |
-| `parlgov_cabinet_id` | `Integer` / `String` | `LINKED_EXTERNAL_AUTHORITY` | Canonical cabinet identifier linked from the ParlGov database. |
-| `total_seats` | `Integer` | `DERIVED_DETERMINISTIC` | Total voting seats configured for the assembly session. |
-
----
+* **`jurisdiction_code`** (String, ISO 3166-2): Unique assembly identifier (e.g. `GB-UKP`, `GB-SCT`, `DE-BT`, `US-HR`).
+* **`parliament_term`** (String): Macro electoral legislative period (e.g. `Session 6`, `58th Parliament`).
+* **`chamber_type`** (Enum): Constitutional chamber structure (`SOVEREIGN_BICAMERAL`, `DEVOLVED_UNICAMERAL`, `FEDERAL_UPPER`, etc.).
+* **`government_type`** (Enum): Executive arrangement typology (`SINGLE_PARTY_MAJORITY`, `SINGLE_PARTY_MINORITY`, `FORMAL_COALITION_MAJORITY`, `FORMAL_COALITION_MINORITY`, `CONFIDENCE_AND_SUPPLY`, `COOPERATION_AGREEMENT`, `CARETAKER_TECHNOCRATIC`).
+* **`parlgov_cabinet_id`** (String): Canonical cabinet identifier linked from ParlGov authority dataset.
 
 ### Domain 2: Bill Identification, Sponsorship & Temporal Origin
-*Core bill metadata, sponsor identification, Wikidata links, and point-in-time party governance alignment.*
+* **`local_bill_id`** (String): Native reference code assigned by host legislature (e.g. `SP Bill 13`, `H.R. 815`).
+* **`title_canonical`** (String): Standardized English short title.
+* **`initiator_type`** (Enum): Globally neutral sponsor type (`EXECUTIVE`, `INDIVIDUAL_MEMBER`, `GROUP_MEMBERS`, `COMMITTEE`).
+* **`initiator_party_governance_role`** (Enum): Primary sponsor alignment (`GOVERNING_PARTY`, `OPPOSITION_PARTY`, `CROSS_PARTY`) evaluated dynamically on introduction date $T_{\text{Intro}}$.
+* **`initiator_member_id`** (String, Wikidata QID): Disambiguated persistent identifier for primary sponsor MP/MSP.
 
-| Variable Name | Type / Enum Values | Expected Primary Provenance | Description |
-| :--- | :--- | :--- | :--- |
-| `local_bill_id` | `String` | `NATIVE_DIRECT` | Host legislature's native reference code (e.g. `SP Bill 13`, `H.R. 815`). |
-| `title_canonical` | `String` | `NATIVE_DIRECT` | Standardized English short title of the bill. |
-| `title_native` | `String` | `NATIVE_DIRECT` | Official title in the native language of the host jurisdiction. |
-| `initiator_type` | `Enum` (`EXECUTIVE`, `INDIVIDUAL_MEMBER`, `GROUP_MEMBERS`, `COMMITTEE`, `PRIVATE_HYBRID`) | `DERIVED_DETERMINISTIC` | Globally neutral classification of the bill's initiating entity. |
-| `initiator_party_governance_role` | `Enum` (`GOVERNING_PARTY`, `OPPOSITION_PARTY`, `CROSS_PARTY`, `NON_PARTISAN`) | `DERIVED_DETERMINISTIC` | Primary sponsor's alignment relative to executive cabinet control **on introduction date**. |
-| `initiator_member_id` | `String` (Wikidata QID / Native ID) | `LINKED_EXTERNAL_AUTHORITY` | Disambiguated persistent identifier for the primary sponsor MP/MSP. |
-| `co_sponsorship_count` | `Integer` | `NATIVE_DIRECT` | Total count of formal co-sponsors attached to the bill. |
-| `cross_party_sponsorship_count` | `Integer` | `DERIVED_DETERMINISTIC` | Count of co-sponsors belonging to opposition parties on introduction date. |
-
----
-
-### Domain 3: Procedural Progression, Timelines & Procedural Control
-*Stage-by-stage progression dates, fast-tracking flags, closure/guillotine motions, and prior consent.*
-
-| Variable Name | Type / Enum Values | Expected Primary Provenance | Description |
-| :--- | :--- | :--- | :--- |
-| `date_introduced` | `Date` (ISO 8601) | `NATIVE_DIRECT` | Formal introduction date of the bill in the chamber. |
-| `date_final_outcome` | `Date` (ISO 8601) | `NATIVE_DIRECT` | Date of final passage, defeat, or withdrawal. |
-| `duration_calendar_days` | `Integer` | `DERIVED_DETERMINISTIC` | Calendar days elapsed from introduction to final outcome. |
-| `duration_sitting_days` | `Integer` | `DERIVED_DETERMINISTIC` | Formal parliamentary sitting days elapsed during consideration. |
-| `term_interruption_flag` | `Boolean` | `DERIVED_DETERMINISTIC` | Indicates whether consideration spanned a recess, prorogation, or election. |
-| `programme_motion_flag` | `Boolean` | `DERIVED_DETERMINISTIC` | Indicates whether a formal timetable/programme motion was imposed. |
-| `guillotine_invoked_flag` | `Boolean` | `DERIVED_DETERMINISTIC` | Indicates whether a closure or guillotine motion was invoked to truncate debate. |
-| `debate_time_allocated_minutes` | `Integer` | `DERIVED_HUMAN_CODED` / `DERIVED_SYNTHETIC_AI` | Total minutes allocated for plenary debate under timetable rules. |
-| `emergency_procedure_flag` | `Boolean` | `NATIVE_DIRECT` / `DERIVED_DETERMINISTIC` | Indicates whether the bill passed under fast-track or urgency procedures. |
-| `stages_compressed_count` | `Integer` | `DERIVED_DETERMINISTIC` | Number of standard procedural stages skipped or combined due to fast-tracking. |
-| `prior_executive_consent_required_flag` | `Boolean` | `DERIVED_DETERMINISTIC` / `DERIVED_HUMAN_CODED` | Indicates whether prior executive/Crown consent was required before progression. |
-| `prior_executive_consent_granted_date` | `Date` (ISO 8601) | `DERIVED_DETERMINISTIC` / `DERIVED_HUMAN_CODED` | Date prior executive/Crown consent was formally signified. |
-| `stage_milestones` | `Array[Object]` | `NATIVE_DIRECT` | Chronological array of stage events (`stage_canonical`, `date_stage`, `url`). |
-
----
+### Domain 3: Progression, Timelines & Stage Milestones
+* **`date_introduced`** (Date, ISO 8601): Formal introduction date of the bill.
+* **`date_final_outcome`** (Date, ISO 8601): Date of final passage, defeat, or withdrawal.
+* **`duration_calendar_days`** (Integer): Calendar days elapsed from introduction to final outcome.
+* **`duration_sitting_days`** (Integer): Formal parliamentary sitting days elapsed.
+* **`stage_milestones`** (Array of Objects): Stage-by-stage progression interval breakdown:
+  ```json
+  [
+    {
+      "stage_sequence": 1,
+      "stage_canonical": "FIRST_READING",
+      "stage_raw": "Stage 1 (General Principles & Lead Committee Report)",
+      "date_start": "2022-03-03",
+      "date_end": "2022-10-06",
+      "duration_sitting_days": 24
+    },
+    {
+      "stage_sequence": 2,
+      "stage_canonical": "COMMITTEE_STAGE",
+      "stage_raw": "Stage 2 (Committee Amendments)",
+      "date_start": "2022-10-07",
+      "date_end": "2022-11-15",
+      "duration_sitting_days": 18
+    },
+    {
+      "stage_sequence": 3,
+      "stage_canonical": "FINAL_PASSAGE",
+      "stage_raw": "Stage 3 (Plenary Consideration & Final Vote)",
+      "date_start": "2022-12-20",
+      "date_end": "2022-12-22",
+      "duration_sitting_days": 3
+    }
+  ]
+  ```
+* **`programme_motion_flag`** (Boolean): Indicates whether a formal timetabling or programme motion was imposed.
+* **`guillotine_invoked_flag`** (Boolean): Indicates whether a debate closure or guillotine motion was invoked.
+* **`emergency_procedure_flag`** (Boolean): Indicates whether the bill passed under fast-track or urgency procedures.
+* **`prior_executive_consent_required_flag`** (Boolean): Indicates whether prior executive or Crown consent was required.
 
 ### Domain 4: Final Disposition & Inter-Chamber Mechanisms
-*Terminal disposition outcomes, head of state promulgation, and bicameral ping-pong metrics.*
+* **`final_status`** (Enum): Terminal procedural status (`ENACTED`, `DEFEATED`, `WITHDRAWN`, `LAPSED`, `PENDING`, `VETOED`).
+* **`termination_mechanism`** (Enum): Specific procedural event terminating consideration (`ENACTMENT`, `VOTE_DEFEAT`, `EXECUTIVE_WITHDRAWAL`).
+* **`head_of_state_promulgation_date`** (Date, ISO 8601): Date of Royal Assent, Presidential Signature, or Promulgation. (Alias: `royal_assent_date`).
+* **`chamber_ping_pong_count`** (Integer): For bicameral systems: number of amendment exchanges between chambers.
 
-| Variable Name | Type / Enum Values | Expected Primary Provenance | Description |
-| :--- | :--- | :--- | :--- |
-| `final_status` | `Enum` (`ENACTED`, `DEFEATED`, `WITHDRAWN`, `LAPSED`, `PENDING`, `VETOED`) | `NATIVE_DIRECT` | Terminal procedural status of the bill. |
-| `termination_mechanism` | `Enum` (`ENACTMENT`, `VOTE_DEFEAT`, `EXECUTIVE_WITHDRAWAL`, `SESSION_EXPIRY`, `EXECUTIVE_VETO`, `CONSTITUTIONAL_CHALLENGE`) | `DERIVED_DETERMINISTIC` | Specific procedural event that terminated consideration. |
-| `head_of_state_promulgation_date` | `Date` (ISO 8601) | `NATIVE_DIRECT` | Date of formal Royal Assent, Presidential Signature, or Promulgation. *(Alias: `royal_assent_date`)*. |
-| `chamber_ping_pong_count` | `Integer` | `DERIVED_DETERMINISTIC` | For bicameral systems: number of exchanges of amendments between chambers. |
-| `chamber_disagreement_flag` | `Boolean` | `DERIVED_DETERMINISTIC` | Indicates whether final passage required resolving formal inter-chamber disagreement. |
+### Domain 5: Bill Documentation & Text Size Analytics
+* **`doc_as_introduced_url`** (URL): Official text of the Bill as introduced.
+* **`doc_as_passed_url`** (URL): Official text of the Bill as enacted or passed.
+* **`word_count_introduced`** (Integer): Word count of official bill text at introduction.
+* **`word_count_post_committee`** (Integer): Word count of bill text following committee stage amendments.
+* **`word_count_enacted`** (Integer): Word count of final enacted statute.
+* **`text_expansion_ratio`** (Float): Ratio of enacted text size vs introduced text size ($\frac{\text{word\_count\_enacted}}{\text{word\_count\_introduced}}$).
+* **`cap_topic_code`** (String): Policy topic code mapped to Comparative Agendas Project taxonomy.
+* **`fiscal_impact_flag`** (Boolean): Flag indicating binding fiscal expenditure or taxation impact.
 
----
+### Domain 6: Committee Scrutiny & Evidence
+* **`lead_committee_name`** (String): Name of the primary scrutinising committee assigned.
+* **`committee_evidence_submissions_count`** (Integer): Total published written evidence submissions received.
 
-### Domain 5: Bill Documentation & Parliamentary Papers Chain
-*Full chain of official parliamentary publications, CAP topic codes, and impact assessments.*
+### Domain 7: Decision-Point Amendments & Text Alteration
+* **`amendments_tabled_count`** (Integer): Total count of formal amendments tabled across all stages.
+* **`amendments_agreed_count`** (Integer): Total count of amendments formally adopted into the bill text.
+* **`amendments_non_executive_count`** (Integer): Count of amendments tabled by non-executive members evaluated on tabling date.
+* **`committee_amendments_executive_acceptance_rate`** (Float 0-1): Proportion of non-executive committee amendments supported by government.
+* **`bill_text_alteration_score`** (Float 0-1): Similarity metric comparing introduced vs enacted text.
 
-| Variable Name | Type / Enum Values | Expected Primary Provenance | Description |
-| :--- | :--- | :--- | :--- |
-| `doc_as_introduced_url` | `String` (URL) | `NATIVE_DIRECT` | Official text of the Bill as introduced. |
-| `doc_as_passed_url` | `String` (URL) | `NATIVE_DIRECT` | Official text of the Bill as enacted or passed. |
-| `doc_policy_memorandum_url` | `String` (URL) | `NATIVE_DIRECT` | Official policy memorandum explaining the bill's intent. |
-| `doc_financial_memorandum_url` | `String` (URL) | `NATIVE_DIRECT` | Financial memorandum or budget impact assessment paper. |
-| `doc_explanatory_notes_url` | `String` (URL) | `NATIVE_DIRECT` | Official explanatory notes accompanying the bill text. |
-| `cap_topic_code` | `Integer` / `String` | `LINKED_EXTERNAL_AUTHORITY` / `DERIVED_SYNTHETIC_AI` | Policy topic classification code mapped to Comparative Agendas Project taxonomy. |
-| `fiscal_impact_flag` | `Boolean` | `DERIVED_HUMAN_CODED` / `DERIVED_SYNTHETIC_AI` | Flag indicating binding fiscal expenditure or taxation impact. |
-| `regulatory_impact_flag` | `Boolean` | `DERIVED_HUMAN_CODED` / `DERIVED_SYNTHETIC_AI` | Flag indicating binding regulatory compliance burdens. |
-
----
-
-### Domain 6: Committee Proceedings & Evidence
-*Committee scrutiny, evidence submissions, and hearing transparency.*
-
-| Variable Name | Type / Enum Values | Expected Primary Provenance | Description |
-| :--- | :--- | :--- | :--- |
-| `lead_committee_name` | `String` | `NATIVE_DIRECT` | Name of the primary scrutinising committee assigned to the bill. |
-| `committee_referral_date` | `Date` (ISO 8601) | `NATIVE_DIRECT` | Formal date the bill was referred to committee. |
-| `committee_report_date` | `Date` (ISO 8601) | `NATIVE_DIRECT` | Date committee reported its findings back to plenary. |
-| `committee_evidence_submissions_count` | `Integer` | `NATIVE_DIRECT` / `DERIVED_DETERMINISTIC` | Total published written evidence submissions received by committee. |
-| `committee_public_hearings_count` | `Integer` | `DERIVED_HUMAN_CODED` / `DERIVED_SYNTHETIC_AI` | Number of oral evidence hearing sessions held on the bill. |
-
----
-
-### Domain 7: Decision-Point Amendments & Legislative Alteration
-*Decision-point amendment activity, committee vs floor disposition, temporal non-executive sponsorship, and text alteration scores.*
-
-| Variable Name | Type / Enum Values | Expected Primary Provenance | Description |
-| :--- | :--- | :--- | :--- |
-| `amendments_tabled_count` | `Integer` | `NATIVE_DIRECT` | Total count of formal amendments tabled across all stages. |
-| `amendments_agreed_count` | `Integer` | `NATIVE_DIRECT` | Total count of amendments formally adopted into the bill text. |
-| `amendments_rejected_count` | `Integer` | `NATIVE_DIRECT` | Total count of tabled amendments defeated on a vote. |
-| `amendments_withdrawn_count` | `Integer` | `NATIVE_DIRECT` | Total count of amendments withdrawn prior to a vote. |
-| `amendments_executive_count` | `Integer` | `DERIVED_DETERMINISTIC` | Count of amendments tabled by government ministers evaluated **on date of tabling**. |
-| `amendments_non_executive_count` | `Integer` | `DERIVED_DETERMINISTIC` | Count of amendments tabled by non-executive members evaluated **on date of tabling**. |
-| `committee_amendments_tabled_count` | `Integer` | `NATIVE_DIRECT` / `DERIVED_DETERMINISTIC` | Count of amendments tabled specifically at committee stage. |
-| `committee_amendments_executive_acceptance_rate` | `Float` (0.0 to 1.0) | `DERIVED_HUMAN_CODED` / `DERIVED_DETERMINISTIC` | Proportion of non-executive committee amendments supported by government. |
-| `bill_text_alteration_score` | `Float` (0.0 to 1.0) | `DERIVED_DETERMINISTIC` / `DERIVED_SYNTHETIC_AI` | Textual similarity metric (Cosine/Levenshtein) comparing introduced text vs enacted text. |
-
----
-
-### Domain 8: Temporal Divisions, Floor Arithmetic & Voting Coalitions
-*Roll-call voting, point-in-time seat arithmetic on division dates, party rebellion flags, and debate records.*
-
-| Variable Name | Type / Enum Values | Expected Primary Provenance | Description |
-| :--- | :--- | :--- | :--- |
-| `divisions_count` | `Integer` | `NATIVE_DIRECT` | Total recorded roll-call division votes held on the bill. |
-| `effective_majority_margin_at_event_date` | `Integer` | `DERIVED_DETERMINISTIC` | Mathematical floor majority margin ($\text{Governing Seats} - \text{Opposition Seats}$) **on the exact date of the vote**. |
-| `governing_seats_at_event_date` | `Integer` | `DERIVED_DETERMINISTIC` | Active voting seats held by executive coalition **on the exact date of the vote**. |
-| `rebellions_flag` | `Boolean` | `DERIVED_DETERMINISTIC` | Presence of party revolts ($\ge 5\%$ party defiance) evaluated against member party status **on the vote date**. |
-| `voting_coalition_type` | `Enum` (`UNANIMOUS`, `GOVERNMENT_PARTY_LINE`, `CROSS_PARTY_MAJORITY`, `MINORITY_PASSED`, `OPPOSITION_DEFEAT`) | `DERIVED_DETERMINISTIC` / `DERIVED_HUMAN_CODED` | Voting alignment classification evaluated against floor arithmetic **on the vote date**. |
-| `plenary_record_urls` | `Array[String]` (URLs) | `NATIVE_DIRECT` | Direct links to official plenary debate transcripts/Hansard. *(Alias: `hansard_debate_urls`)*. |
+### Domain 8: Temporal Divisions, Motion Types & Voting Coalitions
+* **`divisions_count`** (Integer): Total recorded roll-call division votes held on the bill.
+* **`division_motions`** (Array of Objects): Detailed breakdown of key stage motion votes:
+  * `motion_type`: `STAGE_1_AGREEMENT`, `FINANCIAL_RESOLUTION`, `EMERGENCY_BILL_DESIGNATION`, `STAGE_2_AMENDMENT`, `STAGE_3_PASSAGE`
+  * `date`: $T_{\text{Division}}$
+  * `aye_votes`, `no_votes`, `abstain_votes`
+* **`effective_majority_margin_at_event_date`** (Integer): Floor majority margin ($\text{Governing Seats}_T - \text{Opposition Seats}_T$) evaluated on division date $T$.
+* **`party_dissent_rate_at_event_date`** (Float 0-1): Proportion of party members voting against their party majority on division date $T$.
+* **`voting_coalition_type`** (Enum): Voting alignment classification (`UNANIMOUS`, `GOVERNMENT_PARTY_LINE`, `CROSS_PARTY_MAJORITY`) evaluated on vote date.

@@ -1,28 +1,29 @@
-# Master System Architecture: Parliament Data Evaluation & Ingestion Pipeline
+# Parliament & Data Mapping Specification
 
 **Comparative Legislative Data Platform**  
-*System Architecture & Data Provenance Specification*  
-*Version 2.3.0 (Master Wishlist & 6-Tier Data Provenance Spectrum)*
+**Version:** 2.4.0  
+**Specification:** Master Architecture, Dual-Layer Data Engine & 6-Tier Provenance Mapping
 
 ---
 
-## 1. Executive System Architecture
+## 1. System Architecture: Dual-Layer Data Engine
 
 The **Comparative Legislative Data Platform** (`https://legislativedata.org`) is an open-access quantitative research engine designed to ingest, standardize, mirror, and audit legislative data across international parliamentary and presidential assemblies.
 
-The system architecture separates the **Master Canonical Variable Wishlist** (the target research schema) from the **6-Tier Data Availability & Provenance Spectrum** (how each variable is instantiated per parliament and decision point).
+The system architecture cleanly separates the **Native Institutional Layer** (Layer A: high-resolution raw assembly data) from the **Canonical Comparative Layer** (Layer B: harmonised target research metrics evaluated against the 6-Tier Data Availability Spectrum):
 
 ```
- MASTER CANONICAL VARIABLE WISHLIST (Target Dictionary of Quantitative Variables)
- └─ The ideal set of variables sought by comparative legislative researchers.
-                                    │
+  LAYER A: NATIVE INSTITUTIONAL DATA (Preserving 100% Raw Granularity)
+  ├─ Raw Hansard API feeds, native stage codes, motion texts, word counts,
+  └─ member rosters, and individual roll-call votes (stored in payload.native).
+                                     │
                   EVALUATED AT SPECIFIC DECISION-POINT DATES (T)
-                                    │
-  ┌─────────────────────────────────┴─────────────────────────────────┐
-  │         THE 6-TIER DATA AVAILABILITY & PROVENANCE SPECTRUM        │
-  └─────────────────────────────────┬─────────────────────────────────┘
-                                    │
-    ┌────────────────┬──────────────┼──────────────┬──────────────────┬──────────────────┐
+                                     │
+                                     ▼
+  LAYER B: CANONICAL COMPARATIVE LAYER (Harmonised Research Wishlist)
+  └─ Evaluated against the 6-Tier Data Availability & Provenance Spectrum:
+
+    ┌────────────────┬──────────────┬──────────────┬──────────────────┬──────────────────┐
     ▼                ▼              ▼              ▼                  ▼                  ▼
 ┌──────────────┐┌──────────────┐┌──────────────┐┌──────────────┐   ┌──────────────┐   ┌──────────────┐
 │ 1. NATIVE    ││ 2. DERIVED   ││ 3. DERIVED   ││ 4. DERIVED   │   │ 5. LINKED    │   │ 6. HARD GAP  │
@@ -30,52 +31,38 @@ The system architecture separates the **Master Canonical Variable Wishlist** (th
 ├──────────────┤├──────────────┤├──────────────┤├──────────────┤   ├──────────────┤   ├──────────────┤
 │ Served out-  ││ Rule-based   ││ Expert hand- ││ NLP/LLM text │   │ Peer-        ││ Missing,     │
 │ of-the-box   ││ joins, date  ││ coding & PhD ││ extractions  │   │ reviewed     ││ unrecorded,  │
-│ in API/feed  ││ math & roster││ dataset      ││ with AI      │   │ datasets     ││ or non-      │
-│ (JSON/XML).  ││ lookups.     ││ ingestion    ││ Validation   │   │ (ParlGov,    ││ digitized    │
-│              ││              ││ (Gold).      ││ Lifecycle.   │   │ CAP, QID).   ││ (with reason)│
-└──────────────┘└──────────────┘└──────────────┘└──────────────┘   └──────────────┘└──────────────┘
+│ in host API. ││ lookups.     ││ datasets.    ││ + Lifecycle. │   │ datasets.    ││ undigitized. │
+└──────────────┘└──────────────┘└──────────────┘└──────────────┘   └──────────────┘   └──────────────┘
 ```
 
 ---
 
-## 2. The 6-Tier Data Availability & Provenance Spectrum
+## 2. The 3-Step Iterative Pilot Audit Workflow
 
-Every variable in our Master Canonical Catalog is evaluated per assembly, per session, and at every decision point against the 6-tier spectrum:
+To ensure our Master Wishlist Target is methodologically sound and grounded in empirical legislative reality, the platform uses a 3-step inductive-deductive scientific loop:
 
-1. **`NATIVE_DIRECT`:** Served out-of-the-box in host assembly API/feed (JSON/XML).
-2. **`DERIVED_DETERMINISTIC`:** Generated deterministically via simple pipeline joins, lookup tables, or date arithmetic.
-3. **`DERIVED_HUMAN_CODED`:** Manually hand-coded by human researchers, domain experts, or PhD coders (serving as ground truth).
-4. **`DERIVED_SYNTHETIC_AI`:** Synthesized via NLP/LLM models, carrying an explicit **AI Validation Lifecycle Status**:
-   - `UNVERIFIED_DRAFT`: Published immediately post-extraction for open crowdsourced peer audit.
-   - `SAMPLE_VALIDATED`: Audited against a randomized human sample (reporting precision/recall).
-   - `GOLD_BENCHMARKED`: Benchmarked against Tier 3 (`DERIVED_HUMAN_CODED`) ground truth.
-5. **`LINKED_EXTERNAL_AUTHORITY`:** Deterministically linked from established, peer-reviewed external benchmark datasets:
-   - **ParlGov:** Cabinet IDs, Government Types (`SINGLE_PARTY_MAJORITY`, `COOPERATION_AGREEMENT`).
-   - **Wikidata / EveryPolitician:** Persistent member QIDs and biographical timelines.
-   - **Comparative Agendas Project (CAP):** Standardized policy topic codes.
-   - **Manifesto Project (MARPOR):** Party ideology scores.
-6. **`UNAVAILABLE_HARD_GAP`:** Documented institutional omissions carrying sub-reason codes (`NOT_RECORDED_BY_ASSEMBLY`, `RECORDED_BUT_UNDIGITIZED`, `RESTRICTED_ACCESS`, `COST_PROHIBITIVE`).
+1. **Step 1 (Starting Wishlist Catalog):** Establish the initial target quantitative variables (~40 variables across 8 research domains).
+2. **Step 2 (Empirical Assembly Audit - Scottish Parliament `GB-SCT` Pilot):**
+   - Conduct an exhaustive audit of Holyrood's native APIs, Hansard feeds, and PhD dissertation hand-coded datasets.
+   - Categorize every native variable on the 6-tier provenance spectrum.
+   - Identify unmapped native variables (e.g. Stage 1 Lead Committee Report date, Section 35 Orders, Financial Resolutions).
+3. **Step 3 (Wishlist Refinement):** Re-evaluate findings against the Master Wishlist Catalog, incorporating new metrics, adjusting definitions, and deleting unworkable variables.
 
 ---
 
-## 3. Temporal Decision-Point Member Affiliation Engine
+## 3. The 6-Tier Provenance Spectrum Definitions
 
-Parliamentary arithmetic and party affiliations vary continuously across a legislative session due to by-elections, defections, whip suspensions (members becoming Independent), or election of the Speaker/Presiding Officer.
-
-To prevent misclassifying voting behavior or sponsor alignments:
-1. The platform maintains a **Date-Bounded Member Affiliation Table** (`member_party_affiliations` with `valid_from` and `valid_to` timestamps).
-2. **Decision-Point Evaluation Protocol:** Whenever an event occurs at date $T$ (e.g. an amendment is tabled, a division vote is called, or a bill is introduced):
-   - The engine evaluates member party affiliation on date $T$.
-   - The engine computes the **exact floor seat shares and government majority margin on date $T$**:
-     $$\text{Effective Majority Margin}_T = \text{Governing Voting Seats}_T - \text{Opposition Voting Seats}_T$$
-   - Party rebellions ($\ge 5\%$ party defiance) and sponsor governance roles are calculated against member party status on date $T$.
+1. **`NATIVE_DIRECT` (Tier 1):** Native key served directly in official host assembly API or raw data feed.
+2. **`DERIVED_DETERMINISTIC` (Tier 2):** Variable calculated via rule-based joins, date arithmetic, or roster lookups.
+3. **`DERIVED_HUMAN_CODED` (Tier 3):** Expert hand-coded ground truth from PhD dissertations or published academic datasets.
+4. **`DERIVED_SYNTHETIC_AI` (Tier 4):** NLP/LLM text extractions carrying the AI Validation Lifecycle (`UNVERIFIED_DRAFT`, `SAMPLE_VALIDATED`, `GOLD_BENCHMARKED`).
+5. **`LINKED_EXTERNAL_AUTHORITY` (Tier 5):** Linked from benchmark peer-reviewed datasets (ParlGov, CAP, Wikidata, MARPOR).
+6. **`UNAVAILABLE_HARD_GAP` (Tier 6):** Documented institutional data omissions carrying sub-reason codes (`NOT_RECORDED_BY_ASSEMBLY`, `RECORDED_BUT_UNDIGITIZED`, `RESTRICTED_ACCESS`, `COST_PROHIBITIVE`).
 
 ---
 
-## 4. Schema Review & Revision Protocol for Real-World Edge Cases
+## 4. Temporal Decision-Point Engine
 
-To handle edge cases systematically without compromising core schema stability, we establish a formal 4-step protocol:
-1. **Edge Case Detection & Isolation:** Store raw payload in JSONB, tag record `schema_review_required: true`.
-2. **Impact Assessment & Taxonomy Evaluation:** Check alignment against external authority taxonomies (ParlGov, CAP, Wikidata).
-3. **Controlled Schema Extension:** Update catalog and Pydantic models with non-breaking enum additions.
-4. **Pipeline Retro-Fit & Publication:** Re-run ETL for affected sessions and publish release notes.
+Politician party affiliations, presiding officer neutrality, and floor majority margins change over time. Every decision point (bill introduction date, Stage 1 report date, committee amendment tabling date, division vote date) evaluates:
+$$\text{Effective Majority Margin}_T = \text{Governing Seats}_T - \text{Opposition Seats}_T$$
+$$\text{Party Dissent Rate}_T = \frac{\text{Members of Party } P \text{ voting against party majority at } T}{\text{Total Members of Party } P \text{ voting at } T}$$

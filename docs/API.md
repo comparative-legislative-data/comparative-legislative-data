@@ -2,13 +2,13 @@
 
 **Comparative Legislative Data Platform**  
 *RESTful & Audit Inspection API Standard*  
-*Version 2.3.0 (Master Wishlist & 6-Tier Provenance Specification)*
+*Version 2.8.0 (Master Wishlist & 7-Tier Provenance Specification)*
 
 ---
 
 ## 1. API Architecture Overview
 
-The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints for querying canonical legislative datasets, auditing 6-tier data availability across assemblies, querying decision-point member affiliations, and inspecting raw host JSON/XML payloads.
+The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints for querying canonical legislative datasets, auditing 7-tier data availability across assemblies, querying decision-point member affiliations, and inspecting raw host JSON/XML payloads.
 
 ---
 
@@ -16,7 +16,7 @@ The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints 
 
 ### 1. Global Assembly Audit Summaries
 `GET /api/v2/atlas`
-* **Description:** Returns the list of tracked legislative assemblies and their 6-tier variable coverage matrix.
+* **Description:** Returns the list of tracked legislative assemblies and their 7-tier variable coverage matrix.
 
 ```json
 {
@@ -26,14 +26,16 @@ The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints 
       "assembly_name": "Scottish Parliament",
       "country": "United Kingdom",
       "chamber_type": "DEVOLVED_UNICAMERAL",
-      "total_bills_indexed": 142,
+      "total_variables_indexed": 109,
       "provenance_coverage_summary": {
-        "NATIVE_DIRECT_PCT": 42.1,
-        "DERIVED_DETERMINISTIC_PCT": 26.5,
-        "DERIVED_HUMAN_CODED_PCT": 12.0,
-        "DERIVED_SYNTHETIC_AI_PCT": 8.0,
-        "LINKED_EXTERNAL_AUTHORITY_PCT": 6.4,
-        "UNAVAILABLE_HARD_GAP_PCT": 5.0
+        "NATIVE_DIRECT_PCT": 0.0,
+        "DERIVED_DETERMINISTIC_PCT": 0.0,
+        "DERIVED_EXTRACTED_PCT": 0.0,
+        "DERIVED_HUMAN_CODED_PCT": 0.0,
+        "DERIVED_SYNTHETIC_AI_PCT": 0.0,
+        "LINKED_EXTERNAL_AUTHORITY_PCT": 0.0,
+        "UNAVAILABLE_HARD_GAP_PCT": 0.0,
+        "NOT_YET_CATEGORISED_PCT": 100.0
       }
     }
   ]
@@ -61,25 +63,9 @@ The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints 
     {
       "variable_name": "government_type",
       "domain": "Domain 1: Assembly & Executive Context",
-      "tier": "LINKED_EXTERNAL_AUTHORITY",
-      "confidence": "HIGH",
-      "linked_authority_source": "ParlGov",
-      "value": "COOPERATION_AGREEMENT",
+      "tier": "NOT_YET_CATEGORISED",
+      "confidence": "PENDING_AUDIT",
       "notes": "Mapped to ParlGov Cabinet ID for SNP/Green Bute House Agreement (2021-2024)."
-    },
-    {
-      "variable_name": "committee_amendments_executive_acceptance_rate",
-      "domain": "Domain 7: Amendments & Legislative Alteration",
-      "tier": "DERIVED_HUMAN_CODED",
-      "confidence": "HIGH",
-      "citation": "PhD Dissertation Dataset: Scottish Parliament Amendment Outcomes (2016-2021)."
-    },
-    {
-      "variable_name": "effective_majority_margin_at_event_date",
-      "domain": "Domain 8: Temporal Divisions",
-      "tier": "DERIVED_DETERMINISTIC",
-      "confidence": "HIGH",
-      "methodology": "Evaluated dynamically against member_party_affiliations on vote date T."
     }
   ]
 }
@@ -111,7 +97,7 @@ The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints 
 * **Query Parameters:**
   * `jurisdiction_code`: Filter by assembly (e.g. `GB-SCT`, `GB-UKP`).
   * `government_type`: Filter by executive type (`SINGLE_PARTY_MINORITY`, `COOPERATION_AGREEMENT`).
-  * `provenance_tier`: Filter by availability tier (`DERIVED_HUMAN_CODED`, `LINKED_EXTERNAL_AUTHORITY`).
+  * `provenance_tier`: Filter by availability tier (`DERIVED_DETERMINISTIC`, `DERIVED_EXTRACTED`, `LINKED_EXTERNAL_AUTHORITY`).
   * `ai_validation_status`: Filter AI data (`UNVERIFIED_DRAFT`, `SAMPLE_VALIDATED`, `GOLD_BENCHMARKED`).
 
 ---

@@ -1,985 +1,856 @@
-# Scottish Parliament (GB-SCT) Audit Blueprint
-# Comparative Legislative Data Platform — Version 2.8.0 Baseline (Pending Formal Audit)
-# Scientific Classification: Definitive Constants, Closed Enums, Result-Dependent Dynamic, Binary Flags, Persistent Identifiers
-# Multi-Entity Model: CanonicalBill (Macro Level), CanonicalAmendment (Micro Level), CommitteeContext (Roster Level), ParsedProceedings (Hansard Text)
-# Note: All provenance tiers are set to NOT_YET_CATEGORISED pending the standalone formal audit exercise.
-
 assembly_metadata:
-  jurisdiction_code: "GB-SCT"
-  name: "Scottish Parliament"
-  native_name: "Pàrlamaid na h-Alba"
-  location: "Holyrood, Edinburgh, Scotland"
-  chamber_type: "DEVOLVED_UNICAMERAL"
+  jurisdiction_code: GB-SCT
+  name: Scottish Parliament
+  native_name: Pàrlamaid na h-Alba
+  location: Holyrood, Edinburgh, Scotland
+  chamber_type: DEVOLVED_UNICAMERAL
   statutory_seats_total: 129
   presiding_officer_neutral_count: 1
-  official_portal_url: "https://www.parliament.scot"
-
+  official_portal_url: https://www.parliament.scot
 audited_terms:
-  - term_code: "S6"
-    name: "Session 6"
-    date_start: "2021-05-13"
-    date_end: "2026-05-07"
-    executive_periods:
-      - period: "2021-08-31 to 2024-04-25"
-        devolved_executive_name: "Scottish Government"
-        government_type: "COOPERATION_AGREEMENT" # SNP + Scottish Greens (Bute House Agreement)
-        governing_parties: ["SNP", "Scottish Greens"]
-        parlgov_cabinet_id: "GB-SCT-CAB-2021"
-      - period: "2024-04-25 to Present"
-        devolved_executive_name: "Scottish Government"
-        government_type: "SINGLE_PARTY_MINORITY" # SNP
-        governing_parties: ["SNP"]
-        parlgov_cabinet_id: "GB-SCT-CAB-2024"
-
+- term_code: S6
+  name: Session 6
+  date_start: '2021-05-13'
+  date_end: '2026-05-07'
+  executive_periods:
+  - period: 2021-08-31 to 2024-04-25
+    devolved_executive_name: Scottish Government
+    government_type: COOPERATION_AGREEMENT
+    governing_parties:
+    - SNP
+    - Scottish Greens
+    parlgov_cabinet_id: GB-SCT-CAB-2021
+  - period: 2024-04-25 to Present
+    devolved_executive_name: Scottish Government
+    government_type: SINGLE_PARTY_MINORITY
+    governing_parties:
+    - SNP
+    parlgov_cabinet_id: GB-SCT-CAB-2024
 native_data_sources:
-  - id: "sct_api_bills"
-    name: "Official Scottish Parliament Open Data Bills API"
-    url: "https://data.parliament.scot/api/bills"
-    format: "JSON"
-    provenance_tier: "NATIVE_DIRECT"
-  - id: "sct_api_billtypes"
-    name: "Official Bill Types & Classifications API"
-    url: "https://data.parliament.scot/api/billtypes"
-    format: "JSON"
-    provenance_tier: "NATIVE_DIRECT"
-  - id: "sct_api_members"
-    name: "Official Scottish Parliament MSP Roster API"
-    url: "https://data.parliament.scot/api/members"
-    format: "JSON"
-    provenance_tier: "NATIVE_DIRECT"
-  - id: "sct_api_member_parties"
-    name: "Official MSP Temporal Party Affiliations API"
-    url: "https://data.parliament.scot/api/memberparties"
-    format: "JSON"
-    provenance_tier: "NATIVE_DIRECT"
-  - id: "sct_api_parties"
-    name: "Official Political Party Master Registry API"
-    url: "https://data.parliament.scot/api/parties"
-    format: "JSON"
-    provenance_tier: "NATIVE_DIRECT"
-  - id: "sct_api_person_committee_roles"
-    name: "Official MSP Committee Memberships & Convener Roles API"
-    url: "https://data.parliament.scot/api/PersonCommitteeRoles"
-    format: "JSON"
-    provenance_tier: "NATIVE_DIRECT"
-  - id: "sct_api_committees"
-    name: "Official Parliamentary Committees Registry API"
-    url: "https://data.parliament.scot/api/committees"
-    format: "JSON"
-    provenance_tier: "NATIVE_DIRECT"
-  - id: "sct_api_member_gov_roles"
-    name: "Official Ministerial Government Portfolios API"
-    url: "https://data.parliament.scot/api/MemberGovernmentRoles"
-    format: "JSON"
-    provenance_tier: "NATIVE_DIRECT"
-  - id: "sct_api_gov_roles"
-    name: "Official Government Role Titles Master Registry API"
-    url: "https://data.parliament.scot/api/GovernmentRoles"
-    format: "JSON"
-    provenance_tier: "NATIVE_DIRECT"
-  - id: "sct_api_sessions"
-    name: "Official Parliamentary Term Registry API"
-    url: "https://data.parliament.scot/api/sessions"
-    format: "JSON"
-    provenance_tier: "NATIVE_DIRECT"
-  - id: "sct_api_events"
-    name: "Official Parliamentary Events & Stage Debates Calendar API"
-    url: "https://data.parliament.scot/api/events"
-    format: "JSON"
-    provenance_tier: "NATIVE_DIRECT"
-  - id: "sct_api_ors_plenary"
-    name: "Official Report Plenary Chamber Debates API"
-    url: "https://data.parliament.scot/api/orsplenarymeeting?year=2024"
-    format: "JSON"
-    provenance_tier: "NATIVE_DIRECT"
-  - id: "sct_api_ors_committee"
-    name: "Official Report Committee Debates API"
-    url: "https://data.parliament.scot/api/orscommitteemeeting?year=2024"
-    format: "JSON"
-    provenance_tier: "NATIVE_DIRECT"
-  - id: "sct_plenary_chamber_votes"
-    name: "Holyrood Official Report Plenary Chamber Voting Logs"
-    url: "https://www.parliament.scot/chamber-and-committees/votes"
-    format: "HTML/JSON"
-    provenance_tier: "NATIVE_DIRECT"
-
-# --- ENTITY 1: MACRO BILL LEVEL VARIABLES (CanonicalBill) ---
+- id: sct_api_bills
+  name: Official Scottish Parliament Open Data Bills API
+  url: https://data.parliament.scot/api/bills
+  format: JSON
+  provenance_tier: NATIVE_DIRECT
+- id: sct_api_billtypes
+  name: Official Bill Types & Classifications API
+  url: https://data.parliament.scot/api/billtypes
+  format: JSON
+  provenance_tier: NATIVE_DIRECT
+- id: sct_api_members
+  name: Official Scottish Parliament MSP Roster API
+  url: https://data.parliament.scot/api/members
+  format: JSON
+  provenance_tier: NATIVE_DIRECT
+- id: sct_api_member_parties
+  name: Official MSP Temporal Party Affiliations API
+  url: https://data.parliament.scot/api/memberparties
+  format: JSON
+  provenance_tier: NATIVE_DIRECT
+- id: sct_api_parties
+  name: Official Political Party Master Registry API
+  url: https://data.parliament.scot/api/parties
+  format: JSON
+  provenance_tier: NATIVE_DIRECT
+- id: sct_api_person_committee_roles
+  name: Official MSP Committee Memberships & Convener Roles API
+  url: https://data.parliament.scot/api/PersonCommitteeRoles
+  format: JSON
+  provenance_tier: NATIVE_DIRECT
+- id: sct_api_committees
+  name: Official Parliamentary Committees Registry API
+  url: https://data.parliament.scot/api/committees
+  format: JSON
+  provenance_tier: NATIVE_DIRECT
+- id: sct_api_member_gov_roles
+  name: Official Ministerial Government Portfolios API
+  url: https://data.parliament.scot/api/MemberGovernmentRoles
+  format: JSON
+  provenance_tier: NATIVE_DIRECT
+- id: sct_api_gov_roles
+  name: Official Government Role Titles Master Registry API
+  url: https://data.parliament.scot/api/GovernmentRoles
+  format: JSON
+  provenance_tier: NATIVE_DIRECT
+- id: sct_api_sessions
+  name: Official Parliamentary Term Registry API
+  url: https://data.parliament.scot/api/sessions
+  format: JSON
+  provenance_tier: NATIVE_DIRECT
+- id: sct_api_events
+  name: Official Parliamentary Events & Stage Debates Calendar API
+  url: https://data.parliament.scot/api/events
+  format: JSON
+  provenance_tier: NATIVE_DIRECT
+- id: sct_api_ors_plenary
+  name: Official Report Plenary Chamber Debates API
+  url: https://data.parliament.scot/api/orsplenarymeeting?year=2024
+  format: JSON
+  provenance_tier: NATIVE_DIRECT
+- id: sct_api_ors_committee
+  name: Official Report Committee Debates API
+  url: https://data.parliament.scot/api/orscommitteemeeting?year=2024
+  format: JSON
+  provenance_tier: NATIVE_DIRECT
+- id: sct_plenary_chamber_votes
+  name: Holyrood Official Report Plenary Chamber Voting Logs
+  url: https://www.parliament.scot/chamber-and-committees/votes
+  format: HTML/JSON
+  provenance_tier: NATIVE_DIRECT
 bill_entity_variables:
-  # 1. Assembly & Executive Context
-  - key: "jurisdiction_code"
-    name: "Jurisdiction Code"
-    scientific_category: "DEFINITIVE_CONSTANT"
-    type: "String (ISO 3166-2)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "jurisdiction_code"
-
-  - key: "name"
-    name: "Assembly Name"
-    scientific_category: "DEFINITIVE_CONSTANT"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "name"
-
-  - key: "chamber_type"
-    name: "Chamber Structure"
-    scientific_category: "DEFINITIVE_CONSTANT"
-    type: "Enum"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "chamber_type"
-
-  - key: "statutory_seats_total"
-    name: "Statutory Plenary Seats Total"
-    scientific_category: "DEFINITIVE_CONSTANT"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "statutory_seats_total"
-
-  - key: "presiding_officer_neutral_count"
-    name: "Presiding Officer Neutral Non-Voting Count"
-    scientific_category: "DEFINITIVE_CONSTANT"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "presiding_officer_neutral_count"
-
-  - key: "parliament_term"
-    name: "Parliamentary Term Code"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "parliament_term"
-
-  - key: "term_start_date"
-    name: "Parliamentary Term Start Date"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Date (ISO 8601)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "term_start_date"
-
-  - key: "term_end_date"
-    name: "Parliamentary Term End Date"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Date (ISO 8601)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "term_end_date"
-
-  - key: "devolved_executive_name"
-    name: "Historical Devolved Executive Name"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    description: "'Scottish Executive' (1999-2007); 'Scottish Government' (2007-Present)."
-    canonical_mapping: "devolved_executive_name"
-
-  - key: "government_type"
-    name: "Executive Arrangement Typology"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "SINGLE_PARTY_MAJORITY"
-      - "SINGLE_PARTY_MINORITY"
-      - "FORMAL_COALITION_MAJORITY"
-      - "FORMAL_COALITION_MINORITY"
-      - "CONFIDENCE_AND_SUPPLY"
-      - "COOPERATION_AGREEMENT"
-      - "CARETAKER_TECHNOCRATIC"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "government_type"
-
-  - key: "governing_parties_list"
-    name: "Governing Coalition Parties"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Array of Strings"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "governing_parties_list"
-
-  - key: "parlgov_cabinet_id"
-    name: "ParlGov Cabinet Identifier"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "parlgov_cabinet_id"
-
-  # 2. Sponsorship & Origin
-  - key: "local_bill_id"
-    name: "Native Holyrood Reference Code"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "local_bill_id"
-
-  - key: "title_canonical"
-    name: "Standardized Short Title"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "title_canonical"
-
-  - key: "initiator_type"
-    name: "Bill Sponsor Typology"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "EXECUTIVE"            # Government Bill
-      - "INDIVIDUAL_MEMBER"    # Member's Bill
-      - "COMMITTEE"            # Committee Bill
-      - "PRIVATE_ORGANISATION" # Private Bill
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "initiator_type"
-
-  - key: "initiator_party_governance_role"
-    name: "Sponsor Party Alignment on Introduction Date"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "GOVERNING_PARTY"
-      - "OPPOSITION_PARTY"
-      - "CROSS_PARTY"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "initiator_party_governance_role"
-
-  - key: "initiator_member_id"
-    name: "Lead MSP Sponsor Persistent Identifier"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "String (Wikidata QID)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "initiator_member_id"
-
-  - key: "ministerial_portfolio_title"
-    name: "Ministerial Portfolio Title"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    description: "Portfolio name from /api/GovernmentRoles."
-    canonical_mapping: "ministerial_portfolio_title"
-
-  - key: "initiator_convener_member_id"
-    name: "Lead Committee Convener MSP ID"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "String (Wikidata QID)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "initiator_convener_member_id"
-
-  - key: "initiator_organisation_name"
-    name: "Initiating Committee or Promoter Name"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "initiator_organisation_name"
-
-  - key: "third_party_organisation"
-    name: "External Private Bill Promoter Organisation"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    description: "From /api/bills field ThirdPartyOrganisation."
-    canonical_mapping: "third_party_organisation"
-
-  # 3. Timelines & Multi-Day Stage Debates
-  - key: "date_introduced"
-    name: "Bill Introduction Date"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Date (ISO 8601)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "date_introduced"
-
-  - key: "date_final_outcome"
-    name: "Final Outcome Date"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Date (ISO 8601)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "date_final_outcome"
-
-  - key: "duration_calendar_days"
-    name: "Calendar Days Elapsed"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "duration_calendar_days"
-
-  - key: "duration_sitting_days"
-    name: "Parliamentary Sitting Days Elapsed"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "duration_sitting_days"
-
-  - key: "stage_1_lead_committee_report_date"
-    name: "Stage 1 Lead Committee Report Date"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Date (ISO 8601)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "stage_milestones[0].date_end"
-
-  - key: "stage_1_debate_start_date"
-    name: "Stage 1 Debate Start Date"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Date (ISO 8601)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "stage_1_debate_start_date"
-
-  - key: "stage_1_debate_end_date"
-    name: "Stage 1 Debate End Date"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Date (ISO 8601)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "stage_1_debate_end_date"
-
-  - key: "stage_1_debate_days_count"
-    name: "Stage 1 Debate Sitting Days Count"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "stage_1_debate_days_count"
-
-  - key: "stage_2_committee_start_date"
-    name: "Stage 2 Committee Start Date"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Date (ISO 8601)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "stage_milestones[1].date_start"
-
-  - key: "stage_2_committee_end_date"
-    name: "Stage 2 Committee Completion Date"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Date (ISO 8601)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "stage_milestones[1].date_end"
-
-  - key: "stage_3_plenary_debate_start_date"
-    name: "Stage 3 Plenary Debate Start Date"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Date (ISO 8601)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "stage_milestones[2].date_start"
-
-  - key: "stage_3_plenary_debate_end_date"
-    name: "Stage 3 Plenary Debate End Date"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Date (ISO 8601)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "stage_milestones[2].date_end"
-
-  - key: "stage_3_debate_days_count"
-    name: "Stage 3 Debate Sitting Days Count"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "stage_3_debate_days_count"
-
-  - key: "royal_assent_date"
-    name: "Royal Assent Date"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Date (ISO 8601)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "head_of_state_promulgation_date"
-
-  - key: "emergency_procedure_flag"
-    name: "Emergency Bill Designation (Rule 9.21)"
-    scientific_category: "BINARY_FLAG"
-    type: "Boolean"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "emergency_procedure_flag"
-
-  - key: "section_35_order_triggered_flag"
-    name: "Section 35 Scotland Act Order Triggered"
-    scientific_category: "BINARY_FLAG"
-    type: "Boolean"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "inter_governmental_veto_flag"
-
-  # 4. Financial Resolutions (Rule 9.12)
-  - key: "financial_resolution_required_flag"
-    name: "Financial Resolution Required (Rule 9.12)"
-    scientific_category: "BINARY_FLAG"
-    type: "Boolean"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "financial_resolution_required_flag"
-
-  - key: "financial_resolution_approved_flag"
-    name: "Financial Resolution Approved"
-    scientific_category: "BINARY_FLAG"
-    type: "Boolean"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "financial_resolution_approved_flag"
-
-  - key: "financial_resolution_vote_date"
-    name: "Financial Resolution Vote Date"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Date (ISO 8601)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "financial_resolution_vote_date"
-
-  - key: "financial_resolution_aye_count"
-    name: "Financial Resolution Aye Vote Tally"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "financial_resolution_aye_count"
-
-  - key: "financial_resolution_no_count"
-    name: "Financial Resolution No Vote Tally"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "financial_resolution_no_count"
-
-  - key: "financial_resolution_abstain_count"
-    name: "Financial Resolution Abstain Vote Tally"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "financial_resolution_abstain_count"
-
-  # 5. Plenary Motion Roll-Call Votes
-  - key: "decision_point_motion_type"
-    name: "Plenary Motion Type"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "STAGE_1_AGREEMENT"
-      - "FINANCIAL_RESOLUTION"
-      - "EMERGENCY_BILL_DESIGNATION"
-      - "STAGE_3_PASSAGE"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "decision_point_motion_type"
-
-  - key: "effective_majority_margin_at_event_date"
-    name: "Floor Majority Margin on Vote Date T"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "effective_majority_margin_at_event_date"
-
-  - key: "party_dissent_rate_at_event_date"
-    name: "Party Rebellion Rate on Division Date T"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Float (0.0 to 1.0)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "party_dissent_rate_at_event_date"
-
-  - key: "voting_coalition_type"
-    name: "Voting Alignment Typology"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "UNANIMOUS"
-      - "GOVERNMENT_PARTY_LINE"
-      - "CROSS_PARTY_MAJORITY"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "voting_coalition_type"
-
-  # 6. Accompanying Bill Documents & Size Analytics
-  - key: "doc_as_introduced_url"
-    name: "Bill Text URL at Introduction (Stage 1 Print)"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "URL"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "doc_as_introduced_url"
-
-  - key: "doc_as_amended_stage_2_url"
-    name: "Bill Text URL Post-Stage 2 (Committee Print)"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "URL"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "doc_as_amended_stage_2_url"
-
-  - key: "doc_as_amended_stage_3_url"
-    name: "Bill Text URL Post-Stage 3 (Pre-Assent Print)"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "URL"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "doc_as_amended_stage_3_url"
-
-  - key: "doc_as_passed_url"
-    name: "Bill Text URL at Enactment (Royal Assent Print)"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "URL"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "doc_as_passed_url"
-
-  - key: "policy_memorandum_url"
-    name: "Policy Memorandum Document URL"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "URL"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "policy_memorandum_url"
-
-  - key: "financial_memorandum_url"
-    name: "Financial Memorandum Document URL"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "URL"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "financial_memorandum_url"
-
-  - key: "revised_financial_memorandum_url"
-    name: "Revised Financial Memorandum Document URL (Post-Stage 2)"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "URL"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "revised_financial_memorandum_url"
-
-  - key: "explanatory_notes_url"
-    name: "Explanatory Notes Document URL"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "URL"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "explanatory_notes_url"
-
-  - key: "combined_financial_explanatory_notes_url"
-    name: "Legacy Combined Financial & Explanatory Notes URL"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "URL"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "combined_financial_explanatory_notes_url"
-
-  - key: "delegated_powers_memorandum_url"
-    name: "Delegated Powers Memorandum Document URL"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "URL"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "delegated_powers_memorandum_url"
-
-  - key: "stage_1_lead_committee_report_url"
-    name: "Lead Committee Stage 1 Report Document URL"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "URL"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "stage_1_lead_committee_report_url"
-
-  - key: "bill_as_introduced_word_count"
-    name: "Bill Text Word Count at Introduction"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "word_count_introduced"
-
-  - key: "bill_as_amended_stage_2_word_count"
-    name: "Bill Text Word Count Post-Stage 2 Committee"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "word_count_post_committee"
-
-  - key: "bill_as_amended_stage_3_word_count"
-    name: "Bill Text Word Count Post-Stage 3 Plenary"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "word_count_post_stage3"
-
-  - key: "bill_as_enacted_word_count"
-    name: "Bill Text Word Count Post-Royal Assent"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "word_count_enacted"
-
-  - key: "text_expansion_ratio"
-    name: "Bill Text Growth Ratio"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Float"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "text_expansion_ratio"
-
-  - key: "cap_topic_code"
-    name: "Comparative Agendas Project Topic Code"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "cap_topic_code"
-
-  - key: "fiscal_impact_flag"
-    name: "Binding Fiscal Impact Flag"
-    scientific_category: "BINARY_FLAG"
-    type: "Boolean"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "fiscal_impact_flag"
-
-  # 7. Final Disposition
-  - key: "final_status"
-    name: "Terminal Procedural Status"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "ENACTED"
-      - "DEFEATED"
-      - "WITHDRAWN"
-      - "LAPSED"
-      - "PENDING"
-      - "VETOED"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "final_status"
-
-  - key: "termination_mechanism"
-    name: "Procedural Termination Event"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "ENACTMENT"
-      - "VOTE_DEFEAT"
-      - "EXECUTIVE_WITHDRAWAL"
-      - "DISSOLUTION_LAPSE"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "termination_mechanism"
-
-  # 8. Macro Amendment Aggregates
-  - key: "amendments_tabled_count"
-    name: "Total Stage 2 + Stage 3 Amendments Tabled"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "amendments_tabled_count"
-
-  - key: "amendments_agreed_count"
-    name: "Total Amendments Agreed"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "amendments_agreed_count"
-
-  - key: "amendments_non_executive_count"
-    name: "Total Non-Executive Amendments Tabled"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "amendments_non_executive_count"
-
-  - key: "committee_amendments_executive_acceptance_rate"
-    name: "Non-Executive Committee Amendment Acceptance Rate"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Float (0.0 to 1.0)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "committee_amendments_executive_acceptance_rate"
-
-  - key: "bill_text_alteration_score"
-    name: "Bill Text Alteration Score"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Float (0.0 to 1.0)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "bill_text_alteration_score"
-
-# --- ENTITY 2: MICRO AMENDMENT LEVEL VARIABLES (CanonicalAmendment) ---
+- key: jurisdiction_code
+  name: Jurisdiction Code
+  scientific_category: DEFINITIVE_CONSTANT
+  type: String (ISO 3166-2)
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: jurisdiction_code
+- key: name
+  name: Assembly Name
+  scientific_category: DEFINITIVE_CONSTANT
+  type: String
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: name
+- key: chamber_type
+  name: Chamber Structure
+  scientific_category: DEFINITIVE_CONSTANT
+  type: Enum
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: chamber_type
+- key: statutory_seats_total
+  name: Statutory Plenary Seats Total
+  scientific_category: DEFINITIVE_CONSTANT
+  type: Integer
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: statutory_seats_total
+- key: presiding_officer_neutral_count
+  name: Presiding Officer Neutral Non-Voting Count
+  scientific_category: DEFINITIVE_CONSTANT
+  type: Integer
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: presiding_officer_neutral_count
+- key: parliament_term
+  name: Parliamentary Term Code
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: String
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: parliament_term
+- key: term_start_date
+  name: Parliamentary Term Start Date
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Date (ISO 8601)
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: term_start_date
+- key: term_end_date
+  name: Parliamentary Term End Date
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Date (ISO 8601)
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: term_end_date
+- key: devolved_executive_name
+  name: Historical Devolved Executive Name
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: String
+  provenance_tier: NATIVE_DIRECT
+  description: '''Scottish Executive'' (1999-2007); ''Scottish Government'' (2007-Present).'
+  canonical_mapping: devolved_executive_name
+- key: government_type
+  name: Executive Arrangement Typology
+  scientific_category: CLOSED_ENUM
+  allowed_values:
+  - SINGLE_PARTY_MAJORITY
+  - SINGLE_PARTY_MINORITY
+  - FORMAL_COALITION_MAJORITY
+  - FORMAL_COALITION_MINORITY
+  - CONFIDENCE_AND_SUPPLY
+  - COOPERATION_AGREEMENT
+  - CARETAKER_TECHNOCRATIC
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: government_type
+- key: governing_parties_list
+  name: Governing Coalition Parties
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Array of Strings
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: governing_parties_list
+- key: parlgov_cabinet_id
+  name: ParlGov Cabinet Identifier
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: String
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: parlgov_cabinet_id
+- key: local_bill_id
+  name: Native Holyrood Reference Code
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: String
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: local_bill_id
+- key: title_canonical
+  name: Standardized Short Title
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: String
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: title_canonical
+- key: initiator_type
+  name: Bill Sponsor Typology
+  scientific_category: CLOSED_ENUM
+  allowed_values:
+  - EXECUTIVE
+  - INDIVIDUAL_MEMBER
+  - COMMITTEE
+  - PRIVATE_ORGANISATION
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: initiator_type
+- key: initiator_party_governance_role
+  name: Sponsor Party Alignment on Introduction Date
+  scientific_category: CLOSED_ENUM
+  allowed_values:
+  - GOVERNING_PARTY
+  - OPPOSITION_PARTY
+  - CROSS_PARTY
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: initiator_party_governance_role
+- key: initiator_member_id
+  name: Lead MSP Sponsor Persistent Identifier
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: String (Wikidata QID)
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: initiator_member_id
+- key: ministerial_portfolio_title
+  name: Ministerial Portfolio Title
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: String
+  provenance_tier: DERIVED_DETERMINISTIC
+  description: Portfolio name from /api/GovernmentRoles.
+  canonical_mapping: ministerial_portfolio_title
+- key: initiator_convener_member_id
+  name: Lead Committee Convener MSP ID
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: String (Wikidata QID)
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: initiator_convener_member_id
+- key: initiator_organisation_name
+  name: Initiating Committee or Promoter Name
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: String
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: initiator_organisation_name
+- key: third_party_organisation
+  name: External Private Bill Promoter Organisation
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: String
+  provenance_tier: NATIVE_DIRECT
+  description: From /api/bills field ThirdPartyOrganisation.
+  canonical_mapping: third_party_organisation
+- key: date_introduced
+  name: Bill Introduction Date
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Date (ISO 8601)
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: date_introduced
+- key: date_final_outcome
+  name: Final Outcome Date
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Date (ISO 8601)
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: date_final_outcome
+- key: duration_calendar_days
+  name: Calendar Days Elapsed
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: duration_calendar_days
+- key: duration_sitting_days
+  name: Parliamentary Sitting Days Elapsed
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: duration_sitting_days
+- key: stage_1_lead_committee_report_date
+  name: Stage 1 Lead Committee Report Date
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Date (ISO 8601)
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: stage_milestones[0].date_end
+- key: stage_1_debate_start_date
+  name: Stage 1 Debate Start Date
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Date (ISO 8601)
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: stage_1_debate_start_date
+- key: stage_1_debate_end_date
+  name: Stage 1 Debate End Date
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Date (ISO 8601)
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: stage_1_debate_end_date
+- key: stage_1_debate_days_count
+  name: Stage 1 Debate Sitting Days Count
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: stage_1_debate_days_count
+- key: stage_2_committee_start_date
+  name: Stage 2 Committee Start Date
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Date (ISO 8601)
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: stage_milestones[1].date_start
+- key: stage_2_committee_end_date
+  name: Stage 2 Committee Completion Date
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Date (ISO 8601)
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: stage_milestones[1].date_end
+- key: stage_3_plenary_debate_start_date
+  name: Stage 3 Plenary Debate Start Date
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Date (ISO 8601)
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: stage_milestones[2].date_start
+- key: stage_3_plenary_debate_end_date
+  name: Stage 3 Plenary Debate End Date
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Date (ISO 8601)
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: stage_milestones[2].date_end
+- key: stage_3_debate_days_count
+  name: Stage 3 Debate Sitting Days Count
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: stage_3_debate_days_count
+- key: royal_assent_date
+  name: Royal Assent Date
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Date (ISO 8601)
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: head_of_state_promulgation_date
+- key: emergency_procedure_flag
+  name: Emergency Bill Designation (Rule 9.21)
+  scientific_category: BINARY_FLAG
+  type: Boolean
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: emergency_procedure_flag
+- key: section_35_order_triggered_flag
+  name: Section 35 Scotland Act Order Triggered
+  scientific_category: BINARY_FLAG
+  type: Boolean
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: inter_governmental_veto_flag
+- key: financial_resolution_required_flag
+  name: Financial Resolution Required (Rule 9.12)
+  scientific_category: BINARY_FLAG
+  type: Boolean
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: financial_resolution_required_flag
+- key: financial_resolution_approved_flag
+  name: Financial Resolution Approved
+  scientific_category: BINARY_FLAG
+  type: Boolean
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: financial_resolution_approved_flag
+- key: financial_resolution_vote_date
+  name: Financial Resolution Vote Date
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Date (ISO 8601)
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: financial_resolution_vote_date
+- key: financial_resolution_aye_count
+  name: Financial Resolution Aye Vote Tally
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: financial_resolution_aye_count
+- key: financial_resolution_no_count
+  name: Financial Resolution No Vote Tally
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: financial_resolution_no_count
+- key: financial_resolution_abstain_count
+  name: Financial Resolution Abstain Vote Tally
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: financial_resolution_abstain_count
+- key: decision_point_motion_type
+  name: Plenary Motion Type
+  scientific_category: CLOSED_ENUM
+  allowed_values:
+  - STAGE_1_AGREEMENT
+  - FINANCIAL_RESOLUTION
+  - EMERGENCY_BILL_DESIGNATION
+  - STAGE_3_PASSAGE
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: decision_point_motion_type
+- key: effective_majority_margin_at_event_date
+  name: Floor Majority Margin on Vote Date T
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: effective_majority_margin_at_event_date
+- key: party_dissent_rate_at_event_date
+  name: Party Rebellion Rate on Division Date T
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Float (0.0 to 1.0)
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: party_dissent_rate_at_event_date
+- key: voting_coalition_type
+  name: Voting Alignment Typology
+  scientific_category: CLOSED_ENUM
+  allowed_values:
+  - UNANIMOUS
+  - GOVERNMENT_PARTY_LINE
+  - CROSS_PARTY_MAJORITY
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: voting_coalition_type
+- key: doc_as_introduced_url
+  name: Bill Text URL at Introduction (Stage 1 Print)
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: URL
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: doc_as_introduced_url
+- key: doc_as_amended_stage_2_url
+  name: Bill Text URL Post-Stage 2 (Committee Print)
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: URL
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: doc_as_amended_stage_2_url
+- key: doc_as_amended_stage_3_url
+  name: Bill Text URL Post-Stage 3 (Pre-Assent Print)
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: URL
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: doc_as_amended_stage_3_url
+- key: doc_as_passed_url
+  name: Bill Text URL at Enactment (Royal Assent Print)
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: URL
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: doc_as_passed_url
+- key: policy_memorandum_url
+  name: Policy Memorandum Document URL
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: URL
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: policy_memorandum_url
+- key: financial_memorandum_url
+  name: Financial Memorandum Document URL
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: URL
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: financial_memorandum_url
+- key: revised_financial_memorandum_url
+  name: Revised Financial Memorandum Document URL (Post-Stage 2)
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: URL
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: revised_financial_memorandum_url
+- key: explanatory_notes_url
+  name: Explanatory Notes Document URL
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: URL
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: explanatory_notes_url
+- key: combined_financial_explanatory_notes_url
+  name: Legacy Combined Financial & Explanatory Notes URL
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: URL
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: combined_financial_explanatory_notes_url
+- key: delegated_powers_memorandum_url
+  name: Delegated Powers Memorandum Document URL
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: URL
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: delegated_powers_memorandum_url
+- key: stage_1_lead_committee_report_url
+  name: Lead Committee Stage 1 Report Document URL
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: URL
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: stage_1_lead_committee_report_url
+- key: bill_as_introduced_word_count
+  name: Bill Text Word Count at Introduction
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: word_count_introduced
+- key: bill_as_amended_stage_2_word_count
+  name: Bill Text Word Count Post-Stage 2 Committee
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: word_count_post_committee
+- key: bill_as_amended_stage_3_word_count
+  name: Bill Text Word Count Post-Stage 3 Plenary
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: word_count_post_stage3
+- key: bill_as_enacted_word_count
+  name: Bill Text Word Count Post-Royal Assent
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: word_count_enacted
+- key: text_expansion_ratio
+  name: Bill Text Growth Ratio
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Float
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: text_expansion_ratio
+- key: cap_topic_code
+  name: Comparative Agendas Project Topic Code
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: String
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: cap_topic_code
+- key: fiscal_impact_flag
+  name: Binding Fiscal Impact Flag
+  scientific_category: BINARY_FLAG
+  type: Boolean
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: fiscal_impact_flag
+- key: final_status
+  name: Terminal Procedural Status
+  scientific_category: CLOSED_ENUM
+  allowed_values:
+  - ENACTED
+  - DEFEATED
+  - WITHDRAWN
+  - LAPSED
+  - PENDING
+  - VETOED
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: final_status
+- key: termination_mechanism
+  name: Procedural Termination Event
+  scientific_category: CLOSED_ENUM
+  allowed_values:
+  - ENACTMENT
+  - VOTE_DEFEAT
+  - EXECUTIVE_WITHDRAWAL
+  - DISSOLUTION_LAPSE
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: termination_mechanism
+- key: amendments_tabled_count
+  name: Total Stage 2 + Stage 3 Amendments Tabled
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: amendments_tabled_count
+- key: amendments_agreed_count
+  name: Total Amendments Agreed
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: amendments_agreed_count
+- key: amendments_non_executive_count
+  name: Total Non-Executive Amendments Tabled
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: amendments_non_executive_count
+- key: committee_amendments_executive_acceptance_rate
+  name: Non-Executive Committee Amendment Acceptance Rate
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Float (0.0 to 1.0)
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: committee_amendments_executive_acceptance_rate
+- key: bill_text_alteration_score
+  name: Bill Text Alteration Score
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Float (0.0 to 1.0)
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: bill_text_alteration_score
 amendment_entity_variables:
-  - key: "canonical_amendment_id"
-    name: "Persistent Amendment ID"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "canonical_amendment_id"
-
-  - key: "local_amendment_number"
-    name: "Holyrood Marshalled List Amendment Number"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "local_amendment_number"
-
-  - key: "bill_id"
-    name: "Parent Bill Link"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "bill_id"
-
-  - key: "marshalled_list_url"
-    name: "Source Marshalled List Document URL"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "URL"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "marshalled_list_url"
-
-  - key: "stage_canonical"
-    name: "Stage of Consideration"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "COMMITTEE_STAGE" # Stage 2
-      - "REPORT_STAGE"
-      - "FINAL_PASSAGE"   # Stage 3
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "stage_canonical"
-
-  - key: "stage_raw"
-    name: "Native Stage Description"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "stage_raw"
-
-  - key: "committee_name"
-    name: "Scrutinising Committee Name"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "committee_name"
-
-  - key: "committee_type"
-    name: "Committee Classification"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "MANDATORY"
-      - "SUBJECT"
-      - "AD_HOC"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "committee_type"
-
-  - key: "date_tabled"
-    name: "Date Amendment Lodged"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Date (ISO 8601)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "date_tabled"
-
-  - key: "date_decided"
-    name: "Date Voted or Disposed"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Date (ISO 8601)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "date_decided"
-
-  - key: "sponsor_member_id"
-    name: "Lead MSP Sponsor Persistent Identifier"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "String (Wikidata QID)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "sponsor_member_id"
-
-  - key: "sponsor_name"
-    name: "Full Name of Lead Sponsor MSP"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "sponsor_name"
-
-  - key: "sponsor_party_on_tabling_date"
-    name: "Sponsor Party Affiliation on Tabling Date"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "sponsor_party_on_tabling_date"
-
-  - key: "sponsor_party_leadership_role"
-    name: "Sponsor Frontbench Party Leadership Role"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "sponsor_party_leadership_role"
-
-  - key: "sponsor_governance_role"
-    name: "Sponsor Institutional Alignment"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "EXECUTIVE_MINISTER"
-      - "GOVERNING_BACKBENCH"
-      - "OPPOSITION_MEMBER"
-      - "CROSS_PARTY"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "sponsor_governance_role"
-
-  - key: "co_sponsors_count"
-    name: "Count of Co-Signing MSPs"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "co_sponsors_count"
-
-  - key: "target_clause_or_schedule"
-    name: "Structural Location Target in Bill"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "target_clause_or_schedule"
-
-  - key: "amendment_action_type"
-    name: "Text Alteration Action Type"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "INSERTION"
-      - "DELETION"
-      - "SUBSTITUTION"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "amendment_action_type"
-
-  - key: "government_position"
-    name: "Executive Stance during Debate"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "SUPPORTED"
-      - "OPPOSED"
-      - "NEUTRAL_NO_STANCE"
-      - "MINISTERIAL_OWN_AMENDMENT"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "government_position"
-
-  - key: "disposition_canonical"
-    name: "Final Amendment Disposition"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "AGREED_TO"
-      - "DEFEATED"
-      - "WITHDRAWN"
-      - "NOT_MOVED"
-      - "FALLEN"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "disposition_canonical"
-
-  - key: "decision_mechanism"
-    name: "Decision Mechanism"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "VOICE_VOTE_UNANIMOUS"
-      - "DIVISION_ROLL_CALL"
-      - "WITHDRAWN_WITHOUT_VOTE"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "decision_mechanism"
-
-  - key: "division_id"
-    name: "Linked Roll-Call Division Record ID"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "division_id"
-
-  - key: "aye_count"
-    name: "Division Aye Vote Tally"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "aye_count"
-
-  - key: "no_count"
-    name: "Division No Vote Tally"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "no_count"
-
-  - key: "abstain_count"
-    name: "Division Abstain Vote Tally"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "abstain_count"
-
-  - key: "party_dissent_rate_on_amendment"
-    name: "Governing MSP Rebellion Rate on Amendment Division"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Float (0.0 to 1.0)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "party_dissent_rate_on_amendment"
-
-# --- ENTITY 3: COMMITTEE CONTEXT & MEMBERSHIP (CommitteeContext) ---
+- key: canonical_amendment_id
+  name: Persistent Amendment ID
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: String
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: canonical_amendment_id
+- key: local_amendment_number
+  name: Holyrood Marshalled List Amendment Number
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: String
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: local_amendment_number
+- key: bill_id
+  name: Parent Bill Link
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: String
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: bill_id
+- key: marshalled_list_url
+  name: Source Marshalled List Document URL
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: URL
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: marshalled_list_url
+- key: stage_canonical
+  name: Stage of Consideration
+  scientific_category: CLOSED_ENUM
+  allowed_values:
+  - COMMITTEE_STAGE
+  - REPORT_STAGE
+  - FINAL_PASSAGE
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: stage_canonical
+- key: stage_raw
+  name: Native Stage Description
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: String
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: stage_raw
+- key: committee_name
+  name: Scrutinising Committee Name
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: String
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: committee_name
+- key: committee_type
+  name: Committee Classification
+  scientific_category: CLOSED_ENUM
+  allowed_values:
+  - MANDATORY
+  - SUBJECT
+  - AD_HOC
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: committee_type
+- key: date_tabled
+  name: Date Amendment Lodged
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Date (ISO 8601)
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: date_tabled
+- key: date_decided
+  name: Date Voted or Disposed
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Date (ISO 8601)
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: date_decided
+- key: sponsor_member_id
+  name: Lead MSP Sponsor Persistent Identifier
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: String (Wikidata QID)
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: sponsor_member_id
+- key: sponsor_name
+  name: Full Name of Lead Sponsor MSP
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: String
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: sponsor_name
+- key: sponsor_party_on_tabling_date
+  name: Sponsor Party Affiliation on Tabling Date
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: String
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: sponsor_party_on_tabling_date
+- key: sponsor_party_leadership_role
+  name: Sponsor Frontbench Party Leadership Role
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: String
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: sponsor_party_leadership_role
+- key: sponsor_governance_role
+  name: Sponsor Institutional Alignment
+  scientific_category: CLOSED_ENUM
+  allowed_values:
+  - EXECUTIVE_MINISTER
+  - GOVERNING_BACKBENCH
+  - OPPOSITION_MEMBER
+  - CROSS_PARTY
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: sponsor_governance_role
+- key: co_sponsors_count
+  name: Count of Co-Signing MSPs
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: co_sponsors_count
+- key: target_clause_or_schedule
+  name: Structural Location Target in Bill
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: String
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: target_clause_or_schedule
+- key: amendment_action_type
+  name: Text Alteration Action Type
+  scientific_category: CLOSED_ENUM
+  allowed_values:
+  - INSERTION
+  - DELETION
+  - SUBSTITUTION
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: amendment_action_type
+- key: government_position
+  name: Executive Stance during Debate
+  scientific_category: CLOSED_ENUM
+  allowed_values:
+  - SUPPORTED
+  - OPPOSED
+  - NEUTRAL_NO_STANCE
+  - MINISTERIAL_OWN_AMENDMENT
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: government_position
+- key: disposition_canonical
+  name: Final Amendment Disposition
+  scientific_category: CLOSED_ENUM
+  allowed_values:
+  - AGREED_TO
+  - DEFEATED
+  - WITHDRAWN
+  - NOT_MOVED
+  - FALLEN
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: disposition_canonical
+- key: decision_mechanism
+  name: Decision Mechanism
+  scientific_category: CLOSED_ENUM
+  allowed_values:
+  - VOICE_VOTE_UNANIMOUS
+  - DIVISION_ROLL_CALL
+  - WITHDRAWN_WITHOUT_VOTE
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: decision_mechanism
+- key: division_id
+  name: Linked Roll-Call Division Record ID
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: String
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: division_id
+- key: aye_count
+  name: Division Aye Vote Tally
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: aye_count
+- key: no_count
+  name: Division No Vote Tally
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: no_count
+- key: abstain_count
+  name: Division Abstain Vote Tally
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: abstain_count
+- key: party_dissent_rate_on_amendment
+  name: Governing MSP Rebellion Rate on Amendment Division
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Float (0.0 to 1.0)
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: party_dissent_rate_on_amendment
 committee_entity_variables:
-  - key: "committee_id"
-    name: "Committee ID"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "committee_id"
-
-  - key: "committee_name"
-    name: "Committee Official Name"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "String"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "committee_name"
-
-  - key: "committee_type"
-    name: "Committee Classification"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "MANDATORY"
-      - "SUBJECT"
-      - "AD_HOC"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "committee_type"
-
-  - key: "committee_convener_member_id"
-    name: "Committee Convener MSP ID"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "String (Wikidata QID)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "committee_convener_member_id"
-
-  - key: "committee_deputy_convener_member_id"
-    name: "Committee Deputy Convener MSP ID"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "String (Wikidata QID)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "committee_deputy_convener_member_id"
-
-  - key: "committee_membership_roster"
-    name: "Committee Membership Roster with Active Date Bounds"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Array of Objects"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    description: "From /api/PersonCommitteeRoles (PersonID, RoleID, ValidFromDate, ValidUntilDate)."
-    canonical_mapping: "committee_membership_roster"
-
-# --- DOMAIN 11: PARSED PROCEEDINGS & OFFICIAL REPORT ANALYTICS ---
+- key: committee_id
+  name: Committee ID
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: Integer
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: committee_id
+- key: committee_name
+  name: Committee Official Name
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: String
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: committee_name
+- key: committee_type
+  name: Committee Classification
+  scientific_category: CLOSED_ENUM
+  allowed_values:
+  - MANDATORY
+  - SUBJECT
+  - AD_HOC
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: committee_type
+- key: committee_convener_member_id
+  name: Committee Convener MSP ID
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: String (Wikidata QID)
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: committee_convener_member_id
+- key: committee_deputy_convener_member_id
+  name: Committee Deputy Convener MSP ID
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: String (Wikidata QID)
+  provenance_tier: DERIVED_DETERMINISTIC
+  canonical_mapping: committee_deputy_convener_member_id
+- key: committee_membership_roster
+  name: Committee Membership Roster with Active Date Bounds
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Array of Objects
+  provenance_tier: NATIVE_DIRECT
+  description: From /api/PersonCommitteeRoles (PersonID, RoleID, ValidFromDate, ValidUntilDate).
+  canonical_mapping: committee_membership_roster
 proceedings_variables:
-  - key: "official_report_plenary_api_url"
-    name: "Official Report Plenary Debates API Endpoint"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "URL"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    description: "Structured API feed /api/orsplenarymeeting?year={YYYY} containing speech-by-speech interventions."
-    canonical_mapping: "official_report_plenary_api_url"
-
-  - key: "official_report_committee_api_url"
-    name: "Official Report Committee Debates API Endpoint"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "URL"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    description: "Structured API feed /api/orscommitteemeeting?year={YYYY} containing committee debate interventions."
-    canonical_mapping: "official_report_committee_api_url"
-
-  - key: "official_report_publication_url"
-    name: "Official Report Web Transcript Publication URL"
-    scientific_category: "PERSISTENT_IDENTIFIER"
-    type: "URL"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "official_report_publication_url"
-
-  - key: "proceedings_total_word_count"
-    name: "Debate Proceedings Total Word Count"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "proceedings_total_word_count"
-
-  - key: "proceedings_interventions_count"
-    name: "Recorded Speech Interventions Count"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "proceedings_interventions_count"
-
-  - key: "proceedings_msps_speaking_count"
-    name: "Participating MSPs Count"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "proceedings_msps_speaking_count"
-
-  - key: "executive_ministers_word_count_share"
-    name: "Executive Ministers Word Count Share"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Float (0.0 to 1.0)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "executive_ministers_word_count_share"
-
-  - key: "backbench_msps_word_count_share"
-    name: "Backbench & Opposition MSPs Word Count Share"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Float (0.0 to 1.0)"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    canonical_mapping: "backbench_msps_word_count_share"
-
-# --- INSTITUTIONAL HARD GAPS & PROCEDURAL OMISSIONS ---
+- key: official_report_plenary_api_url
+  name: Official Report Plenary Debates API Endpoint
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: URL
+  provenance_tier: NATIVE_DIRECT
+  description: Structured API feed /api/orsplenarymeeting?year={YYYY} containing speech-by-speech
+    interventions.
+  canonical_mapping: official_report_plenary_api_url
+- key: official_report_committee_api_url
+  name: Official Report Committee Debates API Endpoint
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: URL
+  provenance_tier: NATIVE_DIRECT
+  description: Structured API feed /api/orscommitteemeeting?year={YYYY} containing
+    committee debate interventions.
+  canonical_mapping: official_report_committee_api_url
+- key: official_report_publication_url
+  name: Official Report Web Transcript Publication URL
+  scientific_category: PERSISTENT_IDENTIFIER
+  type: URL
+  provenance_tier: NATIVE_DIRECT
+  canonical_mapping: official_report_publication_url
+- key: proceedings_total_word_count
+  name: Debate Proceedings Total Word Count
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: proceedings_total_word_count
+- key: proceedings_interventions_count
+  name: Recorded Speech Interventions Count
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: proceedings_interventions_count
+- key: proceedings_msps_speaking_count
+  name: Participating MSPs Count
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Integer
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: proceedings_msps_speaking_count
+- key: executive_ministers_word_count_share
+  name: Executive Ministers Word Count Share
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Float (0.0 to 1.0)
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: executive_ministers_word_count_share
+- key: backbench_msps_word_count_share
+  name: Backbench & Opposition MSPs Word Count Share
+  scientific_category: RESULT_DEPENDENT_DYNAMIC
+  type: Float (0.0 to 1.0)
+  provenance_tier: NOT_YET_CATEGORISED
+  canonical_mapping: backbench_msps_word_count_share
 procedural_hard_gaps:
-  - key: "programme_motion_flag"
-    name: "Programme Motion Mechanism"
-    scientific_category: "INSTITUTIONAL_HARD_GAP"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    hard_gap_reason: "NOT_APPLICABLE_TO_ASSEMBLY"
-    description: "Westminster procedural concept. Holyrood uses Business Motions agreed by Parliamentary Bureau."
-
-  - key: "guillotine_invoked_flag"
-    name: "Guillotine Motion Mechanism"
-    scientific_category: "INSTITUTIONAL_HARD_GAP"
-    provenance_tier: "NOT_YET_CATEGORISED"
-    hard_gap_reason: "NOT_APPLICABLE_TO_ASSEMBLY"
-    description: "Westminster closure motion. Not applicable to Holyrood procedure."
+- key: programme_motion_flag
+  name: Programme Motion Mechanism
+  scientific_category: INSTITUTIONAL_HARD_GAP
+  provenance_tier: NOT_YET_CATEGORISED
+  hard_gap_reason: NOT_APPLICABLE_TO_ASSEMBLY
+  description: Westminster procedural concept. Holyrood uses Business Motions agreed
+    by Parliamentary Bureau.
+- key: guillotine_invoked_flag
+  name: Guillotine Motion Mechanism
+  scientific_category: INSTITUTIONAL_HARD_GAP
+  provenance_tier: NOT_YET_CATEGORISED
+  hard_gap_reason: NOT_APPLICABLE_TO_ASSEMBLY
+  description: Westminster closure motion. Not applicable to Holyrood procedure.

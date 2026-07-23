@@ -21,3 +21,8 @@ dist/
 .DS_Store
 .vscode/
 .idea/
+
+# Internal working drafts & review scratchpads
+PeerReview/
+archive/
+*.scratch.md

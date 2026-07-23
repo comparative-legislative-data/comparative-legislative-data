@@ -1,207 +1,241 @@
-# Canonical Legislative Data Schema Specification
+# Canonical Data Schema Specification
 
 **Comparative Legislative Data Platform**  
-*Version 2.0.0 (North Star Reset)*
+*Pydantic v2 Canonical Models & Database Schema Standard*  
+*Version 2.1.0 (6-Tier Provenance & AI Validation Lifecycle Specification)*
 
 ---
 
-## 1. Overview & Architectural Principles
+## 1. Overview & Data Model Principles
 
-This document specifies the **Pydantic v2 Canonical Data Schema** for the Comparative Legislative Data Platform. The schema models all legislative data ingested, mirrored, and served by the platform across 8 Quantitative Research Domains established in the [Master Canonical Variable Catalog](file:///home/steven/Documents/github/comparativelegislativedata/docs/canonical_variable_catalog.md).
+The **Canonical Data Schema** defines the core Pydantic v2 models and database relational structures for storing, querying, and auditing legislative data across global parliamentary and presidential assemblies.
 
-### The 5-Tier Data Availability & Provenance Framework
-
-Every field in the canonical bill record is assigned a provenance classification evaluating host API availability:
-
-- **`NATIVE_DIRECT`:** Available directly in the host assembly's official API or raw feed (JSON/XML).
-- **`DERIVED_DETERMINISTIC`:** Derived deterministically via pipeline joins, date arithmetic, or lookup tables (e.g. Executive Rosters). Includes an explicit `derivation_confidence` rating (`HIGH`, `MEDIUM`, `LOW`).
-- **`DERIVED_SYNTHETIC_AI`:** Synthesized using advanced NLP/LLM text processing, topic modeling, or structural parsing of unstructured Hansard/PDF text.
-- **`UNAVAILABLE_HARD_GAP`:** Missing natively from the host assembly, unrecorded, or resource-prohibitive to generate (Documented Open Data Gap).
+### Key Schema Features
+1. **6-Tier Data Availability & Provenance Tagging:** Every record and variable is explicitly assigned a provenance tier:
+   - `CANONICAL_WISHLIST_TARGET`
+   - `NATIVE_DIRECT`
+   - `DERIVED_DETERMINISTIC`
+   - `DERIVED_HUMAN_CODED` *(Manual expert/PhD hand-coding)*
+   - `DERIVED_SYNTHETIC_AI` *(NLP/LLM text extraction)*
+   - `UNAVAILABLE_HARD_GAP` *(Institutional data omission)*
+2. **AI Validation Lifecycle Metadata:** Tier 5 (`DERIVED_SYNTHETIC_AI`) data includes an explicit validation status:
+   - `UNVERIFIED_DRAFT` (Live exploratory data)
+   - `SAMPLE_VALIDATED` (Audited on randomized human sample)
+   - `GOLD_BENCHMARKED` (Benchmarked against Tier 4 ground truth)
+3. **Hard Gap Sub-Taxonomy:** Tier 6 (`UNAVAILABLE_HARD_GAP`) carries sub-reason codes:
+   - `NOT_RECORDED_BY_ASSEMBLY`
+   - `RECORDED_BUT_UNDIGITIZED`
+   - `RESTRICTED_ACCESS`
+   - `COST_PROHIBITIVE`
 
 ---
 
-## 2. Core Enum Definitions
+## 2. Pydantic v2 Models Specification
 
 ```python
 from enum import Enum
+from typing import List, Optional, Dict, Any
+from pydantic import BaseModel, Field, HttpUrl
+from datetime import date, datetime
+
+# --- ENUM DEFINITIONS ---
+
+class ProvenanceTier(str, Enum):
+    CANONICAL_WISHLIST_TARGET = "CANONICAL_WISHLIST_TARGET"
+    NATIVE_DIRECT = "NATIVE_DIRECT"
+    DERIVED_DETERMINISTIC = "DERIVED_DETERMINISTIC"
+    DERIVED_HUMAN_CODED = "DERIVED_HUMAN_CODED"
+    DERIVED_SYNTHETIC_AI = "DERIVED_SYNTHETIC_AI"
+    UNAVAILABLE_HARD_GAP = "UNAVAILABLE_HARD_GAP"
+
+class AIValidationStatus(str, Enum):
+    UNVERIFIED_DRAFT = "UNVERIFIED_DRAFT"
+    SAMPLE_VALIDATED = "SAMPLE_VALIDATED"
+    GOLD_BENCHMARKED = "GOLD_BENCHMARKED"
+
+class HardGapReason(str, Enum):
+    NOT_RECORDED_BY_ASSEMBLY = "NOT_RECORDED_BY_ASSEMBLY"
+    RECORDED_BUT_UNDIGITIZED = "RECORDED_BUT_UNDIGITIZED"
+    RESTRICTED_ACCESS = "RESTRICTED_ACCESS"
+    COST_PROHIBITIVE = "COST_PROHIBITIVE"
+
+class ChamberType(str, Enum):
+    SOVEREIGN_BICAMERAL = "SOVEREIGN_BICAMERAL"
+    DEVOLVED_UNICAMERAL = "DEVOLVED_UNICAMERAL"
+    FEDERAL_UPPER = "FEDERAL_UPPER"
+    FEDERAL_LOWER = "FEDERAL_LOWER"
+    CONCURRENT_ELECTED = "CONCURRENT_ELECTED"
 
 class InitiatorType(str, Enum):
-    """Globally neutral classification of the originating sponsor/author."""
     EXECUTIVE = "EXECUTIVE"
     INDIVIDUAL_MEMBER = "INDIVIDUAL_MEMBER"
     GROUP_MEMBERS = "GROUP_MEMBERS"
     COMMITTEE = "COMMITTEE"
-    CITIZEN_INITIATIVE = "CITIZEN_INITIATIVE"
     PRIVATE_HYBRID = "PRIVATE_HYBRID"
-    OTHER = "OTHER"
 
-class InitiatorGovernanceRole(str, Enum):
-    """Alignment of the primary sponsor relative to executive power at introduction."""
+class PartyGovernanceRole(str, Enum):
     GOVERNING_PARTY = "GOVERNING_PARTY"
     OPPOSITION_PARTY = "OPPOSITION_PARTY"
     CROSS_PARTY = "CROSS_PARTY"
     NON_PARTISAN = "NON_PARTISAN"
-    COMMITTEE_PROPOSED = "COMMITTEE_PROPOSED"
-    UNKNOWN = "UNKNOWN"
 
-class FinalStatus(str, Enum):
-    """Standardized terminal disposition or pending status of the legislation."""
+class FinalBillStatus(str, Enum):
     ENACTED = "ENACTED"
     DEFEATED = "DEFEATED"
     WITHDRAWN = "WITHDRAWN"
     LAPSED = "LAPSED"
     PENDING = "PENDING"
+    VETOED = "VETOED"
 
-class TerminationMechanism(str, Enum):
-    """Specific procedural mechanism resulting in bill termination or enactment."""
-    ENACTMENT = "ENACTMENT"
-    EXECUTIVE_WITHDRAWAL = "EXECUTIVE_WITHDRAWAL"
-    VOTE_DEFEAT = "VOTE_DEFEAT"
-    SESSION_EXPIRY = "SESSION_EXPIRY"
-    SECTION_35_VETO = "SECTION_35_VETO"
-    SUSPENSION_TERMINATION = "SUSPENSION_TERMINATION"
-    PENDING = "PENDING"
+class VotingCoalitionType(str, Enum):
+    UNANIMOUS = "UNANIMOUS"
+    GOVERNMENT_PARTY_LINE = "GOVERNMENT_PARTY_LINE"
+    CROSS_PARTY_MAJORITY = "CROSS_PARTY_MAJORITY"
+    MINORITY_PASSED = "MINORITY_PASSED"
+    OPPOSITION_DEFEAT = "OPPOSITION_DEFEAT"
 
-class StageCanonical(str, Enum):
-    """Globally neutral stage milestones in parliamentary proceedings."""
-    FIRST_READING = "FIRST_READING"
-    SECOND_READING = "SECOND_READING"
-    COMMITTEE_STAGE = "COMMITTEE_STAGE"
-    REPORT_STAGE = "REPORT_STAGE"
-    THIRD_READING = "THIRD_READING"
-    SECOND_CHAMBER_REVIEW = "SECOND_CHAMBER_REVIEW"
-    CONCILIATION = "CONCILIATION"
-    FINAL_PASSAGE = "FINAL_PASSAGE"
-    PROMULGATION = "PROMULGATION"
+# --- PROVENANCE METADATA SUB-MODEL ---
 
-class ProvenanceTier(str, Enum):
-    """5-Tier Data Availability & Provenance Classification."""
-    NATIVE_DIRECT = "NATIVE_DIRECT"
-    DERIVED_DETERMINISTIC = "DERIVED_DETERMINISTIC"
-    DERIVED_SYNTHETIC_AI = "DERIVED_SYNTHETIC_AI"
-    UNAVAILABLE_HARD_GAP = "UNAVAILABLE_HARD_GAP"
+class VariableProvenance(BaseModel):
+    tier: ProvenanceTier
+    confidence: str = Field(default="HIGH", description="HIGH, MEDIUM, or LOW")
+    ai_validation_status: Optional[AIValidationStatus] = Field(default=None, description="For Tier 5 DERIVED_SYNTHETIC_AI")
+    hard_gap_reason: Optional[HardGapReason] = Field(default=None, description="For Tier 6 UNAVAILABLE_HARD_GAP")
+    source_feed: Optional[str] = Field(default=None, description="Raw feed, API endpoint, or paper source")
+    citation: Optional[str] = Field(default=None, description="Academic paper or PhD dataset reference for Tier 4")
 
-class DerivationConfidence(str, Enum):
-    """Confidence level of pipeline-derived fields."""
-    HIGH = "HIGH"
-    MEDIUM = "MEDIUM"
-    LOW = "LOW"
+# --- CORE CANONICAL BILL MODEL ---
+
+class StageMilestone(BaseModel):
+    stage_canonical: str
+    stage_raw: str
+    date_stage: date
+    proceedings_url: Optional[HttpUrl] = None
+
+class CanonicalBill(BaseModel):
+    # Domain 1: Assembly Context
+    jurisdiction_code: str = Field(..., example="GB-SCT")
+    parliament_term: str = Field(..., example="Session 6")
+    chamber_type: ChamberType
+    
+    # Domain 2: Bill Identity & Sponsorship
+    local_bill_id: str = Field(..., example="SP Bill 13")
+    title_canonical: str
+    title_native: Optional[str] = None
+    initiator_type: InitiatorType
+    initiator_party_governance_role: PartyGovernanceRole
+    initiator_member_id: Optional[str] = None
+    co_sponsorship_count: int = 0
+    cross_party_sponsorship_count: int = 0
+    
+    # Domain 3: Procedural Progression & Control
+    date_introduced: date
+    date_final_outcome: Optional[date] = None
+    duration_calendar_days: Optional[int] = None
+    duration_sitting_days: Optional[int] = None
+    term_interruption_flag: bool = False
+    programme_motion_flag: bool = False
+    guillotine_invoked_flag: bool = False
+    debate_time_allocated_minutes: Optional[int] = None
+    emergency_procedure_flag: bool = False
+    stages_compressed_count: int = 0
+    prior_executive_consent_required_flag: bool = False
+    prior_executive_consent_granted_date: Optional[date] = None
+    stage_milestones: List[StageMilestone] = []
+    
+    # Domain 4: Disposition & Inter-Chamber Mechanisms
+    final_status: FinalBillStatus
+    termination_mechanism: str
+    head_of_state_promulgation_date: Optional[date] = None
+    chamber_ping_pong_count: int = 0
+    chamber_disagreement_flag: bool = False
+    
+    # Domain 5: Documentation Chain & Impact
+    doc_as_introduced_url: Optional[HttpUrl] = None
+    doc_as_passed_url: Optional[HttpUrl] = None
+    doc_policy_memorandum_url: Optional[HttpUrl] = None
+    doc_financial_memorandum_url: Optional[HttpUrl] = None
+    doc_explanatory_notes_url: Optional[HttpUrl] = None
+    fiscal_impact_flag: Optional[bool] = None
+    regulatory_impact_flag: Optional[bool] = None
+    
+    # Domain 6: Committee Proceedings
+    lead_committee_name: Optional[str] = None
+    committee_referral_date: Optional[date] = None
+    committee_report_date: Optional[date] = None
+    committee_evidence_submissions_count: int = 0
+    committee_public_hearings_count: int = 0
+    
+    # Domain 7: Amendments & Alteration
+    amendments_tabled_count: int = 0
+    amendments_agreed_count: int = 0
+    amendments_rejected_count: int = 0
+    amendments_withdrawn_count: int = 0
+    amendments_executive_count: int = 0
+    amendments_non_executive_count: int = 0
+    committee_amendments_tabled_count: int = 0
+    committee_amendments_executive_acceptance_rate: Optional[float] = None
+    bill_text_alteration_score: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    
+    # Domain 8: Divisions & Coalitions
+    divisions_count: int = 0
+    rebellions_flag: bool = False
+    voting_coalition_type: VotingCoalitionType
+    plenary_record_urls: List[HttpUrl] = []
+    
+    # Comprehensive Variable Provenance Map
+    variable_provenance_map: Dict[str, VariableProvenance] = Field(
+        default_factory=dict, 
+        description="Explicit 6-tier provenance metadata key-value mapping per variable"
+    )
 ```
 
 ---
 
-## 3. Pydantic Model Hierarchy
+## 3. PostgreSQL Database Schema DDL
 
-### A. Stage Milestone Model
-```python
-from datetime import date
-from typing import Optional
-from pydantic import BaseModel, Field
+```sql
+CREATE TYPE provenance_tier_enum AS ENUM (
+    'CANONICAL_WISHLIST_TARGET',
+    'NATIVE_DIRECT',
+    'DERIVED_DETERMINISTIC',
+    'DERIVED_HUMAN_CODED',
+    'DERIVED_SYNTHETIC_AI',
+    'UNAVAILABLE_HARD_GAP'
+);
 
-class StageMilestone(BaseModel):
-    stage_canonical: StageCanonical = Field(..., description="Standardized stage milestone")
-    stage_raw: str = Field(..., description="Native stage name from host feed")
-    chamber: str = Field(default="PRIMARY_CHAMBER", description="Chamber where stage occurred")
-    date_stage: date = Field(..., description="Date stage was completed")
-    proceedings_url: Optional[str] = Field(None, description="URL to official Hansard/Journal transcript")
-    seq_order: int = Field(..., description="Sequential order in bill progression (1-indexed)")
-```
+CREATE TYPE ai_validation_status_enum AS ENUM (
+    'UNVERIFIED_DRAFT',
+    'SAMPLE_VALIDATED',
+    'GOLD_BENCHMARKED'
+);
 
-### B. Sponsor Information Model
-```python
-class SponsorInfo(BaseModel):
-    member_name: str = Field(..., description="Name string of the sponsor/minister")
-    member_id: Optional[str] = Field(None, description="Persistent member ID (Wikidata QID / native ID)")
-    party: Optional[str] = Field(None, description="Political party affiliation")
-    is_primary: bool = Field(default=True, description="True if primary sponsor, False if co-sponsor")
-```
+CREATE TYPE hard_gap_reason_enum AS ENUM (
+    'NOT_RECORDED_BY_ASSEMBLY',
+    'RECORDED_BUT_UNDIGITIZED',
+    'RESTRICTED_ACCESS',
+    'COST_PROHIBITIVE'
+);
 
-### C. Division Record Model
-```python
-class DivisionRecord(BaseModel):
-    division_id: str = Field(..., description="Local division/roll-call vote identifier")
-    stage_raw: str = Field(..., description="Stage where division vote occurred")
-    date_division: date = Field(..., description="Date of division vote")
-    yeas_count: int = Field(..., description="Total Yea / For votes")
-    nays_count: int = Field(..., description="Total Nay / Against votes")
-    abstentions_count: int = Field(default=0, description="Total Abstentions / Present")
-    passed_flag: bool = Field(..., description="True if division motion carried")
-    rebellions_flag: bool = Field(default=False, description="True if >=5% party defiance occurred")
-```
-
-### D. Normalized Bill Model
-```python
-class NormalizedBill(BaseModel):
-    title: str = Field(..., description="Primary title in English (Domain 2)")
-    parliament_term: str = Field(..., description="Macro electoral period, e.g. Session 6 (Domain 1)")
-    session_subperiod: Optional[str] = Field(None, description="Sessional sub-period (Domain 1)")
-    session_start_date: Optional[date] = Field(None, description="Opening date of session (Domain 1)")
-    session_end_date: Optional[date] = Field(None, description="Dissolution date of session (Domain 1)")
-    
-    # Origin & Sponsorship (Domain 2)
-    initiator_type: InitiatorType = Field(..., description="Standardized sponsor classification")
-    initiator_party_governance_role: InitiatorGovernanceRole = Field(
-        default=InitiatorGovernanceRole.UNKNOWN,
-        description="Sponsor alignment relative to executive"
-    )
-    co_sponsorship_count: int = Field(default=0, description="Total co-sponsors attached")
-    cross_party_sponsorship_count: int = Field(default=0, description="Opposition co-sponsors attached")
-    
-    # Timelines (Domain 3)
-    date_introduced: date = Field(..., description="Introduction date")
-    date_final_outcome: Optional[date] = Field(None, description="Final outcome date")
-    duration_calendar_days: Optional[int] = Field(None, description="Elapsed calendar days")
-    duration_sitting_days: Optional[int] = Field(None, description="Elapsed sitting days")
-    suspension_interrupted_flag: bool = Field(default=False, description="Spanned parliamentary recess")
-    stage_milestones: List[StageMilestone] = Field(default_factory=list, description="Stage timeline array")
-    
-    # Final Disposition (Domain 4)
-    final_status: FinalStatus = Field(..., description="Terminal status")
-    termination_mechanism: TerminationMechanism = Field(default=TerminationMechanism.PENDING)
-    royal_assent_date: Optional[date] = Field(None, description="Royal assent date")
-    
-    # Documents Chain (Domain 5)
-    doc_as_introduced_url: Optional[str] = Field(None)
-    doc_as_passed_url: Optional[str] = Field(None)
-    doc_policy_memorandum_url: Optional[str] = Field(None)
-    doc_financial_memorandum_url: Optional[str] = Field(None)
-    doc_explanatory_notes_url: Optional[str] = Field(None)
-    doc_marshalled_amendments_urls: List[str] = Field(default_factory=list)
-    
-    # Committee Proceedings (Domain 6)
-    lead_committee_name: Optional[str] = Field(None)
-    committee_referral_date: Optional[date] = Field(None)
-    committee_report_date: Optional[date] = Field(None)
-    committee_report_url: Optional[str] = Field(None)
-    committee_evidence_submissions_count: Optional[int] = Field(None)
-    
-    # Amendments (Domain 7)
-    amendments_tabled_count: Optional[int] = Field(None)
-    amendments_agreed_count: Optional[int] = Field(None)
-    amendments_rejected_count: Optional[int] = Field(None)
-    amendments_executive_count: Optional[int] = Field(None)
-    amendments_backbench_count: Optional[int] = Field(None)
-    bill_text_alteration_score: Optional[float] = Field(None)
-    
-    # Divisions & Hansard (Domain 8)
-    divisions_count: Optional[int] = Field(None)
-    division_records: List[DivisionRecord] = Field(default_factory=list)
-    rebellions_flag: bool = Field(default=False)
-    voting_coalition_type: Optional[str] = Field(None)
-    hansard_debate_urls: List[str] = Field(default_factory=list)
-    
-    derivation_confidence: DerivationConfidence = Field(default=DerivationConfidence.HIGH)
-```
-
-### E. Root Canonical Bill Model
-```python
-from datetime import datetime
-from app.core.provenance import Provenance
-
-class Bill(BaseModel):
-    canonical_id: str = Field(..., description="Global unique ID '[JURISDICTION]-[TERM]-[LOCAL_ID]'")
-    jurisdiction_code: str = Field(..., description="ISO-style jurisdiction code (e.g. GB-SCT, GB-UKP)")
-    normalized: NormalizedBill = Field(..., description="Harmonized 8-domain comparative record")
-    native: dict = Field(default_factory=dict, description="Unmodified native host feed payload")
-    provenance: Provenance = Field(..., description="Audit trail and SHA-256 provenance block")
+CREATE TABLE canonical_bills (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    jurisdiction_code VARCHAR(32) NOT NULL,
+    parliament_term VARCHAR(64) NOT NULL,
+    local_bill_id VARCHAR(64) NOT NULL,
+    title_canonical TEXT NOT NULL,
+    title_native TEXT,
+    initiator_type VARCHAR(32) NOT NULL,
+    initiator_party_governance_role VARCHAR(32) NOT NULL,
+    date_introduced DATE NOT NULL,
+    date_final_outcome DATE,
+    final_status VARCHAR(32) NOT NULL,
+    head_of_state_promulgation_date DATE,
+    bill_text_alteration_score NUMERIC(5, 4),
+    voting_coalition_type VARCHAR(32) NOT NULL,
+    payload JSONB NOT NULL,
+    variable_provenance JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_jurisdiction_bill UNIQUE (jurisdiction_code, parliament_term, local_bill_id)
+);
 ```

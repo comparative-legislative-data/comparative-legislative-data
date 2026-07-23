@@ -1,60 +1,113 @@
-# Comparative Legislative Data Platform API Specification
+# Platform API Specification
 
-**Platform API & Data Access Specification**  
-*Version 2.0.0 (North Star Reset)*
-
----
-
-## 1. Core Endpoints Overview
-
-The platform exposes open JSON/REST RESTful endpoints for academic research, automated data mirroring, and audit inspection.
-
-Base URL: `https://legislativedata.org/api/v1`
+**Comparative Legislative Data Platform**  
+*RESTful & Audit Inspection API Standard*  
+*Version 2.1.0 (6-Tier Provenance & AI Validation Specification)*
 
 ---
 
-## 2. API Endpoints Reference
+## 1. API Architecture Overview
 
-### A. Global Data Atlas Audit Blueprints
-- **`GET /api/v1/audits`**
-  - **Description:** Returns index of all audited parliamentary assemblies.
-  - **Query Parameters:** `cohort` (e.g. `2019-2024`), `region` (e.g. `EUROPE`).
-  - **Response:** JSON array of top-level assembly metadata and probe status.
-
-- **`GET /api/v1/audits/{jurisdiction_code}`**
-  - **Description:** Returns full declarative audit blueprint for a target legislature (e.g. `GB-UKP`, `GB-SCT`, `GB-WLS`).
-  - **Response Object:**
-    - `assembly`: Top-level institutional metadata.
-    - `endpoints`: Host API endpoints with rate limits and sample raw payloads.
-    - `field_mappings`: 5-tier evaluation matrix across all 8 research domains.
-    - `hansard`: Speaker disambiguation and debate resolution rules.
-    - `typology_tests`: 5 representative bill empirical audit test cases.
-    - `probe_status`: Live latency and drift status.
-
-### B. Canonical Legislative Data API
-- **`GET /api/v1/bills`**
-  - **Description:** Queries normalized bill records across international legislatures.
-  - **Query Parameters:**
-    - `jurisdiction` (e.g. `GB-SCT`)
-    - `term` (e.g. `Session 6`)
-    - `status` (`ENACTED`, `PENDING`, `DEFEATED`)
-    - `initiator_type` (`EXECUTIVE`, `INDIVIDUAL_MEMBER`)
-    - `limit` (default: 50, max: 500)
-    - `offset` (default: 0)
-  - **Response:** Paginated JSON array of canonical `Bill` records conforming to [`docs/schema.md`](file:///home/steven/Documents/github/comparativelegislativedata/docs/schema.md).
-
-- **`GET /api/v1/bills/{canonical_id}`**
-  - **Description:** Returns single canonical bill record including normalized fields, stage timeline, document URLs, and SHA-256 provenance metadata.
-
-- **`GET /api/v1/bills/{canonical_id}/raw`**
-  - **Description:** Returns the unmodified, raw host API payload for data audit inspection.
-
-### C. Live API Health & Drift Probes
-- **`GET /api/v1/probes/health`**
-  - **Description:** Returns live latency, HTTP status codes, and drift hashes for all host parliamentary API endpoints probed by the backend engine.
+The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints for querying canonical legislative datasets, auditing 6-tier data availability across assemblies, and inspecting raw host JSON/XML payloads.
 
 ---
 
-## 3. Data License & Attribution
+## 2. API Endpoints Specification
 
-All API data is served under the **Open Government Licence v3.0** (or host parliament's equivalent open data licence). Commercial and academic reuse is permitted with appropriate attribution to the Comparative Legislative Data Project.
+### 1. Global Assembly Audit Summaries
+`GET /api/v2/atlas`
+* **Description:** Returns the list of tracked legislative assemblies and their 6-tier variable coverage matrix.
+
+```json
+{
+  "assemblies": [
+    {
+      "jurisdiction_code": "GB-SCT",
+      "assembly_name": "Scottish Parliament",
+      "country": "United Kingdom",
+      "chamber_type": "DEVOLVED_UNICAMERAL",
+      "total_bills_indexed": 142,
+      "provenance_coverage_summary": {
+        "NATIVE_DIRECT_PCT": 45.2,
+        "DERIVED_DETERMINISTIC_PCT": 28.1,
+        "DERIVED_HUMAN_CODED_PCT": 12.5,
+        "DERIVED_SYNTHETIC_AI_PCT": 8.2,
+        "UNAVAILABLE_HARD_GAP_PCT": 6.0
+      }
+    }
+  ]
+}
+```
+
+---
+
+### 2. Parliament Audit & Payload Explorer
+`GET /api/v2/atlas/{jurisdiction_code}`
+* **Description:** Detailed assembly audit breakdown, API endpoints list, sample payloads, and variable-session provenance matrix.
+
+```json
+{
+  "jurisdiction_code": "GB-SCT",
+  "assembly_name": "Scottish Parliament",
+  "native_endpoints": [
+    {
+      "endpoint_name": "Bills Feed",
+      "url": "https://data.parliament.scot/api/bills",
+      "status": "HEALTHY",
+      "sample_payload": {
+        "BillId": 13,
+        "ShortTitle": "Gender Recognition Reform (Scotland) Bill",
+        "Stage": "Passed"
+      }
+    }
+  ],
+  "canonical_variable_matrix": [
+    {
+      "variable_name": "initiator_party_governance_role",
+      "domain": "Domain 2: Bill Identification & Sponsorship",
+      "tier": "DERIVED_DETERMINISTIC",
+      "confidence": "HIGH",
+      "methodology": "Sponsor MSP matched to Scottish Government Cabinet roster table."
+    },
+    {
+      "variable_name": "committee_amendments_executive_acceptance_rate",
+      "domain": "Domain 7: Amendments & Legislative Alteration",
+      "tier": "DERIVED_HUMAN_CODED",
+      "confidence": "HIGH",
+      "citation": "PhD Dissertation Dataset: Scottish Parliament Amendment Outcomes (2016-2021)."
+    },
+    {
+      "variable_name": "fiscal_impact_flag",
+      "domain": "Domain 5: Documentation Chain",
+      "tier": "DERIVED_SYNTHETIC_AI",
+      "ai_validation_status": "UNVERIFIED_DRAFT",
+      "confidence": "MEDIUM",
+      "methodology": "Extracted via LLM analysis of official Financial Memorandum text."
+    },
+    {
+      "variable_name": "guillotine_invoked_flag",
+      "domain": "Domain 3: Timelines & Procedural Control",
+      "tier": "UNAVAILABLE_HARD_GAP",
+      "hard_gap_reason": "NOT_RECORDED_BY_ASSEMBLY",
+      "notes": "Scottish Parliament standing orders do not feature formal Westminster-style guillotine motions."
+    }
+  ]
+}
+```
+
+---
+
+### 3. Canonical Bills Query Engine
+`GET /api/v2/bills`
+* **Query Parameters:**
+  * `jurisdiction_code`: Filter by assembly (e.g. `GB-SCT`, `GB-UKP`).
+  * `term`: Filter by session (e.g. `Session 6`).
+  * `final_status`: Filter by status (`ENACTED`, `DEFEATED`).
+  * `provenance_tier`: Filter by availability tier (`DERIVED_HUMAN_CODED`, `DERIVED_SYNTHETIC_AI`).
+  * `ai_validation_status`: Filter AI data (`UNVERIFIED_DRAFT`, `SAMPLE_VALIDATED`, `GOLD_BENCHMARKED`).
+
+---
+
+### 4. Direct Bill Payload & Audit Inspector
+`GET /api/v2/bills/{jurisdiction_code}/{local_bill_id}`
+* **Description:** Retrieves the full canonical record for a specific bill, including raw host payload and key-by-key variable provenance map.

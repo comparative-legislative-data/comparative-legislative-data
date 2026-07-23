@@ -33,7 +33,7 @@ To ensure maximum academic transparency, every variable in our canonical schema 
 │ (2) NATIVE   ││ (3) DERIVED  │   │ (4) DERIVED  │   │ (5) DERIVED  │   │ (6) HARD GAP │
 │     DIRECT   ││ DETERMINISTIC│   │  HUMAN-CODED │   │ SYNTHETIC-AI │   │ UNAVAILABLE  │
 ├──────────────┤├──────────────┤   ├──────────────┤   ├──────────────┤   ├──────────────┤
-│ Host API or  ││ raw feed     │   │ Expert hand- │   │ NLP/LLM text │   │ Missing,     │
+│ Host API or  ││ Rule-based   │   │ Expert hand- │   │ NLP/LLM text │   │ Missing,     │
 │ raw feed     ││ transforms & │   │ coding & PhD │   │ extraction & │   │ unrecorded,  │
 │ (JSON/XML).  ││ joins        │   │ datasets     │   │ probabilistic│   │ or non-      │
 │              ││ (e.g. roster │   │ (Gold        │   │ inference    │   │ digitized    │

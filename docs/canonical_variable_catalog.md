@@ -1,150 +1,139 @@
 # Master Canonical Variable Catalog
 
 **Comparative Legislative Data Platform**  
-**Version:** 2.5.0  
-**Specification:** Dual-Layer & Dual-Entity (Bill + Amendment) Master Variable Dictionary
+**Version:** 2.6.0  
+**Specification:** Dual-Layer & Triple-Entity (Bill + Amendment + Proceedings) Master Variable Dictionary
 
 ---
 
-## 1. Dual-Layer & Dual-Entity Architecture
+## 1. Multi-Entity Architecture
 
-The platform operates on a **Dual-Layer & Dual-Entity Data Architecture** designed to serve both single-country legislative specialists and cross-national quantitative political scientists:
-
-```
-                  ┌─────────────────────────────────────────────────────────┐
-                  │   HIGH-RESOLUTION NATIVE INSTITUTIONAL LAYER (Layer A) │
-                  │  └─ 100% granular assembly data, raw Hansard feeds,      │
-                  │     native stage codes, motion texts, word counts,      │
-                  │     and individual roll-call vote choice records.       │
-                  └────────────────────────────┬────────────────────────────┘
-                                               │
-                                MAPPED & EVALUATED PER DECISION POINT (T)
-                                               │
-                                               ▼
-                  ┌─────────────────────────────────────────────────────────┐
-                  │    HARMONISED CANONICAL COMPARATIVE LAYER (Layer B)    │
-                  │  ├─ Entity 1: CanonicalBill (Macro legislative journey) │
-                  │  └─ Entity 2: CanonicalAmendment (Micro amendment text) │
-                  └─────────────────────────────────────────────────────────┘
-```
+The platform operates on a **Multi-Entity Architecture**:
+1. **`CanonicalBill` (Macro Level):** Tracks the complete legislative journey, multi-day stage intervals, accompanying documents, and floor vote outcomes.
+2. **`CanonicalAmendment` (Micro Level):** Tracks individual amendment lodgings, Marshalled List numbers, target clauses, text alterations, government positions, and division votes.
+3. **`ParsedProceedings` (Hansard Text Level):** Tracks official report debate transcripts, speech interventions, word count shares, and speaker roles.
 
 ---
 
 ## 2. Scientific Variable Taxonomy Categories
 
-Every variable in the platform is explicitly classified under a 5-part scientific value profile:
-1. **`DEFINITIVE_CONSTANT`:** Invariable institutional properties (e.g. Assembly Name, Chamber Structure, Seat Totals).
-2. **`CLOSED_ENUM`:** Categorical variables with a strictly declared, exhaustive set of allowed choices (`allowed_values`).
+Every variable is classified under a 5-part scientific value profile:
+1. **`DEFINITIVE_CONSTANT`:** Invariable institutional properties (e.g. Assembly Name, Seat Totals).
+2. **`CLOSED_ENUM`:** Categorical variables with an explicit list of allowed choices (`allowed_values`).
 3. **`RESULT_DEPENDENT_DYNAMIC`:** Continuous or discrete empirical measures determined per bill, document, or vote event.
 4. **`BINARY_FLAG`:** Boolean indicators (`True` / `False`) for specific procedural triggers.
-5. **`PERSISTENT_IDENTIFIER`:** Unique disambiguated pointers linking external authority datasets (Wikidata QIDs, ParlGov Cabinet IDs).
+5. **`PERSISTENT_IDENTIFIER`:** Unique disambiguated pointers linking external authority datasets.
 
 ---
 
-## 3. Entity 1: Master Bill-Level Variable Catalog
+## 3. Entity 1: Master Bill-Level Variable Catalog (`CanonicalBill`)
 
 ### Domain 1: Assembly, Electoral & Executive Context
-* **`jurisdiction_code`** (`DEFINITIVE_CONSTANT`, String ISO 3166-2): Unique assembly identifier (e.g. `GB-UKP`, `GB-SCT`, `DE-BT`).
-* **`parliament_term`** (`RESULT_DEPENDENT_DYNAMIC`, String): Macro electoral legislative period (e.g. `Session 6`, `58th Parliament`).
+* **`jurisdiction_code`** (`DEFINITIVE_CONSTANT`, String ISO 3166-2): Assembly code (`GB-SCT`, `GB-UKP`, `DE-BT`).
+* **`parliament_term`** (`RESULT_DEPENDENT_DYNAMIC`, String): Electoral period identifier (e.g. `Session 6`).
+* **`term_start_date`** (`RESULT_DEPENDENT_DYNAMIC`, Date ISO 8601): Term start date.
+* **`term_end_date`** (`RESULT_DEPENDENT_DYNAMIC`, Date ISO 8601): Term end date.
 * **`chamber_type`** (`DEFINITIVE_CONSTANT`, Enum): `[SOVEREIGN_BICAMERAL, DEVOLVED_UNICAMERAL, FEDERAL_UPPER, CONSENSUS_UNICAMERAL]`.
-* **`government_type`** (`CLOSED_ENUM`, Enum): Executive arrangement typology:
-  * `allowed_values`: `[SINGLE_PARTY_MAJORITY, SINGLE_PARTY_MINORITY, FORMAL_COALITION_MAJORITY, FORMAL_COALITION_MINORITY, CONFIDENCE_AND_SUPPLY, COOPERATION_AGREEMENT, CARETAKER_TECHNOCRATIC]`
-* **`parlgov_cabinet_id`** (`PERSISTENT_IDENTIFIER`, String): Canonical cabinet identifier linked from ParlGov authority dataset.
+* **`devolved_executive_name`** (`RESULT_DEPENDENT_DYNAMIC`, String): Historical executive entity name (`"Scottish Executive"` 1999–2007; `"Scottish Government"` 2007–Present).
+* **`government_type`** (`CLOSED_ENUM`, Enum): Executive arrangement typology (`SINGLE_PARTY_MAJORITY`, `SINGLE_PARTY_MINORITY`, `FORMAL_COALITION_MAJORITY`, `FORMAL_COALITION_MINORITY`, `CONFIDENCE_AND_SUPPLY`, `COOPERATION_AGREEMENT`, `CARETAKER_TECHNOCRATIC`).
+* **`governing_parties_list`** (`RESULT_DEPENDENT_DYNAMIC`, Array of Strings): Array of governing coalition parties.
+* **`parlgov_cabinet_id`** (`PERSISTENT_IDENTIFIER`, String): ParlGov cabinet identifier.
 
 ### Domain 2: Bill Identification, Sponsorship & Temporal Origin
-* **`local_bill_id`** (`PERSISTENT_IDENTIFIER`, String): Native reference code assigned by host legislature (e.g. `SP Bill 13`, `H.R. 815`).
-* **`title_canonical`** (`RESULT_DEPENDENT_DYNAMIC`, String): Standardized English short title.
-* **`initiator_type`** (`CLOSED_ENUM`, Enum): Sponsor typology:
-  * `allowed_values`: `[EXECUTIVE, INDIVIDUAL_MEMBER, GROUP_MEMBERS, COMMITTEE, PRIVATE_ORGANISATION]`
-* **`initiator_party_governance_role`** (`CLOSED_ENUM`, Enum): Sponsor alignment on introduction date $T_{\text{Intro}}$:
-  * `allowed_values`: `[GOVERNING_PARTY, OPPOSITION_PARTY, CROSS_PARTY]`
-* **`initiator_member_id`** (`PERSISTENT_IDENTIFIER`, String): Wikidata QID for primary sponsor MP/MSP.
+* **`local_bill_id`** (`PERSISTENT_IDENTIFIER`, String): Native reference code (e.g. `SP Bill 13`).
+* **`title_canonical`** (`RESULT_DEPENDENT_DYNAMIC`, String): Standardized short title.
+* **`initiator_type`** (`CLOSED_ENUM`, Enum): Sponsor typology (`EXECUTIVE`, `INDIVIDUAL_MEMBER`, `COMMITTEE`, `PRIVATE_ORGANISATION`).
+* **`initiator_party_governance_role`** (`CLOSED_ENUM`, Enum): Sponsor party alignment on introduction date ($T_{\text{Intro}}$).
+* **`initiator_member_id`** (`PERSISTENT_IDENTIFIER`, String): Lead MSP sponsor Wikidata QID.
+* **`initiator_convener_member_id`** (`PERSISTENT_IDENTIFIER`, String): Lead Committee Convener MSP Wikidata QID (for Committee Bills).
+* **`initiator_organisation_name`** (`RESULT_DEPENDENT_DYNAMIC`, String): Name of Initiating Committee or External Promoter.
 
-### Domain 3: Progression, Timelines & Stage Milestones
-* **`date_introduced`** (`RESULT_DEPENDENT_DYNAMIC`, Date ISO 8601): Formal introduction date.
-* **`date_final_outcome`** (`RESULT_DEPENDENT_DYNAMIC`, Date ISO 8601): Date of final passage, defeat, or withdrawal.
-* **`duration_calendar_days`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Calendar days elapsed from introduction to outcome.
-* **`duration_sitting_days`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Formal parliamentary sitting days elapsed.
-* **`stage_milestones`** (`RESULT_DEPENDENT_DYNAMIC`, Array of Objects): Stage-by-stage progression interval breakdown (`stage_sequence`, `stage_canonical`, `date_start`, `date_end`, `duration_sitting_days`).
-* **`programme_motion_flag`** (`BINARY_FLAG`, Boolean): Timetabling or programme motion imposed.
-* **`guillotine_invoked_flag`** (`BINARY_FLAG`, Boolean): Debate closure or guillotine motion invoked.
-* **`emergency_procedure_flag`** (`BINARY_FLAG`, Boolean): Fast-track or urgency procedure invoked.
-* **`prior_executive_consent_required_flag`** (`BINARY_FLAG`, Boolean): Prior executive or Crown consent required.
+### Domain 3: Progression, Stage Timelines & Multi-Day Debates
+* **`date_introduced`** (`RESULT_DEPENDENT_DYNAMIC`, Date ISO 8601): Introduction date.
+* **`date_final_outcome`** (`RESULT_DEPENDENT_DYNAMIC`, Date ISO 8601): Final outcome date.
+* **`duration_calendar_days`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Calendar days elapsed.
+* **`duration_sitting_days`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Parliamentary sitting days elapsed.
+* **`stage_1_lead_committee_report_date`** (`RESULT_DEPENDENT_DYNAMIC`, Date ISO 8601): Stage 1 report publication date.
+* **`stage_1_debate_start_date` / `stage_1_debate_end_date`** (`RESULT_DEPENDENT_DYNAMIC`, Dates): Stage 1 debate start and end dates.
+* **`stage_1_debate_days_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Number of sitting days Stage 1 debate straddled.
+* **`stage_2_committee_start_date` / `stage_2_committee_end_date`** (`RESULT_DEPENDENT_DYNAMIC`, Dates): Stage 2 committee start and end dates.
+* **`stage_3_plenary_debate_start_date` / `stage_3_plenary_debate_end_date`** (`RESULT_DEPENDENT_DYNAMIC`, Dates): Stage 3 debate start and end dates.
+* **`stage_3_debate_days_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Number of sitting days Stage 3 debate straddled.
+* **`royal_assent_date`** (`RESULT_DEPENDENT_DYNAMIC`, Date ISO 8601): Royal Assent date.
+* **`emergency_procedure_flag`** (`BINARY_FLAG`, Boolean): Emergency Bill designation under Rule 9.21.
+* **`section_35_order_triggered_flag`** (`BINARY_FLAG`, Boolean): Section 35 Scotland Act Order issued blocking Royal Assent.
+* **`programme_motion_flag` / `guillotine_invoked_flag`** (`INSTITUTIONAL_HARD_GAP` for Holyrood): Assembly procedural omissions.
 
-### Domain 4: Final Disposition & Inter-Chamber Mechanisms
-* **`final_status`** (`CLOSED_ENUM`, Enum): Terminal procedural status:
-  * `allowed_values`: `[ENACTED, DEFEATED, WITHDRAWN, LAPSED, PENDING, VETOED]`
-* **`termination_mechanism`** (`CLOSED_ENUM`, Enum): Procedural termination event:
-  * `allowed_values`: `[ENACTMENT, VOTE_DEFEAT, EXECUTIVE_WITHDRAWAL, DISSOLUTION_LAPSE]`
-* **`head_of_state_promulgation_date`** (`RESULT_DEPENDENT_DYNAMIC`, Date ISO 8601): Date of Royal Assent, Presidential Signature, or Promulgation.
-* **`chamber_ping_pong_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Number of amendment exchanges between chambers.
+### Domain 4: Financial Resolutions (Rule 9.12)
+* **`financial_resolution_required_flag`** (`BINARY_FLAG`, Boolean): Financial Resolution motion required.
+* **`financial_resolution_approved_flag`** (`BINARY_FLAG`, Boolean): Financial Resolution approved.
+* **`financial_resolution_vote_date`** (`RESULT_DEPENDENT_DYNAMIC`, Date ISO 8601): Vote date.
+* **`financial_resolution_aye_count` / `no_count` / `abstain_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integers): Vote tallies.
 
-### Domain 5: Bill Documentation & Text Size Analytics
-* **`doc_as_introduced_url`** (`PERSISTENT_IDENTIFIER`, URL): Official text of the Bill as introduced.
-* **`doc_as_passed_url`** (`PERSISTENT_IDENTIFIER`, URL): Official text of the Bill as enacted or passed.
-* **`word_count_introduced`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Word count of bill text as introduced.
-* **`word_count_post_committee`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Word count of bill text post-committee stage.
-* **`word_count_enacted`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Word count of final enacted Act.
-* **`text_expansion_ratio`** (`RESULT_DEPENDENT_DYNAMIC`, Float): Ratio of enacted text vs introduced text ($\frac{\text{word\_count\_enacted}}{\text{word\_count\_introduced}}$).
-* **`cap_topic_code`** (`PERSISTENT_IDENTIFIER`, String): Policy topic code mapped to Comparative Agendas Project taxonomy.
-* **`fiscal_impact_flag`** (`BINARY_FLAG`, Boolean): Flag indicating binding fiscal expenditure or taxation impact.
+### Domain 5: Standardised Decision-Point Roll-Call Votes
+* **`decision_point_motion_type`** (`CLOSED_ENUM`, Enum): `[STAGE_1_AGREEMENT, FINANCIAL_RESOLUTION, EMERGENCY_BILL_DESIGNATION, STAGE_3_PASSAGE]`.
+* **`decision_point_vote_date`** (`RESULT_DEPENDENT_DYNAMIC`, Date ISO 8601): Vote date $T$.
+* **`decision_point_result`** (`CLOSED_ENUM`, Enum): `[PASSED, DEFEATED]`.
+* **`decision_point_party_cohesion_rate`** (`RESULT_DEPENDENT_DYNAMIC`, Float 0-1): Party unity rate.
+* **`decision_point_voting_coalition_type`** (`CLOSED_ENUM`, Enum): `[UNANIMOUS, GOVERNMENT_PARTY_LINE, CROSS_PARTY_MAJORITY]`.
+* **`individual_msp_votes_array`** (`RESULT_DEPENDENT_DYNAMIC`, Array of Objects): Member vote choices paired with party status evaluated on date $T$.
 
-### Domain 6: Committee Scrutiny & Evidence
-* **`lead_committee_name`** (`RESULT_DEPENDENT_DYNAMIC`, String): Name of primary scrutinising committee.
-* **`committee_evidence_submissions_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Published written evidence submissions received.
+### Domain 6: Accompanying Bill Documents & Size Analytics
+* **`doc_as_introduced_url` / `doc_as_passed_url`** (`PERSISTENT_IDENTIFIER`, URLs): Primary Bill text URLs.
+* **`policy_memorandum_url`** (`PERSISTENT_IDENTIFIER`, URL): Policy Memorandum document URL & word count.
+* **`financial_memorandum_url`** (`PERSISTENT_IDENTIFIER`, URL): Standalone Financial Memorandum URL & word count.
+* **`explanatory_notes_url`** (`PERSISTENT_IDENTIFIER`, URL): Standalone Explanatory Notes URL & word count.
+* **`combined_financial_explanatory_notes_url`** (`PERSISTENT_IDENTIFIER`, URL): Historical legacy combined notes URL.
+* **`delegated_powers_memorandum_url`** (`PERSISTENT_IDENTIFIER`, URL): Delegated Powers Memorandum URL & word count.
+* **`stage_1_lead_committee_report_url`** (`PERSISTENT_IDENTIFIER`, URL): Lead Committee Stage 1 Report URL & word count.
+* **`bill_as_introduced_word_count` / `bill_as_amended_stage_2_word_count` / `bill_as_enacted_word_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integers): Text word counts across stages.
+* **`text_expansion_ratio`** (`RESULT_DEPENDENT_DYNAMIC`, Float): Text growth ratio.
+* **`cap_topic_code`** (`PERSISTENT_IDENTIFIER`, String): CAP policy topic code.
+* **`fiscal_impact_flag`** (`BINARY_FLAG`, Boolean): Binding fiscal impact flag.
 
-### Domain 7: Macro Bill Amendment Aggregates
-* **`amendments_tabled_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Total amendments lodged across all stages.
-* **`amendments_agreed_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Total amendments formally adopted.
-* **`amendments_non_executive_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Total non-executive amendments tabled.
-* **`committee_amendments_executive_acceptance_rate`** (`RESULT_DEPENDENT_DYNAMIC`, Float 0-1): Proportion of non-executive committee amendments supported by government.
-* **`bill_text_alteration_score`** (`RESULT_DEPENDENT_DYNAMIC`, Float 0-1): Text similarity score comparing introduced vs enacted text.
+### Domain 7: Final Disposition
+* **`final_status`** (`CLOSED_ENUM`, Enum): `[ENACTED, DEFEATED, WITHDRAWN, LAPSED, PENDING, VETOED]`.
+* **`termination_mechanism`** (`CLOSED_ENUM`, Enum): `[ENACTMENT, VOTE_DEFEAT, EXECUTIVE_WITHDRAWAL, DISSOLUTION_LAPSE]`.
 
-### Domain 8: Temporal Divisions, Motion Types & Voting Coalitions
-* **`divisions_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Total roll-call division votes held on the bill.
-* **`motion_type`** (`CLOSED_ENUM`, Enum): Stage division motion classification:
-  * `allowed_values`: `[STAGE_1_AGREEMENT, FINANCIAL_RESOLUTION, EMERGENCY_BILL_DESIGNATION, STAGE_2_AMENDMENT, STAGE_3_PASSAGE]`
-* **`effective_majority_margin_at_event_date`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Floor majority margin ($\text{Governing Seats}_T - \text{Opposition Seats}_T$) evaluated on division date $T$.
-* **`party_dissent_rate_at_event_date`** (`RESULT_DEPENDENT_DYNAMIC`, Float 0-1): Proportion of party members voting against frontbench line on division date $T$.
-* **`voting_coalition_type`** (`CLOSED_ENUM`, Enum): Voting alignment:
-  * `allowed_values`: `[UNANIMOUS, GOVERNMENT_PARTY_LINE, CROSS_PARTY_MAJORITY]`
+### Domain 8: Macro Amendment Aggregates
+* **`amendments_tabled_count` / `amendments_agreed_count` / `amendments_non_executive_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integers): Macro amendment tallies.
+* **`committee_amendments_executive_acceptance_rate`** (`RESULT_DEPENDENT_DYNAMIC`, Float 0-1): Non-executive committee amendment government acceptance rate.
+* **`bill_text_alteration_score`** (`RESULT_DEPENDENT_DYNAMIC`, Float 0-1): Text alteration similarity score.
 
 ---
 
-## 4. Entity 2: Master Amendment-Level Variable Catalog (Domain 9)
+## 4. Entity 2: Master Amendment-Level Variable Catalog (`CanonicalAmendment`)
 
-### Domain 9: Granular Amendment Entity Variables (`CanonicalAmendment`)
-
-* **`canonical_amendment_id`** (`PERSISTENT_IDENTIFIER`, String): Unique persistent amendment identifier (e.g. `GB-SCT-S6-SPB13-AMD-042`).
-* **`local_amendment_number`** (`RESULT_DEPENDENT_DYNAMIC`, String): Native marshaled amendment number (e.g. `Amd 42`, `LOD 104`).
-* **`bill_id`** (`PERSISTENT_IDENTIFIER`, String): Parent bill identifier link (`local_bill_id`).
-* **`stage_canonical`** (`CLOSED_ENUM`, Enum): Stage of consideration:
-  * `allowed_values`: `[COMMITTEE_STAGE, REPORT_STAGE, FINAL_PASSAGE]`
-* **`stage_raw`** (`RESULT_DEPENDENT_DYNAMIC`, String): Raw native stage description (e.g. "Stage 2 Equalities Committee Day 3").
-* **`committee_name`** (`RESULT_DEPENDENT_DYNAMIC`, String): Name of scrutinising committee (e.g. "Equalities, Human Rights and Civil Justice Committee").
-* **`date_tabled`** (`RESULT_DEPENDENT_DYNAMIC`, Date ISO 8601): Date amendment formally lodged.
-* **`date_decided`** (`RESULT_DEPENDENT_DYNAMIC`, Date ISO 8601): Date amendment voted on or disposed.
-
-* **`sponsor_member_id`** (`PERSISTENT_IDENTIFIER`, String): Wikidata QID for lead MSP sponsor.
-* **`sponsor_name`** (`RESULT_DEPENDENT_DYNAMIC`, String): Full name of lead sponsor.
-* **`sponsor_party_on_tabling_date`** (`RESULT_DEPENDENT_DYNAMIC`, String): Party affiliation of sponsor evaluated on date Tabled.
-* **`sponsor_governance_role`** (`CLOSED_ENUM`, Enum): Sponsor's institutional alignment:
-  * `allowed_values`: `[EXECUTIVE_MINISTER, GOVERNING_BACKBENCH, OPPOSITION_MEMBER, CROSS_PARTY]`
-* **`co_sponsors_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Count of supporting co-signatory members.
-
-* **`target_clause_or_schedule`** (`RESULT_DEPENDENT_DYNAMIC`, String): Target structural location in Bill (e.g. "Section 4, Page 3, Line 12").
-* **`amendment_action_type`** (`CLOSED_ENUM`, Enum): Proposed text action:
-  * `allowed_values`: `[INSERTION, DELETION, SUBSTITUTION, PROBING]`
-* **`full_text_proposed`** (`RESULT_DEPENDENT_DYNAMIC`, String): Full text of proposed amendment.
-
-* **`government_position`** (`CLOSED_ENUM`, Enum): Executive stance during debate:
-  * `allowed_values`: `[SUPPORTED, OPPOSED, NEUTRAL_NO_STANCE, MINISTERIAL_OWN_AMENDMENT]`
-
-* **`disposition_canonical`** (`CLOSED_ENUM`, Enum): Final amendment disposition outcome:
-  * `allowed_values`: `[AGREED_TO, DEFEATED, WITHDRAWN, NOT_MOVED, FALLEN]`
-* **`decision_mechanism`** (`CLOSED_ENUM`, Enum): Procedural decision mechanism:
-  * `allowed_values`: `[VOICE_VOTE_UNANIMOUS, DIVISION_ROLL_CALL, WITHDRAWN_WITHOUT_VOTE]`
-
-* **`division_id`** (`PERSISTENT_IDENTIFIER`, String): Linked roll-call division record ID (if division held).
+### Domain 9: Micro Amendment Entity Records
+* **`canonical_amendment_id`** (`PERSISTENT_IDENTIFIER`, String): Persistent amendment ID.
+* **`local_amendment_number`** (`RESULT_DEPENDENT_DYNAMIC`, String): Holyrood Marshalled List amendment number.
+* **`bill_id`** (`PERSISTENT_IDENTIFIER`, String): Parent bill link.
+* **`marshalled_list_url`** (`PERSISTENT_IDENTIFIER`, URL): Source Marshalled List document URL.
+* **`stage_canonical`** (`CLOSED_ENUM`, Enum): `[COMMITTEE_STAGE, REPORT_STAGE, FINAL_PASSAGE]`.
+* **`stage_raw`** (`RESULT_DEPENDENT_DYNAMIC`, String): Native stage text.
+* **`committee_name`** (`RESULT_DEPENDENT_DYNAMIC`, String): Scrutinising committee name.
+* **`date_tabled` / `date_decided`** (`RESULT_DEPENDENT_DYNAMIC`, Dates): Lodging and decision dates.
+* **`sponsor_member_id`** (`PERSISTENT_IDENTIFIER`, String): Lead MSP sponsor Wikidata QID.
+* **`sponsor_name`** (`RESULT_DEPENDENT_DYNAMIC`, String): Lead sponsor full name.
+* **`sponsor_party_on_tabling_date`** (`RESULT_DEPENDENT_DYNAMIC`, String): Party status on tabling date.
+* **`sponsor_governance_role`** (`CLOSED_ENUM`, Enum): `[EXECUTIVE_MINISTER, GOVERNING_BACKBENCH, OPPOSITION_MEMBER, CROSS_PARTY]`.
+* **`co_sponsors_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Count of co-signing MSPs.
+* **`target_clause_or_schedule`** (`RESULT_DEPENDENT_DYNAMIC`, String): Target structural location in Bill.
+* **`amendment_action_type`** (`CLOSED_ENUM`, Enum): `[INSERTION, DELETION, SUBSTITUTION]`.
+* **`government_position`** (`CLOSED_ENUM`, Enum): `[SUPPORTED, OPPOSED, NEUTRAL_NO_STANCE, MINISTERIAL_OWN_AMENDMENT]`.
+* **`disposition_canonical`** (`CLOSED_ENUM`, Enum): `[AGREED_TO, DEFEATED, WITHDRAWN, NOT_MOVED, FALLEN]`.
+* **`decision_mechanism`** (`CLOSED_ENUM`, Enum): `[VOICE_VOTE_UNANIMOUS, DIVISION_ROLL_CALL, WITHDRAWN_WITHOUT_VOTE]`.
+* **`division_id`** (`PERSISTENT_IDENTIFIER`, String): Linked roll-call division record ID.
 * **`aye_count` / `no_count` / `abstain_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integers): Vote tallies.
-* **`party_dissent_rate_on_amendment`** (`RESULT_DEPENDENT_DYNAMIC`, Float 0-1): Proportion of governing party members rebelling against frontbench whip on this amendment division.
+* **`party_dissent_rate_on_amendment`** (`RESULT_DEPENDENT_DYNAMIC`, Float 0-1): Governing party rebellion rate on this amendment.
+
+---
+
+## 5. Domain 10: Parsed Proceedings & Official Report Analytics (`ParsedProceedings`)
+
+* **`official_report_proceedings_url`** (`PERSISTENT_IDENTIFIER`, URL): Official Report Hansard transcript URL.
+* **`proceedings_total_word_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Debate proceedings total word count.
+* **`proceedings_interventions_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Recorded speech interventions count.
+* **`proceedings_msps_speaking_count`** (`RESULT_DEPENDENT_DYNAMIC`, Integer): Unique participating MSPs count.
+* **`executive_ministers_word_count_share`** (`RESULT_DEPENDENT_DYNAMIC`, Float 0-1): Proportion of debate word count spoken by Executive Ministers.
+* **`backbench_msps_word_count_share`** (`RESULT_DEPENDENT_DYNAMIC`, Float 0-1): Proportion of debate word count spoken by backbench/opposition MSPs.

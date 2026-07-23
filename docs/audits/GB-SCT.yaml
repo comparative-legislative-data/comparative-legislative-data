@@ -1,7 +1,7 @@
 # Scottish Parliament (GB-SCT) Audit Blueprint
-# Comparative Legislative Data Platform — Version 2.5.0
+# Comparative Legislative Data Platform — Version 2.6.0
 # Scientific Classification: Definitive Constants, Closed Enums, Result-Dependent Dynamic, Binary Flags, Persistent Identifiers
-# Dual Entity Model: CanonicalBill (Macro Level) & CanonicalAmendment (Micro Level)
+# Dual Entity Model: CanonicalBill (Macro Level), CanonicalAmendment (Micro Level) & ParsedProceedings (Hansard Proceedings)
 
 assembly_metadata:
   jurisdiction_code: "GB-SCT"
@@ -20,10 +20,14 @@ audited_terms:
     date_end: "2026-05-07"
     executive_periods:
       - period: "2021-08-31 to 2024-04-25"
+        devolved_executive_name: "Scottish Government"
         government_type: "COOPERATION_AGREEMENT" # SNP + Scottish Greens (Bute House Agreement)
+        governing_parties: ["SNP", "Scottish Greens"]
         parlgov_cabinet_id: "GB-SCT-CAB-2021"
       - period: "2024-04-25 to Present"
+        devolved_executive_name: "Scottish Government"
         government_type: "SINGLE_PARTY_MINORITY" # SNP
+        governing_parties: ["SNP"]
         parlgov_cabinet_id: "GB-SCT-CAB-2024"
 
 native_data_sources:
@@ -42,6 +46,11 @@ native_data_sources:
     url: "https://data.parliament.scot/api/votes"
     format: "JSON"
     provenance_tier: "NATIVE_DIRECT"
+  - id: "sct_official_report_proceedings"
+    name: "Holyrood Official Report Hansard Proceedings Text API"
+    url: "https://data.parliament.scot/api/officialreport"
+    format: "JSON/XML"
+    provenance_tier: "NATIVE_DIRECT"
   - id: "phd_hand_coded_amendments"
     name: "Scottish Parliament PhD Hand-Coded Amendment Dataset"
     url: "https://doi.org/10.5281/zenodo.1234567"
@@ -56,7 +65,6 @@ bill_entity_variables:
     scientific_category: "DEFINITIVE_CONSTANT"
     type: "String (ISO 3166-2)"
     provenance_tier: "NATIVE_DIRECT"
-    description: "Fixed assembly code (GB-SCT)."
     canonical_mapping: "jurisdiction_code"
 
   - key: "name"
@@ -64,7 +72,6 @@ bill_entity_variables:
     scientific_category: "DEFINITIVE_CONSTANT"
     type: "String"
     provenance_tier: "NATIVE_DIRECT"
-    description: "Scottish Parliament / Pàrlamaid na h-Alba."
     canonical_mapping: "name"
 
   - key: "chamber_type"
@@ -72,7 +79,6 @@ bill_entity_variables:
     scientific_category: "DEFINITIVE_CONSTANT"
     type: "Enum"
     provenance_tier: "NATIVE_DIRECT"
-    description: "DEVOLVED_UNICAMERAL."
     canonical_mapping: "chamber_type"
 
   - key: "statutory_seats_total"
@@ -80,7 +86,6 @@ bill_entity_variables:
     scientific_category: "DEFINITIVE_CONSTANT"
     type: "Integer"
     provenance_tier: "NATIVE_DIRECT"
-    description: "129 MSP seats."
     canonical_mapping: "statutory_seats_total"
 
   - key: "presiding_officer_neutral_count"
@@ -88,16 +93,36 @@ bill_entity_variables:
     scientific_category: "DEFINITIVE_CONSTANT"
     type: "Integer"
     provenance_tier: "NATIVE_DIRECT"
-    description: "1 non-voting Presiding Officer."
     canonical_mapping: "presiding_officer_neutral_count"
 
   - key: "parliament_term"
-    name: "Parliamentary Term"
+    name: "Parliamentary Term Code"
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
     type: "String"
     provenance_tier: "NATIVE_DIRECT"
-    description: "Session 6, Session 5, etc."
     canonical_mapping: "parliament_term"
+
+  - key: "term_start_date"
+    name: "Parliamentary Term Start Date"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Date (ISO 8601)"
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "term_start_date"
+
+  - key: "term_end_date"
+    name: "Parliamentary Term End Date"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Date (ISO 8601)"
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "term_end_date"
+
+  - key: "devolved_executive_name"
+    name: "Historical Devolved Executive Name"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "String"
+    provenance_tier: "NATIVE_DIRECT"
+    description: "'Scottish Executive' (1999-2007); 'Scottish Government' (2007-Present)."
+    canonical_mapping: "devolved_executive_name"
 
   - key: "government_type"
     name: "Executive Arrangement Typology"
@@ -113,6 +138,13 @@ bill_entity_variables:
     provenance_tier: "LINKED_EXTERNAL_AUTHORITY"
     canonical_mapping: "government_type"
 
+  - key: "governing_parties_list"
+    name: "Governing Coalition Parties"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Array of Strings"
+    provenance_tier: "DERIVED_DETERMINISTIC"
+    canonical_mapping: "governing_parties_list"
+
   - key: "parlgov_cabinet_id"
     name: "ParlGov Cabinet Identifier"
     scientific_category: "PERSISTENT_IDENTIFIER"
@@ -126,7 +158,6 @@ bill_entity_variables:
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
     type: "String"
     provenance_tier: "NATIVE_DIRECT"
-    description: "e.g. SP Bill 13."
     canonical_mapping: "local_bill_id"
 
   - key: "title_canonical"
@@ -134,7 +165,6 @@ bill_entity_variables:
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
     type: "String"
     provenance_tier: "NATIVE_DIRECT"
-    description: "Standardized English title."
     canonical_mapping: "title_canonical"
 
   - key: "initiator_type"
@@ -165,7 +195,23 @@ bill_entity_variables:
     provenance_tier: "LINKED_EXTERNAL_AUTHORITY"
     canonical_mapping: "initiator_member_id"
 
-  # 3. Timelines & Stage Milestones
+  - key: "initiator_convener_member_id"
+    name: "Lead Committee Convener MSP ID"
+    scientific_category: "PERSISTENT_IDENTIFIER"
+    type: "String (Wikidata QID)"
+    provenance_tier: "LINKED_EXTERNAL_AUTHORITY"
+    description: "Convener leading a Committee Bill."
+    canonical_mapping: "initiator_convener_member_id"
+
+  - key: "initiator_organisation_name"
+    name: "Initiating Committee or External Promoter Name"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "String"
+    provenance_tier: "NATIVE_DIRECT"
+    description: "Name of Committee or Private Bill Promoter."
+    canonical_mapping: "initiator_organisation_name"
+
+  # 3. Timelines, Stage Milestones & Multi-Day Debates
   - key: "date_introduced"
     name: "Bill Introduction Date"
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
@@ -201,12 +247,27 @@ bill_entity_variables:
     provenance_tier: "NATIVE_DIRECT"
     canonical_mapping: "stage_milestones[0].date_end"
 
-  - key: "stage_1_parliament_agreement_vote_date"
-    name: "Stage 1 Debate & Agreement Vote Date"
+  - key: "stage_1_debate_start_date"
+    name: "Stage 1 Debate Start Date"
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
     type: "Date (ISO 8601)"
     provenance_tier: "NATIVE_DIRECT"
-    canonical_mapping: "stage_milestones[0].date_end"
+    canonical_mapping: "stage_1_debate_start_date"
+
+  - key: "stage_1_debate_end_date"
+    name: "Stage 1 Debate End Date"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Date (ISO 8601)"
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "stage_1_debate_end_date"
+
+  - key: "stage_1_debate_days_count"
+    name: "Stage 1 Debate Sitting Days Count"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Integer"
+    provenance_tier: "DERIVED_DETERMINISTIC"
+    description: "Number of sitting days Stage 1 debate straddled."
+    canonical_mapping: "stage_1_debate_days_count"
 
   - key: "stage_2_committee_start_date"
     name: "Stage 2 Committee Start Date"
@@ -222,12 +283,27 @@ bill_entity_variables:
     provenance_tier: "NATIVE_DIRECT"
     canonical_mapping: "stage_milestones[1].date_end"
 
-  - key: "stage_3_plenary_debate_date"
-    name: "Stage 3 Plenary Debate & Final Passage Date"
+  - key: "stage_3_plenary_debate_start_date"
+    name: "Stage 3 Plenary Debate Start Date"
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
     type: "Date (ISO 8601)"
     provenance_tier: "NATIVE_DIRECT"
     canonical_mapping: "stage_milestones[2].date_start"
+
+  - key: "stage_3_plenary_debate_end_date"
+    name: "Stage 3 Plenary Debate End Date"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Date (ISO 8601)"
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "stage_milestones[2].date_end"
+
+  - key: "stage_3_debate_days_count"
+    name: "Stage 3 Debate Sitting Days Count"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Integer"
+    provenance_tier: "DERIVED_DETERMINISTIC"
+    description: "Number of sitting days Stage 3 debate straddled."
+    canonical_mapping: "stage_3_debate_days_count"
 
   - key: "royal_assent_date"
     name: "Royal Assent Date"
@@ -236,33 +312,12 @@ bill_entity_variables:
     provenance_tier: "NATIVE_DIRECT"
     canonical_mapping: "head_of_state_promulgation_date"
 
-  - key: "programme_motion_flag"
-    name: "Programme Timetabling Motion Imposed"
-    scientific_category: "BINARY_FLAG"
-    type: "Boolean"
-    provenance_tier: "NATIVE_DIRECT"
-    canonical_mapping: "programme_motion_flag"
-
-  - key: "guillotine_invoked_flag"
-    name: "Debate Closure / Guillotine Motion Invoked"
-    scientific_category: "BINARY_FLAG"
-    type: "Boolean"
-    provenance_tier: "NATIVE_DIRECT"
-    canonical_mapping: "guillotine_invoked_flag"
-
-  - key: "emergency_bill_declaration_flag"
+  - key: "emergency_procedure_flag"
     name: "Emergency Bill Designation (Rule 9.21)"
     scientific_category: "BINARY_FLAG"
     type: "Boolean"
     provenance_tier: "NATIVE_DIRECT"
     canonical_mapping: "emergency_procedure_flag"
-
-  - key: "financial_resolution_motion_flag"
-    name: "Financial Resolution Required (Rule 9.12)"
-    scientific_category: "BINARY_FLAG"
-    type: "Boolean"
-    provenance_tier: "NATIVE_DIRECT"
-    canonical_mapping: "financial_resolution_invoked_flag"
 
   - key: "section_35_order_triggered_flag"
     name: "Section 35 Scotland Act Order Triggered"
@@ -271,32 +326,50 @@ bill_entity_variables:
     provenance_tier: "NATIVE_DIRECT"
     canonical_mapping: "inter_governmental_veto_flag"
 
-  # 4. Final Disposition
-  - key: "final_status"
-    name: "Terminal Procedural Status"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "ENACTED"
-      - "DEFEATED"
-      - "WITHDRAWN"
-      - "LAPSED"
-      - "PENDING"
-      - "VETOED"
+  # 4. Financial Resolutions (Rule 9.12)
+  - key: "financial_resolution_required_flag"
+    name: "Financial Resolution Required (Rule 9.12)"
+    scientific_category: "BINARY_FLAG"
+    type: "Boolean"
     provenance_tier: "NATIVE_DIRECT"
-    canonical_mapping: "final_status"
+    canonical_mapping: "financial_resolution_required_flag"
 
-  - key: "termination_mechanism"
-    name: "Procedural Termination Event"
-    scientific_category: "CLOSED_ENUM"
-    allowed_values:
-      - "ENACTMENT"
-      - "VOTE_DEFEAT"
-      - "EXECUTIVE_WITHDRAWAL"
-      - "DISSOLUTION_LAPSE"
+  - key: "financial_resolution_approved_flag"
+    name: "Financial Resolution Approved"
+    scientific_category: "BINARY_FLAG"
+    type: "Boolean"
     provenance_tier: "NATIVE_DIRECT"
-    canonical_mapping: "termination_mechanism"
+    canonical_mapping: "financial_resolution_approved_flag"
 
-  # 5. Bill Documentation & Size Analytics
+  - key: "financial_resolution_vote_date"
+    name: "Financial Resolution Vote Date"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Date (ISO 8601)"
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "financial_resolution_vote_date"
+
+  - key: "financial_resolution_aye_count"
+    name: "Financial Resolution Aye Vote Tally"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Integer"
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "financial_resolution_aye_count"
+
+  - key: "financial_resolution_no_count"
+    name: "Financial Resolution No Vote Tally"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Integer"
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "financial_resolution_no_count"
+
+  - key: "financial_resolution_abstain_count"
+    name: "Financial Resolution Abstain Vote Tally"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Integer"
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "financial_resolution_abstain_count"
+
+  # 5. Accompanying Bill Documents & Size Analytics
   - key: "doc_as_introduced_url"
     name: "Bill Text URL at Introduction"
     scientific_category: "PERSISTENT_IDENTIFIER"
@@ -310,6 +383,50 @@ bill_entity_variables:
     type: "URL"
     provenance_tier: "NATIVE_DIRECT"
     canonical_mapping: "doc_as_passed_url"
+
+  - key: "policy_memorandum_url"
+    name: "Policy Memorandum Document URL"
+    scientific_category: "PERSISTENT_IDENTIFIER"
+    type: "URL"
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "policy_memorandum_url"
+
+  - key: "financial_memorandum_url"
+    name: "Financial Memorandum Document URL"
+    scientific_category: "PERSISTENT_IDENTIFIER"
+    type: "URL"
+    provenance_tier: "NATIVE_DIRECT"
+    description: "Split out as standalone document in modern Holyrood practice."
+    canonical_mapping: "financial_memorandum_url"
+
+  - key: "explanatory_notes_url"
+    name: "Explanatory Notes Document URL"
+    scientific_category: "PERSISTENT_IDENTIFIER"
+    type: "URL"
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "explanatory_notes_url"
+
+  - key: "combined_financial_explanatory_notes_url"
+    name: "Legacy Combined Financial & Explanatory Notes URL"
+    scientific_category: "PERSISTENT_IDENTIFIER"
+    type: "URL"
+    provenance_tier: "NATIVE_DIRECT"
+    description: "Legacy pre-split historical document format."
+    canonical_mapping: "combined_financial_explanatory_notes_url"
+
+  - key: "delegated_powers_memorandum_url"
+    name: "Delegated Powers Memorandum Document URL"
+    scientific_category: "PERSISTENT_IDENTIFIER"
+    type: "URL"
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "delegated_powers_memorandum_url"
+
+  - key: "stage_1_lead_committee_report_url"
+    name: "Lead Committee Stage 1 Report Document URL"
+    scientific_category: "PERSISTENT_IDENTIFIER"
+    type: "URL"
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "stage_1_lead_committee_report_url"
 
   - key: "bill_as_introduced_word_count"
     name: "Bill Text Word Count at Introduction"
@@ -353,20 +470,30 @@ bill_entity_variables:
     provenance_tier: "NATIVE_DIRECT"
     canonical_mapping: "fiscal_impact_flag"
 
-  # 6. Committee Scrutiny
-  - key: "lead_committee_name"
-    name: "Lead Scrutinising Committee Name"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "String"
+  # 6. Final Disposition
+  - key: "final_status"
+    name: "Terminal Procedural Status"
+    scientific_category: "CLOSED_ENUM"
+    allowed_values:
+      - "ENACTED"
+      - "DEFEATED"
+      - "WITHDRAWN"
+      - "LAPSED"
+      - "PENDING"
+      - "VETOED"
     provenance_tier: "NATIVE_DIRECT"
-    canonical_mapping: "lead_committee_name"
+    canonical_mapping: "final_status"
 
-  - key: "committee_evidence_submissions_count"
-    name: "Written Evidence Submissions Count"
-    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
-    type: "Integer"
+  - key: "termination_mechanism"
+    name: "Procedural Termination Event"
+    scientific_category: "CLOSED_ENUM"
+    allowed_values:
+      - "ENACTMENT"
+      - "VOTE_DEFEAT"
+      - "EXECUTIVE_WITHDRAWAL"
+      - "DISSOLUTION_LAPSE"
     provenance_tier: "NATIVE_DIRECT"
-    canonical_mapping: "committee_evidence_submissions_count"
+    canonical_mapping: "termination_mechanism"
 
   # 7. Macro Amendment Aggregates
   - key: "amendments_tabled_count"
@@ -395,7 +522,6 @@ bill_entity_variables:
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
     type: "Float (0.0 to 1.0)"
     provenance_tier: "DERIVED_HUMAN_CODED"
-    description: "Proportion of opposition/backbench amendments accepted by Ministers (from PhD dataset)."
     canonical_mapping: "committee_amendments_executive_acceptance_rate"
 
   - key: "bill_text_alteration_score"
@@ -405,7 +531,7 @@ bill_entity_variables:
     provenance_tier: "DERIVED_DETERMINISTIC"
     canonical_mapping: "bill_text_alteration_score"
 
-  # 8. Divisions & Floor Arithmetic
+  # 8. Divisions & Voting Coalitions
   - key: "divisions_count"
     name: "Total Roll-Call Division Votes"
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
@@ -451,7 +577,6 @@ amendment_entity_variables:
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
     type: "String"
     provenance_tier: "NATIVE_DIRECT"
-    description: "Native amendment number on Marshalled List (e.g. Amd 42, LOD 104)."
     canonical_mapping: "local_amendment_number"
 
   - key: "bill_id"
@@ -460,6 +585,13 @@ amendment_entity_variables:
     type: "String"
     provenance_tier: "NATIVE_DIRECT"
     canonical_mapping: "bill_id"
+
+  - key: "marshalled_list_url"
+    name: "Source Marshalled List Document URL"
+    scientific_category: "PERSISTENT_IDENTIFIER"
+    type: "URL"
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "marshalled_list_url"
 
   - key: "stage_canonical"
     name: "Stage of Consideration"
@@ -543,7 +675,6 @@ amendment_entity_variables:
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
     type: "String"
     provenance_tier: "NATIVE_DIRECT"
-    description: "e.g. Section 4, Page 3, Line 12."
     canonical_mapping: "target_clause_or_schedule"
 
   - key: "amendment_action_type"
@@ -553,9 +684,7 @@ amendment_entity_variables:
       - "INSERTION"
       - "DELETION"
       - "SUBSTITUTION"
-      - "PROBING"
     provenance_tier: "DERIVED_HUMAN_CODED"
-    description: "Classification of text alteration (from PhD dataset)."
     canonical_mapping: "amendment_action_type"
 
   - key: "government_position"
@@ -567,7 +696,6 @@ amendment_entity_variables:
       - "NEUTRAL_NO_STANCE"
       - "MINISTERIAL_OWN_AMENDMENT"
     provenance_tier: "DERIVED_HUMAN_CODED"
-    description: "Government position on opposition/backbench amendment."
     canonical_mapping: "government_position"
 
   - key: "disposition_canonical"
@@ -625,14 +753,64 @@ amendment_entity_variables:
     scientific_category: "RESULT_DEPENDENT_DYNAMIC"
     type: "Float (0.0 to 1.0)"
     provenance_tier: "DERIVED_DETERMINISTIC"
-    description: "Proportion of governing party members voting against frontbench whip on this amendment."
     canonical_mapping: "party_dissent_rate_on_amendment"
 
-# --- INSTITUTIONAL HARD GAPS ---
-hard_gaps:
-  - key: "committee_stage_2_informal_paper_gap"
-    name: "Committee Stage 2 Informal Working Paper Gap"
+# --- DOMAIN 10: PARSED PROCEEDINGS & OFFICIAL REPORT ANALYTICS ---
+proceedings_variables:
+  - key: "official_report_proceedings_url"
+    name: "Official Report Hansard Transcript URL"
+    scientific_category: "PERSISTENT_IDENTIFIER"
+    type: "URL"
+    provenance_tier: "NATIVE_DIRECT"
+    canonical_mapping: "official_report_proceedings_url"
+
+  - key: "proceedings_total_word_count"
+    name: "Debate Proceedings Total Word Count"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Integer"
+    provenance_tier: "DERIVED_DETERMINISTIC"
+    canonical_mapping: "proceedings_total_word_count"
+
+  - key: "proceedings_interventions_count"
+    name: "Recorded Speech Interventions Count"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Integer"
+    provenance_tier: "DERIVED_DETERMINISTIC"
+    canonical_mapping: "proceedings_interventions_count"
+
+  - key: "proceedings_msps_speaking_count"
+    name: "Participating MSPs Count"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Integer"
+    provenance_tier: "DERIVED_DETERMINISTIC"
+    canonical_mapping: "proceedings_msps_speaking_count"
+
+  - key: "executive_ministers_word_count_share"
+    name: "Executive Ministers Word Count Share"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Float (0.0 to 1.0)"
+    provenance_tier: "DERIVED_DETERMINISTIC"
+    canonical_mapping: "executive_ministers_word_count_share"
+
+  - key: "backbench_msps_word_count_share"
+    name: "Backbench & Opposition MSPs Word Count Share"
+    scientific_category: "RESULT_DEPENDENT_DYNAMIC"
+    type: "Float (0.0 to 1.0)"
+    provenance_tier: "DERIVED_DETERMINISTIC"
+    canonical_mapping: "backbench_msps_word_count_share"
+
+# --- INSTITUTIONAL HARD GAPS & PROCEDURAL OMISSIONS ---
+procedural_hard_gaps:
+  - key: "programme_motion_flag"
+    name: "Programme Motion Mechanism"
     scientific_category: "INSTITUTIONAL_HARD_GAP"
     provenance_tier: "UNAVAILABLE_HARD_GAP"
-    hard_gap_reason: "RECORDED_BUT_UNDIGITIZED"
-    description: "Informal Stage 2 committee working notes are not published in open API format."
+    hard_gap_reason: "NOT_APPLICABLE_TO_ASSEMBLY"
+    description: "Westminster procedural concept. Holyrood uses Business Motions agreed by Parliamentary Bureau."
+
+  - key: "guillotine_invoked_flag"
+    name: "Guillotine Motion Mechanism"
+    scientific_category: "INSTITUTIONAL_HARD_GAP"
+    provenance_tier: "UNAVAILABLE_HARD_GAP"
+    hard_gap_reason: "NOT_APPLICABLE_TO_ASSEMBLY"
+    description: "Westminster closure motion. Not applicable to Holyrood procedure."

@@ -140,7 +140,7 @@
                 <td><code class="url-code">{ds.url}</code></td>
                 <td><span class="badge badge-bicd">{ds.format}</span></td>
                 <td>
-                  <span class="badge badge-pending">{ds.provenance_tier}</span>
+                  <span class="badge tier-badge tier-direct">{ds.provenance_tier}</span>
                 </td>
               </tr>
             {/each}

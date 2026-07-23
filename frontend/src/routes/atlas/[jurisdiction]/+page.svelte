@@ -139,24 +139,28 @@
     return JSON.stringify(payloadResult.data, null, 2);
   });
 
-  function matchesEndpoint(v: any, source: any) {
-    if (!source) return false;
-    const sId = source.id.toLowerCase();
-    const key = v.key.toLowerCase();
-    const entity = (v.entity || '').toLowerCase();
-    const desc = (v.description || '').toLowerCase();
+  // Derived array of raw keys revealed by the selected native API endpoint payload
+  let revealedNativeKeys = $derived.by(() => {
+    if (!payloadResult || !payloadResult.data) return [];
+    let sampleItem = payloadResult.data;
+    if (Array.isArray(payloadResult.data) && payloadResult.data.length > 0) {
+      sampleItem = payloadResult.data[0];
+    }
+    if (typeof sampleItem !== 'object' || sampleItem === null) return [];
 
-    if (desc.includes(sId)) return true;
+    return Object.keys(sampleItem).map(k => {
+      const val = sampleItem[k];
+      let typeName = typeof val;
+      if (val === null) typeName = 'null';
+      else if (Array.isArray(val)) typeName = `Array (${val.length} items)`;
+      else if (typeName === 'object') typeName = 'Object';
 
-    if (sId.includes('bill') && (entity.includes('bill') || key.includes('bill') || key.includes('title') || key.includes('initiator') || key.includes('royal_assent') || key.includes('introduced') || key.includes('stage'))) return true;
-    if (sId.includes('member') && (key.includes('member') || key.includes('msp') || key.includes('portfolio') || key.includes('party'))) return true;
-    if (sId.includes('committee') && (entity.includes('committee') || key.includes('committee'))) return true;
-    if (sId.includes('ors') && (entity.includes('proceedings') || key.includes('proceedings') || key.includes('official_report') || key.includes('interventions') || key.includes('speech'))) return true;
-    if (sId.includes('vote') && (key.includes('vote') || key.includes('aye') || key.includes('no') || key.includes('resolution') || key.includes('majority') || key.includes('dissent'))) return true;
-    if (sId.includes('session') && (key.includes('term') || key.includes('session') || key.includes('seats'))) return true;
+      let sampleStr = JSON.stringify(val);
+      if (sampleStr && sampleStr.length > 60) sampleStr = sampleStr.substring(0, 60) + '...';
 
-    return false;
-  }
+      return { key: k, type: typeName, sample: sampleStr };
+    });
+  });
 </script>
 
 <svelte:head>
@@ -228,7 +232,6 @@
               <th>Source Name</th>
               <th>Target API Endpoint URL</th>
               <th>Format</th>
-              <th>Provenance Tier</th>
               <th>Interactive Actions</th>
             </tr>
           </thead>
@@ -238,9 +241,6 @@
                 <td class="font-bold">{ds.name}</td>
                 <td><code class="url-code">{ds.url}</code></td>
                 <td><span class="badge badge-bicd">{ds.format}</span></td>
-                <td>
-                  <span class="badge tier-badge tier-direct">{ds.provenance_tier}</span>
-                </td>
                 <td>
                   <div class="endpoint-action-btns">
                     <button 
@@ -413,7 +413,7 @@
           class:active={activeTab === 'schema'} 
           onclick={() => activeTab = 'schema'}
         >
-          <Layers size={15} /> Mapped Blueprint Variables
+          <Layers size={15} /> Native Endpoint Variables
         </button>
       </div>
 
@@ -497,31 +497,27 @@
         </div>
       {/if}
 
-      <!-- Tab 3: Schema Variables -->
+      <!-- Tab 3: Native Endpoint Variables -->
       {#if activeTab === 'schema'}
         <div class="tab-content">
           <p class="text-muted mb-4">
-            Institutional variables in our Master Blueprint mapped to or derived from <strong>{selectedSource.name}</strong>:
+            Raw data variables revealed directly by the host API endpoint payload (<strong>{selectedSource.name}</strong>):
           </p>
-          <div class="schema-variables-list">
-            {#each allVariables.filter(v => matchesEndpoint(v, selectedSource)) as v}
-              <div class="schema-var-item">
-                <div class="schema-var-top">
-                  <code class="var-name">{v.key}</code>
-                  <span 
-                    class="badge tier-badge"
-                    class:tier-direct={v.provenance_tier === 'NATIVE_DIRECT'} 
-                    class:tier-derived={v.provenance_tier === 'DERIVED_DETERMINISTIC'}
-                    class:tier-uncategorised={v.provenance_tier === 'NOT_YET_CATEGORISED'}
-                  >
-                    {v.provenance_tier}
-                  </span>
+          {#if revealedNativeKeys.length > 0}
+            <div class="schema-variables-list">
+              {#each revealedNativeKeys as k}
+                <div class="schema-var-item">
+                  <div class="schema-var-top">
+                    <code class="var-name">{k.key}</code>
+                    <span class="badge badge-bicd">{k.type}</span>
+                  </div>
+                  <div class="var-title">Payload Sample: <code class="url-code">{k.sample}</code></div>
                 </div>
-                <span class="var-title">{v.name}</span>
-                <span class="var-entity">{v.entity} &bull; {v.scientific_category}</span>
-              </div>
-            {/each}
-          </div>
+              {/each}
+            </div>
+          {:else}
+            <p class="text-muted">No key-value attributes revealed in host response payload sample.</p>
+          {/if}
         </div>
       {/if}
     </div>

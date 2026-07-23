@@ -95,9 +95,7 @@
   <meta name="description" content="Master Wishlist Catalog defining ~40 target quantitative research variables across 8 legislative domains." />
   <script src="https://giscus.app/client.js"
         data-repo="comparative-legislative-data/comparative-legislative-data"
-        data-repo-id="R_kgDORXbA_A"
-        data-category="Announcements"
-        data-category-id="DIC_kwDORXbA_M4C1234"
+        data-category="General"
         data-mapping="pathname"
         data-strict="0"
         data-reactions-enabled="1"

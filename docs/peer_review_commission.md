@@ -2,7 +2,7 @@
 
 **Comparative Legislative Data Platform**  
 *Academic Consultation & External Expert Commission*  
-*Version 2.1.0 (Self-Contained 6-Tier Commission Brief)*
+*Version 2.2.0 (Self-Contained 7-Tier Commission Brief)*
 
 ---
 
@@ -12,45 +12,45 @@ The **Comparative Legislative Data Platform** (`https://legislativedata.org`) is
 
 This **Peer Review Commission Brief** is a self-contained briefing document intended for external academic reviewers, legislative scholars, political scientists, and data engineering experts. **No GitHub repository access or technical setup is required to complete this review.**
 
-We commission expert reviewers to evaluate our proposed **Master Canonical Variable Catalog** (Section 3) and **6-Tier Data Availability & Provenance Framework** (Section 2), and to submit a written **Peer Review Report** addressing the core evaluation questions in Section 4.
+We commission expert reviewers to evaluate our proposed **Master Canonical Variable Catalog** (Section 3) and **7-Tier Data Availability & Provenance Framework** (Section 2), and to submit a written **Peer Review Report** addressing the core evaluation questions in Section 4.
 
 ---
 
-## 2. The 6-Tier Data Availability & Provenance Framework
+## 2. The 7-Tier Data Availability & Provenance Framework
 
-To ensure maximum academic transparency, every variable in our canonical schema is evaluated per parliament and per session against a 6-tier availability and provenance spectrum:
+To ensure maximum academic transparency, every variable in our canonical schema is evaluated per parliament, per session, and **at every specific decision point** (bill introduction, committee stage amendment, division vote, and final passage) against a 7-tier availability and provenance spectrum:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
 │ (1) MASTER CANONICAL VARIABLE WISHLIST (The Ideal Quantitative Research Schema)             │
 └───────────────────────────────┬─────────────────────────────────────────────────────────────┘
                                 │
-                      EVALUATED PER VARIABLE / SESSION
+                      EVALUATED AT SPECIFIC DECISION-POINT DATES (T)
                                 │
-    ┌────────────────┬──────────┴─────────┬──────────────────┬──────────────────┐
-    ▼                ▼                    ▼                  ▼                  ▼
-┌──────────────┐┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
-│ (2) NATIVE   ││ (3) DERIVED  │   │ (4) DERIVED  │   │ (5) DERIVED  │   │ (6) HARD GAP │
-│     DIRECT   ││ DETERMINISTIC│   │  HUMAN-CODED │   │ SYNTHETIC-AI │   │ UNAVAILABLE  │
-├──────────────┤├──────────────┤   ├──────────────┤   ├──────────────┤   ├──────────────┤
-│ Host API or  ││ raw feed     │   │ Expert hand- │   │ NLP/LLM text │   │ Missing,     │
-│ raw feed     ││ transforms & │   │ coding & PhD │   │ extraction & │   │ unrecorded,  │
-│ (JSON/XML).  ││ joins        │   │ datasets     │   │ probabilistic│   │ or non-      │
-│              ││ (e.g. roster │   │ (Gold        │   │ inference    │   │ digitized    │
-│              ││ lookup).     │   │ Standard).   │   │ (Tier 4-     │   │ (with reason │
-│              ││              │   │              │   │ benchmarked).│   │ code).       │
-└──────────────┘└──────────────┘   └──────────────┘   └──────────────┘   └──────────────┘
+    ┌────────────────┬──────────┼──────────┬──────────────────┬──────────────────┐
+    ▼                ▼          ▼          ▼                  ▼                  ▼
+┌──────────────┐┌──────────┐┌──────────┐┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│ (2) NATIVE   ││ (3) DERIV││ (4) DERIV││ (5) DERIVED  │   │ (6) LINKED   │   │ (7) HARD GAP │
+│     DIRECT   ││ DETERMIN ││  HUMAN   ││ SYNTHETIC-AI │   │ EXTERNAL     │   │ UNAVAILABLE  │
+├──────────────┤├──────────┤├──────────┤├──────────────┤   ├──────────────┤   ├──────────────┤
+│ Host API or  ││ Rule-    ││ Expert   ││ NLP/LLM text │   │ Benchmark    │   │ Missing,     │
+│ raw feed     ││ based    ││ hand-    ││ extractions  │   │ datasets     │   │ unrecorded,  │
+│ (JSON/XML).  ││ joins &  ││ coding & ││ with AI      │   │ (ParlGov,    │   │ or non-      │
+│              ││ date     ││ PhD data ││ Validation   │   │ Wikidata,    │   │ digitized    │
+│              ││ math.    ││ (Gold).  ││ Lifecycle.   │   │ CAP, MARPOR).│   │ (with reason)│
+└──────────────┘└──────────┘└──────────┘└──────────────┘   └──────────────┘   └──────────────┘
 ```
 
 1. **`CANONICAL_WISHLIST_TARGET`:** Universal variable definition in our Master Catalog.
 2. **`NATIVE_DIRECT`:** Available directly in the host assembly's official API or raw feed (JSON/XML).
-3. **`DERIVED_DETERMINISTIC`:** Generated deterministically via simple pipeline transformations, date arithmetic, or joins against persistent datasets (e.g. Executive Rosters). Includes explicit confidence ratings (`HIGH`, `MEDIUM`, `LOW`).
-4. **`DERIVED_HUMAN_CODED`:** Manually hand-coded by human researchers, subject experts, or doctoral coders. Represents ground-truth data for publication and AI benchmarking.
+3. **`DERIVED_DETERMINISTIC`:** Generated deterministically via simple pipeline transformations, date arithmetic, or joins against persistent datasets.
+4. **`DERIVED_HUMAN_CODED`:** Manually hand-coded by human researchers, subject experts, or doctoral coders (serving as ground truth).
 5. **`DERIVED_SYNTHETIC_AI`:** Synthesized using advanced NLP/LLM text processing, carrying an explicit **Validation Lifecycle Status**:
    - `UNVERIFIED_DRAFT`: Published immediately post-extraction for open crowdsourced audit.
    - `SAMPLE_VALIDATED`: Audited against a randomized human sample with recorded precision/recall metrics.
    - `GOLD_BENCHMARKED`: Extensively benchmarked against Tier 4 (`DERIVED_HUMAN_CODED`) ground truth.
-6. **`UNAVAILABLE_HARD_GAP`:** Missing natively from the host assembly, carrying sub-reason codes:
+6. **`LINKED_EXTERNAL_AUTHORITY`:** Deterministically linked from established, peer-reviewed external benchmark datasets (e.g. ParlGov, Wikidata, CAP, Manifesto Project).
+7. **`UNAVAILABLE_HARD_GAP`:** Missing natively from the host assembly, carrying sub-reason codes:
    - `NOT_RECORDED_BY_ASSEMBLY` (institutional absence).
    - `RECORDED_BUT_UNDIGITIZED` (data-engineering backlog).
    - `RESTRICTED_ACCESS` / `COST_PROHIBITIVE`.
@@ -61,19 +61,21 @@ To ensure maximum academic transparency, every variable in our canonical schema 
 
 Below is the proposed wishlist of quantitative legislative variables grouped across 8 research domains:
 
-### Domain 1: Assembly & Electoral Context
+### Domain 1: Assembly, Electoral & Executive Context
 - `jurisdiction_code`: ISO-style unique country/sub-national code (e.g. `GB-UKP`, `GB-SCT`, `DE-BT`, `US-HR`).
 - `parliament_term`: Macro electoral period spanning general elections (e.g. `Session 6`, `58th Parliament`).
 - `session_start_date` / `session_end_date`: Official term boundaries.
 - `chamber_type`: Chamber classification (`SOVEREIGN_BICAMERAL`, `DEVOLVED_UNICAMERAL`, `FEDERAL_UPPER`, `FEDERAL_LOWER`, `CONCURRENT_ELECTED`).
+- `government_type`: Executive arrangement typology (`SINGLE_PARTY_MAJORITY`, `SINGLE_PARTY_MINORITY`, `FORMAL_COALITION_MAJORITY`, `COOPERATION_AGREEMENT`, `CONFIDENCE_AND_SUPPLY`).
+- `parlgov_cabinet_id`: Linked cabinet identifier from the ParlGov database.
 
-### Domain 2: Bill Identification, Sponsorship & Origin
+### Domain 2: Bill Identification, Sponsorship & Temporal Origin
 - `local_bill_id`: Official reference assigned by host legislature (e.g. `SP Bill 13`, `H.R. 815`).
 - `title_canonical` / `title_native`: Normalized English title vs official native language title.
 - `initiator_type`: Globally neutral sponsor type (`EXECUTIVE`, `INDIVIDUAL_MEMBER`, `GROUP_MEMBERS`, `COMMITTEE`, `PRIVATE_HYBRID`).
-- `initiator_party_governance_role`: Alignment of primary sponsor relative to executive power (`GOVERNING_PARTY`, `OPPOSITION_PARTY`, `CROSS_PARTY`, `NON_PARTISAN`).
+- `initiator_party_governance_role`: Primary sponsor's governance alignment evaluated **on the exact date of introduction**.
 - `initiator_member_id`: Persistent disambiguated member ID (Wikidata QID / native ID).
-- `co_sponsorship_count` & `cross_party_sponsorship_count`: Total co-sponsors vs opposition co-sponsors.
+- `co_sponsorship_count` & `cross_party_sponsorship_count`: Total co-sponsors vs opposition co-sponsors on introduction date.
 
 ### Domain 3: Procedural Progression, Timelines & Procedural Control
 - `date_introduced` / `date_final_outcome`: Formal introduction and terminal disposition dates.
@@ -94,6 +96,7 @@ Below is the proposed wishlist of quantitative legislative variables grouped acr
 - `doc_as_introduced_url` / `doc_as_passed_url`: Text of Bill at introduction vs final passage.
 - `doc_policy_memorandum_url` / `doc_financial_memorandum_url`: Policy rationale and costing papers.
 - `doc_explanatory_notes_url`: Official legal explanatory notes.
+- `cap_topic_code`: Policy topic code linked to Comparative Agendas Project taxonomy.
 - `fiscal_impact_flag` & `regulatory_impact_flag`: Flags indicating binding fiscal or regulatory impact.
 
 ### Domain 6: Committee Proceedings & Evidence
@@ -101,16 +104,18 @@ Below is the proposed wishlist of quantitative legislative variables grouped acr
 - `committee_referral_date` / `committee_report_date`: Dates of committee remit and report.
 - `committee_evidence_submissions_count` & `committee_public_hearings_count`: Written submissions and oral hearing counts.
 
-### Domain 7: Amendments & Legislative Alteration
+### Domain 7: Decision-Point Amendments & Legislative Alteration
 - `amendments_tabled_count` / `amendments_agreed_count` / `amendments_rejected_count` / `amendments_withdrawn_count`.
-- `amendments_executive_count` vs `amendments_non_executive_count`: Government minister vs non-executive amendments.
+- `amendments_executive_count` vs `amendments_non_executive_count`: Government minister vs non-executive amendments evaluated **on date of tabling**.
 - `committee_amendments_tabled_count` & `committee_amendments_executive_acceptance_rate`: Committee-stage amendment activity and executive acceptance rate.
 - `bill_text_alteration_score`: Derived similarity metric of text change from introduction to passage (Levenshtein/Cosine similarity).
 
-### Domain 8: Divisions, Voting Coalitions & Debate Records
-- `divisions_count` & `division_records`: Roll-call votes held, Yeas, Nays, Abstentions, and motion outcome.
-- `rebellions_flag`: Presence of governing or opposition party revolts ($\ge 5\%$ party defiance).
-- `voting_coalition_type`: Voting alignment classification (`UNANIMOUS`, `GOVERNMENT_PARTY_LINE`, `CROSS_PARTY_MAJORITY`, `MINORITY_PASSED`, `OPPOSITION_DEFEAT`).
+### Domain 8: Temporal Divisions, Floor Arithmetic & Voting Coalitions
+- `divisions_count`: Total roll-call division votes held.
+- `effective_majority_margin_at_event_date`: Mathematical floor majority margin ($\text{Governing Seats} - \text{Opposition Seats}$) **on the exact vote date**.
+- `governing_seats_at_event_date`: Active voting seats held by the executive coalition **on the exact vote date**.
+- `rebellions_flag`: Presence of party revolts ($\ge 5\%$ party defiance) evaluated against member party status **on the vote date**.
+- `voting_coalition_type`: Voting alignment classification evaluated against floor arithmetic **on the vote date**.
 - `plenary_record_urls`: Array of direct links to plenary debate transcripts/Hansard. *(Alias: `hansard_debate_urls`)*.
 
 ---
@@ -124,10 +129,10 @@ Reviewers are requested to submit a structured **Written Peer Review Report** ad
 2. Are there critical variables in comparative legislative studies that are missing and should be added?
 3. Are the variable definitions and enums sufficiently neutral to span both parliamentary (Westminster, devolved, consensus) and presidential/semi-presidential systems?
 
-### Area 2: 6-Tier Provenance, Human Data & AI Validation
-4. Is the 6-tier distinction (`NATIVE_DIRECT` vs `DERIVED_DETERMINISTIC` vs `DERIVED_HUMAN_CODED` vs `DERIVED_SYNTHETIC_AI` vs `UNAVAILABLE_HARD_GAP`) methodologically sound for academic publication?
-5. Does the **AI Validation Lifecycle** (`UNVERIFIED_DRAFT` $\rightarrow$ `SAMPLE_VALIDATED` $\rightarrow$ `GOLD_BENCHMARKED`) strike an appropriate balance between open exploratory data access and academic rigor?
-6. How can human-coded datasets (`DERIVED_HUMAN_CODED`) from doctoral research or academic repositories best be integrated and benchmarked on the platform?
+### Area 2: 7-Tier Provenance, Temporal Tracking & External Linking
+4. Is the 7-tier distinction (`NATIVE_DIRECT` vs `DERIVED_DETERMINISTIC` vs `DERIVED_HUMAN_CODED` vs `DERIVED_SYNTHETIC_AI` vs `LINKED_EXTERNAL_AUTHORITY` vs `UNAVAILABLE_HARD_GAP`) methodologically sound for academic publication?
+5. Does evaluating politician affiliation and floor arithmetic at **every decision point** (bill introduction, amendment tabling, division vote) resolve temporal changes in parliamentary majority status?
+6. How effectively does linking external authority datasets (ParlGov, CAP, Wikidata) enhance comparative analysis?
 
 ### Area 3: Data Gap Transparency & Academic Utility
 7. Does explicitly documenting host API omissions as **`UNAVAILABLE_HARD_GAP`** with sub-reason codes provide sufficient transparency for comparative political scientists?

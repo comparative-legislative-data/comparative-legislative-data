@@ -2,13 +2,13 @@
 
 **Comparative Legislative Data Platform**  
 *RESTful & Audit Inspection API Standard*  
-*Version 2.1.0 (6-Tier Provenance & AI Validation Specification)*
+*Version 2.2.0 (7-Tier Provenance, Government Formation & Temporal Affiliation Specification)*
 
 ---
 
 ## 1. API Architecture Overview
 
-The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints for querying canonical legislative datasets, auditing 6-tier data availability across assemblies, and inspecting raw host JSON/XML payloads.
+The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints for querying canonical legislative datasets, auditing 7-tier data availability across assemblies, querying decision-point member affiliations, and inspecting raw host JSON/XML payloads.
 
 ---
 
@@ -16,7 +16,7 @@ The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints 
 
 ### 1. Global Assembly Audit Summaries
 `GET /api/v2/atlas`
-* **Description:** Returns the list of tracked legislative assemblies and their 6-tier variable coverage matrix.
+* **Description:** Returns the list of tracked legislative assemblies and their 7-tier variable coverage matrix.
 
 ```json
 {
@@ -28,11 +28,12 @@ The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints 
       "chamber_type": "DEVOLVED_UNICAMERAL",
       "total_bills_indexed": 142,
       "provenance_coverage_summary": {
-        "NATIVE_DIRECT_PCT": 45.2,
-        "DERIVED_DETERMINISTIC_PCT": 28.1,
-        "DERIVED_HUMAN_CODED_PCT": 12.5,
-        "DERIVED_SYNTHETIC_AI_PCT": 8.2,
-        "UNAVAILABLE_HARD_GAP_PCT": 6.0
+        "NATIVE_DIRECT_PCT": 42.1,
+        "DERIVED_DETERMINISTIC_PCT": 26.5,
+        "DERIVED_HUMAN_CODED_PCT": 12.0,
+        "DERIVED_SYNTHETIC_AI_PCT": 8.0,
+        "LINKED_EXTERNAL_AUTHORITY_PCT": 6.4,
+        "UNAVAILABLE_HARD_GAP_PCT": 5.0
       }
     }
   ]
@@ -53,21 +54,18 @@ The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints 
     {
       "endpoint_name": "Bills Feed",
       "url": "https://data.parliament.scot/api/bills",
-      "status": "HEALTHY",
-      "sample_payload": {
-        "BillId": 13,
-        "ShortTitle": "Gender Recognition Reform (Scotland) Bill",
-        "Stage": "Passed"
-      }
+      "status": "HEALTHY"
     }
   ],
   "canonical_variable_matrix": [
     {
-      "variable_name": "initiator_party_governance_role",
-      "domain": "Domain 2: Bill Identification & Sponsorship",
-      "tier": "DERIVED_DETERMINISTIC",
+      "variable_name": "government_type",
+      "domain": "Domain 1: Assembly & Executive Context",
+      "tier": "LINKED_EXTERNAL_AUTHORITY",
       "confidence": "HIGH",
-      "methodology": "Sponsor MSP matched to Scottish Government Cabinet roster table."
+      "linked_authority_source": "ParlGov",
+      "value": "COOPERATION_AGREEMENT",
+      "notes": "Mapped to ParlGov Cabinet ID for SNP/Green Bute House Agreement (2021-2024)."
     },
     {
       "variable_name": "committee_amendments_executive_acceptance_rate",
@@ -77,19 +75,11 @@ The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints 
       "citation": "PhD Dissertation Dataset: Scottish Parliament Amendment Outcomes (2016-2021)."
     },
     {
-      "variable_name": "fiscal_impact_flag",
-      "domain": "Domain 5: Documentation Chain",
-      "tier": "DERIVED_SYNTHETIC_AI",
-      "ai_validation_status": "UNVERIFIED_DRAFT",
-      "confidence": "MEDIUM",
-      "methodology": "Extracted via LLM analysis of official Financial Memorandum text."
-    },
-    {
-      "variable_name": "guillotine_invoked_flag",
-      "domain": "Domain 3: Timelines & Procedural Control",
-      "tier": "UNAVAILABLE_HARD_GAP",
-      "hard_gap_reason": "NOT_RECORDED_BY_ASSEMBLY",
-      "notes": "Scottish Parliament standing orders do not feature formal Westminster-style guillotine motions."
+      "variable_name": "effective_majority_margin_at_event_date",
+      "domain": "Domain 8: Temporal Divisions",
+      "tier": "DERIVED_DETERMINISTIC",
+      "confidence": "HIGH",
+      "methodology": "Evaluated dynamically against member_party_affiliations on vote date T."
     }
   ]
 }
@@ -97,17 +87,35 @@ The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints 
 
 ---
 
-### 3. Canonical Bills Query Engine
+### 3. Decision-Point Member Affiliation Engine
+`GET /api/v2/members/{member_id}/affiliation`
+* **Query Parameters:**
+  * `date`: Target decision-point date ISO 8601 (e.g. `2014-03-12`).
+
+```json
+{
+  "member_id": "MSP_1042",
+  "member_name": "Tricia Marwick",
+  "jurisdiction_code": "GB-SCT",
+  "evaluated_date": "2014-03-12",
+  "party_id": "NEUTRAL_PRESIDING_OFFICER",
+  "party_role": "SPEAKER_NEUTRAL",
+  "voting_status": "NON_VOTING_CHAIR"
+}
+```
+
+---
+
+### 4. Canonical Bills Query Engine
 `GET /api/v2/bills`
 * **Query Parameters:**
   * `jurisdiction_code`: Filter by assembly (e.g. `GB-SCT`, `GB-UKP`).
-  * `term`: Filter by session (e.g. `Session 6`).
-  * `final_status`: Filter by status (`ENACTED`, `DEFEATED`).
-  * `provenance_tier`: Filter by availability tier (`DERIVED_HUMAN_CODED`, `DERIVED_SYNTHETIC_AI`).
+  * `government_type`: Filter by executive type (`SINGLE_PARTY_MINORITY`, `COOPERATION_AGREEMENT`).
+  * `provenance_tier`: Filter by availability tier (`DERIVED_HUMAN_CODED`, `LINKED_EXTERNAL_AUTHORITY`).
   * `ai_validation_status`: Filter AI data (`UNVERIFIED_DRAFT`, `SAMPLE_VALIDATED`, `GOLD_BENCHMARKED`).
 
 ---
 
-### 4. Direct Bill Payload & Audit Inspector
+### 5. Direct Bill Payload & Audit Inspector
 `GET /api/v2/bills/{jurisdiction_code}/{local_bill_id}`
-* **Description:** Retrieves the full canonical record for a specific bill, including raw host payload and key-by-key variable provenance map.
+* **Description:** Retrieves the full canonical record for a specific bill, including raw host payload, key-by-key variable provenance map, and edge-case review status.

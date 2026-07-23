@@ -2,96 +2,102 @@
 
 **Comparative Legislative Data Platform**  
 *System Architecture & Data Provenance Specification*  
-*Version 2.1.0 (6-Tier Data Availability & AI Validation Spectrum)*
+*Version 2.2.0 (7-Tier Spectrum, Temporal Decision-Point Engine & Schema Revision Protocol)*
 
 ---
 
 ## 1. Executive System Architecture
 
-The **Comparative Legislative Data Platform** (`https://legislativedata.org`) is designed as an open-access quantitative research engine. The platform ingests, standardizes, mirrors, and audits legislative data across international parliamentary and presidential assemblies.
+The **Comparative Legislative Data Platform** (`https://legislativedata.org`) is an open-access quantitative research engine designed to ingest, standardize, mirror, and audit legislative data across international parliamentary and presidential assemblies.
 
-Rather than assuming all assemblies serve identical structured APIs, the architecture is built around a **6-Tier Data Availability & Provenance Model**. Every variable in our Master Canonical Catalog is evaluated per assembly and per session to establish explicit provenance, methodological certainty, and open data gap transparency.
+The architecture is built around a **7-Tier Data Availability & Provenance Model** and a **Temporal Decision-Point Engine**. Every variable in our Master Canonical Catalog is evaluated per assembly, per session, and **at every decision point** (bill introduction, committee stage amendment tabling, roll-call division, final passage) to guarantee point-in-time quantitative accuracy.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
 │ (1) MASTER CANONICAL VARIABLE WISHLIST (The Ideal Quantitative Research Schema)             │
 └───────────────────────────────┬─────────────────────────────────────────────────────────────┘
                                 │
-                      EVALUATED PER VARIABLE / SESSION
+                      EVALUATED AT SPECIFIC DECISION-POINT DATES (T)
                                 │
-    ┌────────────────┬──────────┴─────────┬──────────────────┬──────────────────┐
-    ▼                ▼                    ▼                  ▼                  ▼
-┌──────────────┐┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
-│ (2) NATIVE   ││ (3) DERIVED  │   │ (4) DERIVED  │   │ (5) DERIVED  │   │ (6) HARD GAP │
-│     DIRECT   ││ DETERMINISTIC│   │  HUMAN-CODED │   │ SYNTHETIC-AI │   │ UNAVAILABLE  │
-├──────────────┤├──────────────┤   ├──────────────┤   ├──────────────┤   ├──────────────┤
-│ Host API or  ││ Rule-based   │   │ Expert hand- │   │ NLP/LLM text │   │ Missing,     │
-│ raw feed     ││ transforms & │   │ coding & PhD │   │ extraction & │   │ unrecorded,  │
-│ (JSON/XML).  ││ joins        │   │ datasets     │   │ probabilistic│   │ or non-      │
-│              ││ (e.g. roster │   │ (Gold        │   │ inference    │   │ digitized    │
-│              ││ lookup).     │   │ Standard).   │   │ (Tier 4-     │   │ (with reason │
-│              ││              │   │              │   │ benchmarked).│   │ code).       │
-└──────────────┘└──────────────┘   └──────────────┘   └──────────────┘   └──────────────┘
+    ┌────────────────┬──────────┼──────────┬──────────────────┬──────────────────┐
+    ▼                ▼          ▼          ▼                  ▼                  ▼
+┌──────────────┐┌──────────┐┌──────────┐┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│ (2) NATIVE   ││ (3) DERIV││ (4) DERIV││ (5) DERIVED  │   │ (6) LINKED   │   │ (7) HARD GAP │
+│     DIRECT   ││ DETERMIN ││  HUMAN   ││ SYNTHETIC-AI │   │ EXTERNAL     │   │ UNAVAILABLE  │
+├──────────────┤├──────────┤├──────────┤├──────────────┤   ├──────────────┤   ├──────────────┤
+│ Host API or  ││ Rule-    ││ Expert   ││ NLP/LLM text │   │ Benchmark    │   │ Missing,     │
+│ raw feed     ││ based    ││ hand-    ││ extractions  │   │ datasets     │   │ unrecorded,  │
+│ (JSON/XML).  ││ joins &  ││ coding & ││ with AI      │   │ (ParlGov,    │   │ or non-      │
+│              ││ date     ││ PhD data ││ Validation   │   │ Wikidata,    │   │ digitized    │
+│              ││ math.    ││ (Gold).  ││ Lifecycle.   │   │ CAP, MARPOR).│   │ (with reason)│
+└──────────────┘└──────────┘└──────────┘└──────────────┘   └──────────────┘   └──────────────┘
 ```
 
 ---
 
-## 2. The 6-Tier Legislative Availability & Provenance Model
+## 2. The 7-Tier Legislative Availability & Provenance Model
 
-### Tier 1: `CANONICAL_WISHLIST_TARGET`
-The universal definition of the variable as specified in the [Master Canonical Variable Catalog](file:///home/steven/Documents/github/comparativelegislativedata/docs/canonical_variable_catalog.md).
-
-### Tier 2: `NATIVE_DIRECT`
-Data points served directly out-of-the-box in the host assembly's official API endpoints or raw bulk data feeds (JSON/XML). No complex inference or multi-table joins are required.
-
-### Tier 3: `DERIVED_DETERMINISTIC`
-Data points constructed deterministically via pipeline logic, exact relational joins, or date arithmetic.
-* *Example:* Joining `initiator_member_id` against an external Executive Roster table to derive `initiator_party_governance_role`.
-* *Confidence Ratings:* Rated as `HIGH`, `MEDIUM`, or `LOW` based on join key completeness.
-
-### Tier 4: `DERIVED_HUMAN_CODED` *(Academic Ground Truth)*
-Data points manually hand-coded and verified by human researchers, political science domain experts, or doctoral dissertation coders.
-* *Role:* Serves as the high-accuracy "Gold Standard" for quantitative research and provides the ground truth required to train and validate Tier 5 AI pipelines.
-
-### Tier 5: `DERIVED_SYNTHETIC_AI` *(Probabilistic Text Intelligence)*
-Data points synthesized using advanced NLP models, LLM text extractions, or topic modeling over unstructured parliamentary texts (e.g., Hansard transcripts, Explanatory Notes, Marshalled Amendment lists).
-
-#### The AI Validation Lifecycle:
-To avoid hiding valuable AI analysis in secret silos, Tier 5 data is published immediately upon extraction, carrying an explicit **Validation Lifecycle Status**:
-1. **`UNVERIFIED_DRAFT` (Exploratory & Open):** Live on the platform immediately post-extraction. Flagged with a prominent visual badge for crowdsourced peer review and audit.
-2. **`SAMPLE_VALIDATED` (Community Audited):** Audited against a randomized human sample (50–100 records), reporting precision, recall, and F1 scores.
-3. **`GOLD_BENCHMARKED` (Publication Ready):** Extensively benchmarked against a Tier 4 (`DERIVED_HUMAN_CODED`) dataset, achieving high agreement metrics ($\ge 0.85$ F1 score).
-
-### Tier 6: `UNAVAILABLE_HARD_GAP` *(Documented Institutional Omissions)*
-Variables that cannot be served or derived for a specific assembly session. To prevent "missing data bias" in quantitative regressions, hard gaps carry mandatory sub-reason codes:
-* **`NOT_RECORDED_BY_ASSEMBLY`:** Institutional omission (e.g., assembly does not record division vote lists).
-* **`RECORDED_BUT_UNDIGITIZED`:** Existing paper records or unparsed PDFs not yet digitized (data engineering backlog).
-* **`RESTRICTED_ACCESS`:** Data restricted by parliamentary copyright or paywalls.
-* **`COST_PROHIBITIVE`:** Resource-prohibitive processing cost.
+1. **`CANONICAL_WISHLIST_TARGET`:** Universal target definition in the Master Catalog.
+2. **`NATIVE_DIRECT`:** Served out-of-the-box in host APIs or raw bulk data feeds.
+3. **`DERIVED_DETERMINISTIC`:** Generated deterministically via pipeline joins or date arithmetic.
+4. **`DERIVED_HUMAN_CODED`:** Manually hand-coded by human researchers, subject experts, or PhD coders (serving as ground truth).
+5. **`DERIVED_SYNTHETIC_AI`:** Synthesized via NLP/LLM models, carrying an explicit **AI Validation Lifecycle Status**:
+   - `UNVERIFIED_DRAFT`: Published immediately post-extraction for open crowdsourced peer audit.
+   - `SAMPLE_VALIDATED`: Audited against a randomized human sample (reporting precision/recall).
+   - `GOLD_BENCHMARKED`: Benchmarked against Tier 4 (`DERIVED_HUMAN_CODED`) ground truth.
+6. **`LINKED_EXTERNAL_AUTHORITY`:** Deterministically linked from established, peer-reviewed external benchmark datasets:
+   - **ParlGov:** Cabinet IDs, Government Types (`SINGLE_PARTY_MAJORITY`, `COOPERATION_AGREEMENT`).
+   - **Wikidata / EveryPolitician:** Persistent member QIDs and biographical timelines.
+   - **Comparative Agendas Project (CAP):** Standardized policy topic codes.
+   - **Manifesto Project (MARPOR):** Party ideology scores.
+7. **`UNAVAILABLE_HARD_GAP`:** Documented institutional omissions carrying sub-reason codes (`NOT_RECORDED_BY_ASSEMBLY`, `RECORDED_BUT_UNDIGITIZED`, `RESTRICTED_ACCESS`, `COST_PROHIBITIVE`).
 
 ---
 
-## 3. Data Processing & Provenance Pipeline Architecture
+## 3. Temporal Decision-Point Member Affiliation Engine
+
+Parliamentary arithmetic and party affiliations vary continuously across a legislative session due to by-elections, defections, whip suspensions (members becoming Independent), or election of the Speaker/Presiding Officer.
+
+To prevent misclassifying voting behavior or sponsor alignments:
+1. The platform maintains a **Date-Bounded Member Affiliation Table** (`member_party_affiliations` with `valid_from` and `valid_to` timestamps).
+2. **Decision-Point Evaluation Protocol:** Whenever an event occurs at date $T$ (e.g. an amendment is tabled, a division vote is called, or a bill is introduced):
+   - The engine evaluates member party affiliation on date $T$.
+   - The engine computes the **exact floor seat shares and government majority margin on date $T$**:
+     $$\text{Effective Majority Margin}_T = \text{Governing Voting Seats}_T - \text{Opposition Voting Seats}_T$$
+   - Party rebellions ($\ge 5\%$ party defiance) and sponsor governance roles are calculated against member party status on date $T$.
+
+---
+
+## 4. Schema Review & Revision Protocol for Real-World Edge Cases
+
+As the platform ingests real-world data from diverse assemblies, procedural edge cases will inevitably emerge (e.g. unique committee structures, multi-party cooperation pacts, or non-standard voting rules).
+
+To handle edge cases systematically without compromising core schema stability, we establish a formal 4-step protocol:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│ 1. HOST ASSEMBLY API / FEED INGESTION                                                       │
-│    Fetch raw host payloads -> Store in Host Raw Storage (PostgreSQL JSONB / S3)             │
+│ 1. EDGE CASE DETECTION & ISOLATION                                                          │
+│    - When ingestion hits an unmapped procedural event, store payload in raw JSONB.           │
+│    - Flag record with `SCHEMA_REVIEW_REQUIRED: true` and assign temporary fallback enum.    │
 └───────────────────────────────┬─────────────────────────────────────────────────────────────┘
                                 │
 ┌───────────────────────────────┴─────────────────────────────────────────────────────────────┐
-│ 2. CANONICAL ETL & PROVENANCE EVALUATION                                                    │
-│    - Map Native Direct Fields       (Tier 2: NATIVE_DIRECT)                                  │
-│    - Compute Deterministic Joins   (Tier 3: DERIVED_DETERMINISTIC)                          │
-│    - Ingest Academic Datasets       (Tier 4: DERIVED_HUMAN_CODED)                            │
-│    - Run NLP/LLM Synthesizer       (Tier 5: DERIVED_SYNTHETIC_AI + Validation Status)        │
-│    - Flag Hard Gaps + Reason Codes  (Tier 6: UNAVAILABLE_HARD_GAP)                         │
+│ 2. IMPACT ASSESSMENT & TAXONOMY EVALUATION                                                  │
+│    - Evaluate whether edge case represents a jurisdiction-specific value or a universal     │
+│      comparative phenomenon.                                                                │
+│    - Check alignment against external authority taxonomies (ParlGov, CAP, Wikidata).       │
 └───────────────────────────────┬─────────────────────────────────────────────────────────────┘
                                 │
 ┌───────────────────────────────┴─────────────────────────────────────────────────────────────┐
-│ 3. PERSISTENCE & ATLAS SERVING                                                              │
-│    - PostgreSQL Canonical Models (`canonical_bills`, `bill_provenance_audit`)              │
-│    - Fast FastAPI Platform REST API (`/v2/atlas`, `/v2/bills`)                              │
-│    - SvelteKit Atlas Web Interface with 6-Tier Badges & Payload Inspector                   │
+│ 3. CONTROLLED SCHEMA EXTENSION                                                              │
+│    - Propose enum addition or field adjustment in `docs/canonical_variable_catalog.md`.      │
+│    - Update Pydantic v2 model definitions in `docs/schema.md`.                              │
+│    - Maintain backwards compatibility via non-breaking enum additions.                      │
+└───────────────────────────────┬─────────────────────────────────────────────────────────────┘
+                                │
+┌───────────────────────────────┴─────────────────────────────────────────────────────────────┐
+│ 4. PIPELINE RETRO-FIT & PUBLICATION                                                         │
+│    - Re-run ETL transformation for affected jurisdiction sessions.                         │
+│    - Publish updated schema release with changelog entry.                                   │
 └─────────────────────────────────────────────────────────────────────────────────────────────┘
 ```

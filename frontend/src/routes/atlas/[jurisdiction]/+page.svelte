@@ -138,6 +138,25 @@
     }
     return JSON.stringify(payloadResult.data, null, 2);
   });
+
+  function matchesEndpoint(v: any, source: any) {
+    if (!source) return false;
+    const sId = source.id.toLowerCase();
+    const key = v.key.toLowerCase();
+    const entity = (v.entity || '').toLowerCase();
+    const desc = (v.description || '').toLowerCase();
+
+    if (desc.includes(sId)) return true;
+
+    if (sId.includes('bill') && (entity.includes('bill') || key.includes('bill') || key.includes('title') || key.includes('initiator') || key.includes('royal_assent') || key.includes('introduced') || key.includes('stage'))) return true;
+    if (sId.includes('member') && (key.includes('member') || key.includes('msp') || key.includes('portfolio') || key.includes('party'))) return true;
+    if (sId.includes('committee') && (entity.includes('committee') || key.includes('committee'))) return true;
+    if (sId.includes('ors') && (entity.includes('proceedings') || key.includes('proceedings') || key.includes('official_report') || key.includes('interventions') || key.includes('speech'))) return true;
+    if (sId.includes('vote') && (key.includes('vote') || key.includes('aye') || key.includes('no') || key.includes('resolution') || key.includes('majority') || key.includes('dissent'))) return true;
+    if (sId.includes('session') && (key.includes('term') || key.includes('session') || key.includes('seats'))) return true;
+
+    return false;
+  }
 </script>
 
 <svelte:head>
@@ -352,14 +371,17 @@
       <div class="modal-status-bar">
         {#if isLoadingPayload}
           <div class="status-item loading-item">
-            <RefreshCw size={14} class="spin" /> Fetching live response payload from server...
+            <RefreshCw size={14} class="spin" /> Fetching live response payload from official API endpoint...
           </div>
         {:else if payloadResult}
           <div class="status-item">
             <span class="status-pill status-200">HTTP {payloadResult.status || 200} OK</span>
             <span class="status-meta">Latency: <strong>{payloadResult.elapsedMs || 0} ms</strong></span>
-            {#if payloadResult.isJson && Array.isArray(payloadResult.data)}
-              <span class="status-meta">Records: <strong>{payloadResult.data.length} items</strong></span>
+            {#if payloadResult.totalRecords}
+              <span class="status-meta">Total Records: <strong>{payloadResult.totalRecords.toLocaleString()} items</strong></span>
+            {/if}
+            {#if payloadResult.payloadBytes}
+              <span class="status-meta">Size: <strong>{(payloadResult.payloadBytes / 1024 / 1024).toFixed(2)} MB</strong></span>
             {/if}
           </div>
           <div class="status-actions">
@@ -391,7 +413,7 @@
           class:active={activeTab === 'schema'} 
           onclick={() => activeTab = 'schema'}
         >
-          <Layers size={15} /> Schema Variables
+          <Layers size={15} /> Mapped Blueprint Variables
         </button>
       </div>
 
@@ -412,6 +434,12 @@
               </div>
             </div>
           {:else}
+            {#if payloadResult && payloadResult.isTruncated}
+              <div class="truncation-notice">
+                ⚡ Displaying <strong>20 sample records</strong> out of <strong>{payloadResult.totalRecords.toLocaleString()}</strong> total items for instant response performance.
+              </div>
+            {/if}
+
             <!-- JSON Search & Utility Bar -->
             <div class="json-tools">
               <div class="search-input-box">
@@ -473,14 +501,24 @@
       {#if activeTab === 'schema'}
         <div class="tab-content">
           <p class="text-muted mb-4">
-            Institutional variables in our Master Blueprint that map data from this native open data feed:
+            Institutional variables in our Master Blueprint mapped to or derived from <strong>{selectedSource.name}</strong>:
           </p>
           <div class="schema-variables-list">
-            {#each allVariables.filter(v => v.description?.toLowerCase().includes(selectedSource.id) || v.key.includes('bill') || v.key.includes('member') || v.key.includes('committee')) as v}
+            {#each allVariables.filter(v => matchesEndpoint(v, selectedSource)) as v}
               <div class="schema-var-item">
-                <code class="var-name">{v.key}</code>
+                <div class="schema-var-top">
+                  <code class="var-name">{v.key}</code>
+                  <span 
+                    class="badge tier-badge"
+                    class:tier-direct={v.provenance_tier === 'NATIVE_DIRECT'} 
+                    class:tier-derived={v.provenance_tier === 'DERIVED_DETERMINISTIC'}
+                    class:tier-uncategorised={v.provenance_tier === 'NOT_YET_CATEGORISED'}
+                  >
+                    {v.provenance_tier}
+                  </span>
+                </div>
                 <span class="var-title">{v.name}</span>
-                <span class="var-entity">{v.entity}</span>
+                <span class="var-entity">{v.entity} &bull; {v.scientific_category}</span>
               </div>
             {/each}
           </div>

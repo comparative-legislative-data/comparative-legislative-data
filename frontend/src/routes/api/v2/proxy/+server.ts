@@ -29,20 +29,33 @@ export const GET: RequestHandler = async ({ url }) => {
 
     const elapsedMs = Date.now() - startTime;
     const contentType = response.headers.get('content-type') || '';
+    const text = await response.text();
 
     let data: any;
     let isJson = false;
 
-    if (contentType.includes('application/json') || contentType.includes('json')) {
-      data = await response.json();
-      isJson = true;
-    } else {
-      const text = await response.text();
+    // Holyrood API returns application/octet-stream for some JSON endpoints
+    const trimmed = text.trim();
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
       try {
-        data = JSON.parse(text);
+        data = JSON.parse(trimmed);
         isJson = true;
       } catch {
         data = text.substring(0, 5000) + (text.length > 5000 ? '\n...[truncated HTML/text]' : '');
+      }
+    } else {
+      data = text.substring(0, 5000) + (text.length > 5000 ? '\n...[truncated HTML/text]' : '');
+    }
+
+    let totalRecords = 1;
+    let sampleData = data;
+    let isTruncated = false;
+
+    if (Array.isArray(data)) {
+      totalRecords = data.length;
+      if (data.length > 20) {
+        sampleData = data.slice(0, 20);
+        isTruncated = true;
       }
     }
 
@@ -52,7 +65,10 @@ export const GET: RequestHandler = async ({ url }) => {
       elapsedMs,
       contentType,
       isJson,
-      data
+      totalRecords,
+      isTruncated,
+      payloadBytes: text.length,
+      data: sampleData
     });
   } catch (error: any) {
     return json({

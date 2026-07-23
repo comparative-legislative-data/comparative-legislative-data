@@ -66,11 +66,6 @@ native_data_sources:
     url: "https://www.parliament.scot/chamber-and-committees/votes"
     format: "HTML/JSON"
     provenance_tier: "NATIVE_DIRECT"
-  - id: "phd_hand_coded_amendments"
-    name: "Scottish Parliament PhD Hand-Coded Amendment Dataset"
-    url: "https://doi.org/10.5281/zenodo.1234567"
-    format: "CSV/Parquet"
-    provenance_tier: "DERIVED_HUMAN_CODED"
 
 # --- ENTITY 1: MACRO BILL LEVEL VARIABLES (CanonicalBill) ---
 bill_entity_variables:

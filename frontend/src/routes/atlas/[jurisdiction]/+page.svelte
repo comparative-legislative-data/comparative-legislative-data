@@ -49,8 +49,8 @@
     ]
   });
 
-  // Extract all institutional variables from blueprint entities
-  let allVariables = $derived(() => {
+  // Extract all institutional variables from blueprint entities (Svelte 5 $derived.by)
+  let allVariables = $derived.by(() => {
     if (!bp) return [];
     const bills = (bp.bill_entity_variables || []).map((v: any) => ({ ...v, entity: 'CanonicalBill (Macro Level)' }));
     const amendments = (bp.amendment_entity_variables || []).map((v: any) => ({ ...v, entity: 'CanonicalAmendment (Micro Level)' }));
@@ -82,8 +82,8 @@
     <div class="header-top">
       <div class="badge-group">
         <span class="badge badge-bicd">{jurisdiction}</span>
-        <span class="badge badge-live">Dual-Layer v2.7.0 Blueprint</span>
-        <span class="badge badge-direct">API & DB Audit Active</span>
+        <span class="badge badge-live">Dual-Layer v2.8.0 Baseline</span>
+        <span class="badge badge-pending">Formal Audit Pending</span>
       </div>
       {#if bp}
         <span class="schema-version-badge">{bp.assembly_metadata?.name || jurisdiction} &bull; {bp.assembly_metadata?.chamber_type}</span>
@@ -94,7 +94,7 @@
       {bp?.assembly_metadata?.name || jurisdiction} Data Audit Blueprint
     </h1>
     <p class="audit-sub">
-      Declarative field mappings, native open data API endpoints, 6-tier provenance matrix, and institutional variable definitions.
+      Declarative field mappings, native open data API endpoints, 7-tier provenance matrix, and institutional variable definitions.
     </p>
 
     {#if bp?.assembly_metadata}
@@ -140,13 +140,7 @@
                 <td><code class="url-code">{ds.url}</code></td>
                 <td><span class="badge badge-bicd">{ds.format}</span></td>
                 <td>
-                  {#if ds.provenance_tier === 'NATIVE_DIRECT'}
-                    <span class="badge badge-direct">NATIVE_DIRECT</span>
-                  {:else if ds.provenance_tier === 'DERIVED_HUMAN_CODED'}
-                    <span class="badge badge-enriched">DERIVED_HUMAN_CODED</span>
-                  {:else}
-                    <span class="badge badge-pending">{ds.provenance_tier}</span>
-                  {/if}
+                  <span class="badge badge-pending">{ds.provenance_tier}</span>
                 </td>
               </tr>
             {/each}
@@ -165,16 +159,25 @@
       </div>
 
       <p class="text-muted mb-6">
-        The high-resolution native variables defined for {bp.assembly_metadata?.name || jurisdiction}, mapped against our 6-Tier Provenance Spectrum. 
-        <strong>Single-country experts: Click [Discuss on GitHub] or [Email Feedback] to refine these variable mappings.</strong>
+        The high-resolution native variables defined for {bp.assembly_metadata?.name || jurisdiction} (total: <strong>{allVariables.length}</strong> variables). 
+        All variables are set to <strong>NOT_YET_CATEGORISED</strong> pending the upcoming formal empirical audit.
       </p>
 
       <div class="variables-grid">
-        {#each allVariables() as varDef}
+        {#each allVariables as varDef}
           <div class="var-card">
             <div class="var-header">
               <code class="var-name">{varDef.key}</code>
-              <span class="badge tier-badge" class:tier-direct={varDef.provenance_tier === 'NATIVE_DIRECT'} class:tier-derived={varDef.provenance_tier === 'DERIVED_DETERMINISTIC'} class:tier-human={varDef.provenance_tier === 'DERIVED_HUMAN_CODED'} class:tier-gap={varDef.provenance_tier === 'UNAVAILABLE_HARD_GAP'}>
+              <span 
+                class="badge tier-badge" 
+                class:tier-direct={varDef.provenance_tier === 'NATIVE_DIRECT'} 
+                class:tier-derived={varDef.provenance_tier === 'DERIVED_DETERMINISTIC'} 
+                class:tier-extracted={varDef.provenance_tier === 'DERIVED_EXTRACTED'} 
+                class:tier-human={varDef.provenance_tier === 'DERIVED_HUMAN_CODED'} 
+                class:tier-ai={varDef.provenance_tier === 'DERIVED_SYNTHETIC_AI'} 
+                class:tier-gap={varDef.provenance_tier === 'UNAVAILABLE_HARD_GAP'} 
+                class:tier-uncategorised={varDef.provenance_tier === 'NOT_YET_CATEGORISED'}
+              >
                 {varDef.provenance_tier}
               </span>
             </div>
@@ -267,7 +270,7 @@
 
   .badge-bicd { background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
   .badge-live { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
-  .badge-direct { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+  .badge-pending { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
 
   .schema-version-badge {
     font-size: 0.8rem;
@@ -398,8 +401,11 @@
   }
   .tier-direct { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
   .tier-derived { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+  .tier-extracted { background: rgba(45, 212, 191, 0.15); color: #2dd4bf; border: 1px solid rgba(45, 212, 191, 0.3); }
   .tier-human { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+  .tier-ai { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
   .tier-gap { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+  .tier-uncategorised { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
 
   .var-title {
     font-family: var(--font-heading);

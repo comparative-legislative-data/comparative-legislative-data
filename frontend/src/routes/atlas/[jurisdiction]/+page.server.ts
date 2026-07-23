@@ -1,40 +1,57 @@
 import { error } from '@sveltejs/kit';
+import { load as parseYaml } from 'js-yaml';
 import fs from 'fs';
 import path from 'path';
-import { load as parseYaml } from 'js-yaml';
 import type { PageServerLoad } from './$types';
+
+// Vite eager raw imports — bundles YAML audit blueprints directly into production JS!
+const yamlModules = import.meta.glob('../../../../docs/audits/*.yaml', { query: '?raw', eager: true }) as Record<string, { default: string } | string>;
 
 export const load: PageServerLoad = async ({ params }) => {
   const { jurisdiction } = params;
   const code = jurisdiction.toUpperCase();
 
-  const yamlPath = path.resolve(`../docs/audits/${code}.yaml`);
-  const mdPath = path.resolve(`../docs/mappings/${code}.md`);
-
   let blueprint: any = null;
-  if (fs.existsSync(yamlPath)) {
+
+  // 1. Try Vite static bundle import (Production safe)
+  const globKey = `../../../../docs/audits/${code}.yaml`;
+  const rawGlob = yamlModules[globKey];
+
+  if (rawGlob) {
     try {
-      const rawYaml = fs.readFileSync(yamlPath, 'utf-8');
+      const rawYaml = typeof rawGlob === 'string' ? rawGlob : rawGlob.default;
       blueprint = parseYaml(rawYaml) as any;
     } catch (e) {
-      console.error(`Failed to parse YAML audit blueprint for ${code}:`, e);
+      console.error(`Failed to parse bundled YAML for ${code}:`, e);
     }
   }
 
-  let rawContent: string | null = null;
-  if (!blueprint && fs.existsSync(mdPath)) {
-    try {
-      rawContent = fs.readFileSync(mdPath, 'utf-8');
-    } catch (e) {
-      throw error(500, `Failed to load audit guide for ${code}`);
+  // 2. Fallback to filesystem resolution if running in local dev or VPS
+  if (!blueprint) {
+    const candidatePaths = [
+      path.resolve(process.cwd(), '../docs/audits', `${code}.yaml`),
+      path.resolve(process.cwd(), 'docs/audits', `${code}.yaml`),
+      path.resolve(process.cwd(), '../../docs/audits', `${code}.yaml`),
+      path.resolve('/home/chessadmin/comparativelegislativedata/docs/audits', `${code}.yaml`)
+    ];
+
+    for (const yamlPath of candidatePaths) {
+      if (fs.existsSync(yamlPath)) {
+        try {
+          const rawYaml = fs.readFileSync(yamlPath, 'utf-8');
+          blueprint = parseYaml(rawYaml) as any;
+          if (blueprint) break;
+        } catch (e) {
+          console.error(`Failed to read filesystem YAML from ${yamlPath}:`, e);
+        }
+      }
     }
   }
 
   return {
     jurisdiction: code,
     blueprint,
-    content: rawContent,
     liveDatasetMetrics: null,
-    message: blueprint || rawContent ? null : `Audit blueprint for ${code} is currently being compiled under Phase 0.`
+    message: blueprint ? null : `Audit blueprint for ${code} is currently being compiled under Phase 0.`
   };
 };

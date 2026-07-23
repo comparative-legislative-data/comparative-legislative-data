@@ -1,24 +1,24 @@
 <script lang="ts">
-  import { Search, Globe, Filter, ExternalLink, CheckCircle, Clock, ArrowRight } from 'lucide-svelte';
+  import { Search, Globe, Filter, ExternalLink, CheckCircle, Clock, ArrowRight, Layers } from 'lucide-svelte';
 
   let searchQuery = $state('');
   let selectedFilter = $state('ALL');
 
   const parliamentList = [
-    { code: 'GB-UKP', name: 'UK Parliament', location: 'Westminster', region: 'BICD', access: 'REST API', provenance: 'ENRICHED_BY_PIPELINE', status: 'IN_AUDIT', docs: '/atlas/GB-UKP' },
-    { code: 'GB-SCT', name: 'Scottish Parliament', location: 'Holyrood', region: 'BICD', access: 'REST API / XML', provenance: 'ENRICHED_BY_PIPELINE', status: 'IN_AUDIT', docs: '/atlas/GB-SCT' },
-    { code: 'GB-WLS', name: 'Senedd Cymru', location: 'Cardiff', region: 'BICD', access: 'REST API', provenance: 'ENRICHED_BY_PIPELINE', status: 'PLANNED', docs: '/atlas/GB-WLS' },
-    { code: 'GB-NIR', name: 'Northern Ireland Assembly', location: 'Stormont', region: 'BICD', access: 'XML / HTML', provenance: 'ENRICHED_BY_PIPELINE', status: 'PLANNED', docs: '/atlas/GB-NIR' },
-    { code: 'IM-TYN', name: 'Isle of Man Tynwald', location: 'Douglas', region: 'BICD', access: 'HTML Portal', provenance: 'ENRICHED_BY_PIPELINE', status: 'PLANNED', docs: '/atlas/IM-TYN' },
-    { code: 'JE-STJ', name: 'States of Jersey', location: 'St Helier', region: 'BICD', access: 'HTML Portal', provenance: 'ENRICHED_BY_PIPELINE', status: 'PLANNED', docs: '/atlas/JE-STJ' },
-    { code: 'GG-STG', name: 'States of Guernsey', location: 'St Peter Port', region: 'BICD', access: 'HTML Portal', provenance: 'ENRICHED_BY_PIPELINE', status: 'PLANNED', docs: '/atlas/GG-STG' },
-    { code: 'GI-GIB', name: 'Gibraltar Parliament', location: 'Gibraltar', region: 'BICD', access: 'HTML / PDF', provenance: 'ENRICHED_BY_PIPELINE', status: 'PLANNED', docs: '/atlas/GI-GIB' },
-    { code: 'US-FED', name: 'US Congress', location: 'Washington D.C.', region: 'GLOBAL', access: 'REST API', provenance: 'NATIVE_DIRECT', status: 'PLANNED', docs: '/atlas/US-FED' },
-    { code: 'DE-BT', name: 'German Bundestag', location: 'Berlin', region: 'GLOBAL', access: 'DIP REST API', provenance: 'NATIVE_DIRECT', status: 'PLANNED', docs: '/atlas/DE-BT' },
-    { code: 'CA-PARL', name: 'Parliament of Canada', location: 'Ottawa', region: 'GLOBAL', access: 'XML / JSON', provenance: 'NATIVE_DIRECT', status: 'PLANNED', docs: '/atlas/CA-PARL' },
-    { code: 'AU-PARL', name: 'Parliament of Australia', location: 'Canberra', region: 'GLOBAL', access: 'XML / HTML', provenance: 'ENRICHED_BY_PIPELINE', status: 'PLANNED', docs: '/atlas/AU-PARL' },
-    { code: 'FR-AN', name: 'French National Assembly', location: 'Paris', region: 'GLOBAL', access: 'Open Data JSON', provenance: 'NATIVE_DIRECT', status: 'PLANNED', docs: '/atlas/FR-AN' },
-    { code: 'EU-EP', name: 'European Parliament', location: 'Brussels/Strasbourg', region: 'GLOBAL', access: 'EP Open Data API', provenance: 'NATIVE_DIRECT', status: 'PLANNED', docs: '/atlas/EU-EP' }
+    { code: 'GB-SCT', name: 'Scottish Parliament', location: 'Holyrood', region: 'BICD', access: 'REST API / JSON', provenance: 'NATIVE_DIRECT (v2.7.0)', status: 'ACTIVE_AUDIT', docs: '/atlas/GB-SCT', active: true },
+    { code: 'GB-UKP', name: 'UK Parliament', location: 'Westminster', region: 'BICD', access: 'REST API', provenance: 'ENRICHED_BY_PIPELINE', status: 'PLANNED', docs: '/atlas/GB-UKP', active: false },
+    { code: 'GB-WLS', name: 'Senedd Cymru', location: 'Cardiff', region: 'BICD', access: 'REST API', provenance: 'ENRICHED_BY_PIPELINE', status: 'PLANNED', docs: '/atlas/GB-WLS', active: false },
+    { code: 'GB-NIR', name: 'Northern Ireland Assembly', location: 'Stormont', region: 'BICD', access: 'XML / HTML', provenance: 'ENRICHED_BY_PIPELINE', status: 'PLANNED', docs: '/atlas/GB-NIR', active: false },
+    { code: 'IM-TYN', name: 'Isle of Man Tynwald', location: 'Douglas', region: 'BICD', access: 'HTML Portal', provenance: 'ENRICHED_BY_PIPELINE', status: 'PLANNED', docs: '/atlas/IM-TYN', active: false },
+    { code: 'JE-STJ', name: 'States of Jersey', location: 'St Helier', region: 'BICD', access: 'HTML Portal', provenance: 'ENRICHED_BY_PIPELINE', status: 'PLANNED', docs: '/atlas/JE-STJ', active: false },
+    { code: 'GG-STG', name: 'States of Guernsey', location: 'St Peter Port', region: 'BICD', access: 'HTML Portal', provenance: 'ENRICHED_BY_PIPELINE', status: 'PLANNED', docs: '/atlas/GG-STG', active: false },
+    { code: 'GI-GIB', name: 'Gibraltar Parliament', location: 'Gibraltar', region: 'BICD', access: 'HTML / PDF', provenance: 'ENRICHED_BY_PIPELINE', status: 'PLANNED', docs: '/atlas/GI-GIB', active: false },
+    { code: 'US-FED', name: 'US Congress', location: 'Washington D.C.', region: 'GLOBAL', access: 'REST API', provenance: 'NATIVE_DIRECT', status: 'PLANNED', docs: '/atlas/US-FED', active: false },
+    { code: 'DE-BT', name: 'German Bundestag', location: 'Berlin', region: 'GLOBAL', access: 'DIP REST API', provenance: 'NATIVE_DIRECT', status: 'PLANNED', docs: '/atlas/DE-BT', active: false },
+    { code: 'CA-PARL', name: 'Parliament of Canada', location: 'Ottawa', region: 'GLOBAL', access: 'XML / JSON', provenance: 'NATIVE_DIRECT', status: 'PLANNED', docs: '/atlas/CA-PARL', active: false },
+    { code: 'AU-PARL', name: 'Parliament of Australia', location: 'Canberra', region: 'GLOBAL', access: 'XML / HTML', provenance: 'ENRICHED_BY_PIPELINE', status: 'PLANNED', docs: '/atlas/AU-PARL', active: false },
+    { code: 'FR-AN', name: 'French National Assembly', location: 'Paris', region: 'GLOBAL', access: 'Open Data JSON', provenance: 'NATIVE_DIRECT', status: 'PLANNED', docs: '/atlas/FR-AN', active: false },
+    { code: 'EU-EP', name: 'European Parliament', location: 'Brussels/Strasbourg', region: 'GLOBAL', access: 'EP Open Data API', provenance: 'NATIVE_DIRECT', status: 'PLANNED', docs: '/atlas/EU-EP', active: false }
   ];
 
   let filteredParliaments = $derived(
@@ -69,12 +69,12 @@
   <!-- Page Header -->
   <div class="page-header">
     <div class="header-badge">
-      <span class="badge badge-bicd">Phase 0 Status</span>
-      <span>Data Availability & API Mapping Atlas</span>
+      <span class="badge badge-direct">Scottish Parliament Audit Active</span>
+      <span>Global Parliamentary Data Atlas</span>
     </div>
     <h1 class="page-title">Parliament Data Atlas</h1>
     <p class="page-sub">
-      Auditing API access, rate limits, data structures, and 3-tier provenance across international assemblies.
+      Auditing native open data API feeds, rate limits, data structures, and 6-tier provenance across international legislative assemblies.
     </p>
   </div>
 
@@ -84,7 +84,7 @@
       <Search size={18} class="search-icon" />
       <input 
         type="text" 
-        placeholder="Search assembly by name, code, or location (e.g. UK Parliament, GB-SCT, Holyrood)..." 
+        placeholder="Search assembly by name, code, or location (e.g. Scottish Parliament, GB-SCT, Holyrood)..." 
         bind:value={searchQuery}
         class="search-input"
       />
@@ -95,165 +95,271 @@
         class="filter-btn {selectedFilter === 'ALL' ? 'active' : ''}" 
         onclick={() => selectedFilter = 'ALL'}
       >
-        All Parliaments ({parliamentList.length})
+        All Assemblies ({parliamentList.length})
       </button>
       <button 
         class="filter-btn {selectedFilter === 'BICD' ? 'active' : ''}" 
         onclick={() => selectedFilter = 'BICD'}
       >
-        BICD Group (8)
+        British-Irish Assemblies
       </button>
       <button 
         class="filter-btn {selectedFilter === 'GLOBAL' ? 'active' : ''}" 
         onclick={() => selectedFilter = 'GLOBAL'}
       >
-        Major Global (6+)
+        Global Assemblies
       </button>
     </div>
   </div>
 
   <!-- Parliaments Grid -->
-  <div class="atlas-grid">
-    {#each filteredParliaments as item}
-      <div class="card atlas-card">
-        <div class="card-top">
-          <span class="badge badge-bicd">{item.code}</span>
-          {#if item.status === 'IN_AUDIT'}
-            <span class="badge badge-live">In Audit</span>
+  <div class="parliaments-grid">
+    {#each filteredParliaments as p}
+      <a href={p.docs} class="parliament-card card {p.active ? 'active-card' : 'muted-card'}">
+        <div class="card-header">
+          <div class="title-group">
+            <span class="badge {p.active ? 'badge-direct' : 'badge-grey'}">{p.code}</span>
+            <h3>{p.name}</h3>
+          </div>
+          {#if p.active}
+            <span class="status-badge active-status"><span class="pulse-dot"></span> ACTIVE AUDIT</span>
           {:else}
-            <span class="badge badge-pending">Planned</span>
+            <span class="status-badge grey-status">PLANNED</span>
           {/if}
         </div>
 
-        <div class="card-body">
-          <h3 class="parliament-title">{item.name}</h3>
-          <p class="parliament-meta">{item.location} &bull; {item.region} Group</p>
-
-          <div class="specs-list">
-            <div class="spec-row">
-              <span class="spec-key">Access Method</span>
-              <span class="spec-val">{item.access}</span>
-            </div>
-            <div class="spec-row">
-              <span class="spec-key">Provenance Model</span>
-              <span class="spec-val">{item.provenance}</span>
-            </div>
+        <div class="card-meta">
+          <div class="meta-row">
+            <span class="meta-label">Location / Chamber:</span>
+            <span class="meta-val">{p.location}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Native API Access:</span>
+            <span class="meta-val">{p.access}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Provenance Tier:</span>
+            <span class="meta-val font-mono">{p.provenance}</span>
           </div>
         </div>
 
         <div class="card-footer">
-          <a href={item.docs} class="btn-secondary btn-full">
-            View Audit Blueprint <ArrowRight size={14} />
-          </a>
+          <span class="view-link">
+            {#if p.active}
+              View Institutional Blueprint <ArrowRight size={14} />
+            {:else}
+              View Assembly Profile <ArrowRight size={14} />
+            {/if}
+          </span>
         </div>
-      </div>
+      </a>
     {/each}
   </div>
 </div>
 
 <style>
-  .page-padding { padding: 3rem 1.5rem; }
-  .page-header { text-align: center; max-width: 800px; margin: 0 auto 3rem; }
+  .page-padding { padding-top: 2rem; padding-bottom: 5rem; }
+  .page-header { margin-bottom: 2rem; }
+
   .header-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.75rem;
-    background: rgba(31, 41, 55, 0.6);
-    border: 1px solid var(--border-subtle);
-    padding: 0.35rem 0.85rem;
+    gap: 0.5rem;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--accent-indigo);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
     border-radius: 9999px;
     margin-bottom: 1rem;
-    font-size: 0.85rem;
-    color: var(--text-muted);
   }
-  .page-title { font-size: 2.75rem; margin-bottom: 0.75rem; }
-  .page-sub { font-size: 1.1rem; color: var(--text-muted); }
+
+  .badge-direct { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+  .badge-grey { background: rgba(255, 255, 255, 0.05); color: #64748b; border: 1px solid rgba(255, 255, 255, 0.1); }
+
+  .page-title {
+    font-family: var(--font-heading);
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-sub {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    max-width: 48rem;
+    line-height: 1.5;
+  }
 
   .control-card {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    margin-bottom: 2.5rem;
-    padding: 1rem 1.5rem;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
   }
 
   .search-input-wrapper {
     position: relative;
-    flex: 1;
     display: flex;
     align-items: center;
   }
 
-  .search-input-wrapper :global(.search-icon) {
-    position: absolute;
-    left: 1rem;
-    color: var(--text-dim);
-  }
-
   .search-input {
     width: 100%;
-    background: #0b0f19;
+    background: rgba(15, 23, 42, 0.8);
     border: 1px solid var(--border-subtle);
-    border-radius: 0.65rem;
+    border-radius: 0.5rem;
     padding: 0.75rem 1rem 0.75rem 2.75rem;
-    color: var(--text-main);
+    color: #ffffff;
     font-size: 0.95rem;
+    outline: none;
   }
-  .search-input:focus { outline: none; border-color: var(--accent-indigo); }
 
-  .filter-buttons { display: flex; gap: 0.5rem; }
+  :global(.search-icon) {
+    position: absolute;
+    left: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .filter-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
   .filter-btn {
-    background: rgba(31, 41, 55, 0.6);
+    background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-subtle);
     color: var(--text-muted);
-    padding: 0.6rem 1rem;
-    border-radius: 0.5rem;
-    font-size: 0.85rem;
+    font-size: 0.825rem;
     font-weight: 500;
+    padding: 0.4rem 0.85rem;
+    border-radius: 0.375rem;
     cursor: pointer;
+  }
+  .filter-btn.active {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: var(--accent-indigo);
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  .parliaments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .parliament-card {
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
     transition: all 0.2s ease;
   }
-  .filter-btn:hover { color: var(--text-main); background: var(--bg-card-hover); }
-  .filter-btn.active { background: var(--accent-indigo); color: #ffffff; border-color: var(--accent-indigo); }
 
-  .atlas-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
+  .active-card {
+    background: rgba(15, 23, 42, 0.95);
+    border: 2px solid rgba(34, 197, 94, 0.6);
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.15);
+  }
+  .active-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(34, 197, 94, 0.9);
   }
 
-  .atlas-card {
+  .muted-card {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    opacity: 0.65;
+  }
+  .muted-card:hover {
+    opacity: 0.9;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .card-header {
     display: flex;
-    flex-direction: column;
     justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
   }
 
-  .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-  .parliament-title { font-size: 1.25rem; color: #ffffff; }
-  .parliament-meta { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem; }
+  .title-group h3 {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-top: 0.35rem;
+  }
 
-  .specs-list {
-    background: rgba(11, 15, 25, 0.6);
-    border: 1px solid var(--border-subtle);
-    border-radius: 0.65rem;
-    padding: 0.85rem;
+  .active-status {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .pulse-dot {
+    width: 6px;
+    height: 6px;
+    background: #4ade80;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #4ade80;
+  }
+
+  .grey-status {
+    background: rgba(255, 255, 255, 0.05);
+    color: #64748b;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 9999px;
+  }
+
+  .card-meta {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-    margin-bottom: 1.25rem;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
   }
 
-  .spec-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; }
-  .spec-key { color: var(--text-dim); }
-  .spec-val { color: var(--text-main); font-weight: 500; }
-  .btn-full { width: 100%; justify-content: center; }
-
-  @media (max-width: 1024px) {
-    .atlas-grid { grid-template-columns: repeat(2, 1fr); }
-    .control-card { flex-direction: column; align-items: stretch; }
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
   }
-  @media (max-width: 640px) {
-    .atlas-grid { grid-template-columns: 1fr; }
+
+  .meta-label { color: var(--text-dim); }
+  .meta-val { color: var(--text-main); font-weight: 500; }
+
+  .card-footer {
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .view-link {
+    font-size: 0.825rem;
+    font-weight: 600;
+    color: var(--accent-cyan);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
   }
 </style>

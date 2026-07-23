@@ -1,19 +1,18 @@
 <script lang="ts">
-  import { ArrowLeft, CheckCircle2, FileText, Globe, Layers, ShieldCheck, Database, Server, Cpu, Check, AlertCircle, RefreshCw } from 'lucide-svelte';
+  import { ArrowLeft, CheckCircle2, FileText, Globe, Layers, ShieldCheck, Database, Server, Mail, MessageSquare, Tag, AlertCircle, Info } from 'lucide-svelte';
   import type { PageData } from './$types';
 
   let { data }: { data: PageData } = $props();
 
   let bp = $derived(data.blueprint);
-  let metrics = $derived(data.liveDatasetMetrics);
+  let jurisdiction = $derived(data.jurisdiction);
 
   let datasetSchema = $derived({
     '@context': 'https://schema.org',
     '@type': 'Dataset',
-    'name': `${data.jurisdiction} Parliamentary Open Data Audit & Mapping Blueprint`,
-    'description': `Field-by-field 3-tier provenance matrix, Hansard transcript resolution rules, rate limits, and structural API schemas for ${data.jurisdiction}.`,
-    'url': `https://legislativedata.org/atlas/${data.jurisdiction}`,
-    'license': 'https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/',
+    'name': `${jurisdiction} Parliamentary Open Data Audit & Mapping Blueprint`,
+    'description': `Field-by-field provenance matrix, API access endpoints, and institutional variable schema for ${jurisdiction}.`,
+    'url': `https://legislativedata.org/atlas/${jurisdiction}`,
     'publisher': {
       '@type': 'Organization',
       'name': 'Comparative Legislative Data Project'
@@ -44,26 +43,28 @@
       {
         '@type': 'ListItem',
         'position': 3,
-        'name': data.jurisdiction,
-        'item': `https://legislativedata.org/atlas/${data.jurisdiction}`
+        'name': jurisdiction,
+        'item': `https://legislativedata.org/atlas/${jurisdiction}`
       }
     ]
+  });
+
+  // Extract all institutional variables from blueprint entities
+  let allVariables = $derived(() => {
+    if (!bp) return [];
+    const bills = (bp.bill_entity_variables || []).map((v: any) => ({ ...v, entity: 'CanonicalBill (Macro Level)' }));
+    const amendments = (bp.amendment_entity_variables || []).map((v: any) => ({ ...v, entity: 'CanonicalAmendment (Micro Level)' }));
+    const committees = (bp.committee_entity_variables || []).map((v: any) => ({ ...v, entity: 'CommitteeContext (Roster Engine)' }));
+    const proceedings = (bp.proceedings_variables || []).map((v: any) => ({ ...v, entity: 'ParsedProceedings (Hansard Text)' }));
+    const gaps = (bp.procedural_hard_gaps || []).map((v: any) => ({ ...v, entity: 'Procedural Hard Gaps' }));
+    return [...bills, ...amendments, ...committees, ...proceedings, ...gaps];
   });
 </script>
 
 <svelte:head>
-  <title>{data.jurisdiction} Assembly Data Audit — Global Parliamentary Data Atlas</title>
-  <meta name="description" content="Field-by-field 3-tier provenance matrix, Hansard transcript resolution rules, rate limits, and 5-bill typology audit for {data.jurisdiction}." />
-  <meta name="keywords" content="{data.jurisdiction} parliament data, {data.jurisdiction} API audit, parliamentary open data schema, legislative dataset {data.jurisdiction}" />
-
-  <meta property="og:title" content="{data.jurisdiction} Assembly Data Audit — Global Parliamentary Data Atlas" />
-  <meta property="og:description" content="Field-by-field 3-tier provenance matrix, Hansard transcript resolution rules, and structural API schema for {data.jurisdiction}." />
-
-  <!-- Google Scholar Citation Meta Tags -->
-  <meta name="citation_title" content="{data.jurisdiction} Parliamentary Data Mapping & Audit Profile" />
-  <meta name="citation_publisher" content="Comparative Legislative Data Project" />
-  <meta name="citation_technical_report_number" content="Phase 0 Audit Profile: {data.jurisdiction}" />
-  <meta name="citation_language" content="en" />
+  <title>{jurisdiction} Assembly Data Audit — Global Parliamentary Data Atlas</title>
+  <meta name="description" content="Field-by-field provenance matrix, native open data endpoints, and institutional variable schema for {jurisdiction}." />
+  <meta property="og:title" content="{jurisdiction} Assembly Data Audit — Global Parliamentary Data Atlas" />
 
   <!-- Structured Data (JSON-LD) -->
   {@html `<script type="application/ld+json">${JSON.stringify(datasetSchema)}</script>`}
@@ -80,420 +81,432 @@
   <div class="card header-card">
     <div class="header-top">
       <div class="badge-group">
-        <span class="badge badge-bicd">{data.jurisdiction}</span>
-        <span class="badge badge-live">Option 3 Hybrid Blueprint</span>
-        <span class="badge badge-direct">API & DB Probed</span>
-        {#if metrics}
-          <span class="badge badge-enriched">Phase 1 Live Ingested</span>
-        {/if}
+        <span class="badge badge-bicd">{jurisdiction}</span>
+        <span class="badge badge-live">Dual-Layer v2.7.0 Blueprint</span>
+        <span class="badge badge-direct">API & DB Audit Active</span>
       </div>
       {#if bp}
-        <span class="schema-version-badge">Schema v{bp.schema_version} &bull; Updated {bp.last_updated}</span>
+        <span class="schema-version-badge">{bp.assembly_metadata?.name || jurisdiction} &bull; {bp.assembly_metadata?.chamber_type}</span>
       {/if}
     </div>
 
     <h1 class="audit-title">
-      {bp ? bp.assembly.name : data.jurisdiction} Data Audit Blueprint
+      {bp?.assembly_metadata?.name || jurisdiction} Data Audit Blueprint
     </h1>
     <p class="audit-sub">
-      Declarative field mappings, API endpoints, rate limits, Hansard disambiguation rules, and continuous drift health probe status.
+      Declarative field mappings, native open data API endpoints, 6-tier provenance matrix, and institutional variable definitions.
     </p>
 
-    <div class="audit-meta-grid">
-      <div class="meta-item">
-        <span class="meta-label">Location / Chamber</span>
-        <span class="meta-value">{bp ? `${bp.assembly.location} (${bp.assembly.chamber_type})` : 'Phase 0 Audit'}</span>
+    {#if bp?.assembly_metadata}
+      <div class="audit-meta-grid">
+        <div class="meta-item">
+          <span class="meta-label">Location / Chamber</span>
+          <span class="meta-value">{bp.assembly_metadata.location} ({bp.assembly_metadata.chamber_type})</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Statutory Seats</span>
+          <span class="meta-value">{bp.assembly_metadata.statutory_seats_total} Seats ({bp.assembly_metadata.presiding_officer_neutral_count} Neutral PO)</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Audited Term</span>
+          <span class="meta-value">{bp.audited_terms?.[0]?.name} ({bp.audited_terms?.[0]?.date_start} to {bp.audited_terms?.[0]?.date_end})</span>
+        </div>
       </div>
-      <div class="meta-item">
-        <span class="meta-label">Open License</span>
-        <span class="meta-value">{bp ? bp.assembly.license_type : 'Open Parliament Licence v3.0 / OGL v3.0'}</span>
-      </div>
-      <div class="meta-item">
-        <span class="meta-label">Target Cohort</span>
-        <span class="meta-value">{bp ? bp.assembly.target_cohort : '2019–2024 BICD Cohort 1'}</span>
-      </div>
-    </div>
+    {/if}
   </div>
 
-  <!-- Live Ingested Dataset Stats Card (Vertical Slice Active) -->
-  {#if metrics}
-    <section class="blueprint-section">
-      <div class="card live-metrics-card">
-        <div class="live-metrics-header">
-          <div class="title-with-icon">
-            <Database size={22} color="#10b981" />
-            <h3>Phase 1 Live Ingested Database Metrics (PostgreSQL Mirror)</h3>
-          </div>
-          <span class="live-status-badge">
-            <span class="pulse-dot"></span> LIVE INGESTED
-          </span>
-        </div>
+  <!-- Section 1: Native Data Sources & API Endpoints -->
+  {#if bp?.native_data_sources}
+    <section class="blueprint-section mt-8">
+      <div class="section-title-row">
+        <Server size={20} color="#38bdf8" />
+        <h2>Official Native Data Sources & Open API Endpoints</h2>
+      </div>
 
-        <div class="metrics-grid">
-          <div class="metric-box">
-            <span class="metric-num text-accent">{metrics.total_bills_cohort}</span>
-            <span class="metric-title">2019–2024 Total Bills Ingested</span>
-          </div>
-          <div class="metric-box">
-            <span class="metric-num text-success">{metrics.enacted_acts}</span>
-            <span class="metric-title">Enacted Acts (Stage 3 Passed)</span>
-          </div>
-          <div class="metric-box">
-            <span class="metric-num text-warning">{metrics.pending_bills}</span>
-            <span class="metric-title">In Progress / Defeated / Pending</span>
-          </div>
-          <div class="metric-box">
-            <span class="metric-num text-purple">{metrics.provenance_hashes_count}</span>
-            <span class="metric-title">SHA-256 Provenance Audit Hashes</span>
-          </div>
-        </div>
-
-        <div class="live-metrics-footer">
-          <span><RefreshCw size={14} /> Last Ingestion Sync: <strong>{metrics.last_ingestion_sync}</strong></span>
-          <span>Cohort Boundary: <strong>{metrics.cohort_window}</strong></span>
-        </div>
+      <div class="table-card card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Source Name</th>
+              <th>Target API Endpoint URL</th>
+              <th>Format</th>
+              <th>Provenance Tier</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each bp.native_data_sources as ds}
+              <tr>
+                <td class="font-bold">{ds.name}</td>
+                <td><code class="url-code">{ds.url}</code></td>
+                <td><span class="badge badge-bicd">{ds.format}</span></td>
+                <td>
+                  {#if ds.provenance_tier === 'NATIVE_DIRECT'}
+                    <span class="badge badge-direct">NATIVE_DIRECT</span>
+                  {:else if ds.provenance_tier === 'DERIVED_HUMAN_CODED'}
+                    <span class="badge badge-enriched">DERIVED_HUMAN_CODED</span>
+                  {:else}
+                    <span class="badge badge-pending">{ds.provenance_tier}</span>
+                  {/if}
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
       </div>
     </section>
   {/if}
 
-  <!-- Structured Declarative Blueprint Render -->
+  <!-- Section 2: Assembly-Specific Institutional Variable Audit Catalog (Layer A) -->
   {#if bp}
-    <!-- Section 1: Endpoints & Rate Limits -->
-    <section class="blueprint-section">
-      <div class="section-title-row">
-        <Server size={20} color="#38bdf8" />
-        <h2>API Endpoints & Access Specifications</h2>
-      </div>
-
-      <div class="table-card card">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Endpoint Name</th>
-              <th>Target URL</th>
-              <th>Method</th>
-              <th>Rate Limit</th>
-              <th>Format</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each bp.endpoints as ep}
-              <tr>
-                <td class="font-bold">{ep.name}</td>
-                <td><code class="url-code">{ep.url}</code></td>
-                <td><span class="badge badge-direct">{ep.http_method}</span></td>
-                <td>{ep.rate_limit_per_min ? `${ep.rate_limit_per_min} req/min` : 'Unspecified'}</td>
-                <td><span class="badge badge-bicd">{ep.response_format}</span></td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Section 2: Dual-Layer Field Mappings -->
-    <section class="blueprint-section">
+    <section class="blueprint-section mt-10">
       <div class="section-title-row">
         <Layers size={20} color="#6366f1" />
-        <h2>Dual-Layer Field Mappings & Provenance Matrix</h2>
+        <h2>{bp.assembly_metadata?.name || jurisdiction} Institutional Variable Audit Catalog (Layer A)</h2>
       </div>
 
-      <div class="table-card card">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Canonical Field</th>
-              <th>Native Key Path</th>
-              <th>Provenance Tier</th>
-              <th>Confidence</th>
-              <th>Notes / Transformation</th>
-            </tr>
-          </thead>
-          <tbody>
-            {#each bp.field_mappings as fm}
-              <tr>
-                <td class="font-mono font-bold text-accent">{fm.canonical_field}</td>
-                <td class="font-mono">{fm.native_key}</td>
-                <td>
-                  {#if fm.provenance_tier === 'NATIVE_DIRECT'}
-                    <span class="badge badge-direct">NATIVE_DIRECT</span>
-                  {:else if fm.provenance_tier === 'ENRICHED_BY_PIPELINE'}
-                    <span class="badge badge-enriched">ENRICHED</span>
-                  {:else}
-                    <span class="badge badge-pending">UNAVAILABLE_GAP</span>
-                  {/if}
-                </td>
-                <td><span class="confidence-tag">{fm.derivation_confidence}</span></td>
-                <td class="text-subtle">{fm.notes || '—'}</td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      </div>
-    </section>
+      <p class="text-muted mb-6">
+        The high-resolution native variables defined for {bp.assembly_metadata?.name || jurisdiction}, mapped against our 6-Tier Provenance Spectrum. 
+        <strong>Single-country experts: Click [Discuss on GitHub] or [Email Feedback] to refine these variable mappings.</strong>
+      </p>
 
-    <!-- Section 3: Hansard & Typology Tests Grid -->
-    <div class="two-col-grid">
-      <!-- Hansard Disambiguation -->
-      <section class="blueprint-section">
-        <div class="section-title-row">
-          <FileText size={20} color="#10b981" />
-          <h2>Hansard Resolution</h2>
-        </div>
-        <div class="card spec-box">
-          <div class="spec-line"><span class="spec-label">Format:</span> <strong>{bp.hansard.transcript_format}</strong></div>
-          <div class="spec-line"><span class="spec-label">Disambiguation:</span> <strong>{bp.hansard.speaker_disambiguation_method}</strong></div>
-          <div class="spec-line"><span class="spec-label">Timestamp Granularity:</span> <strong>{bp.hansard.timestamp_granularity}</strong></div>
-          <div class="spec-line"><span class="spec-label">Interruption Flags:</span> <strong>{bp.hansard.interruption_flags_available ? 'Available' : 'None'}</strong></div>
-        </div>
-      </section>
-
-      <!-- Procedural Notes -->
-      <section class="blueprint-section">
-        <div class="section-title-row">
-          <ShieldCheck size={20} color="#a855f7" />
-          <h2>Procedural Rules</h2>
-        </div>
-        <div class="card spec-box">
-          <ul class="notes-list">
-            {#each bp.procedural_notes as note}
-              <li><Check size={15} color="#10b981" /> {note}</li>
-            {/each}
-          </ul>
-        </div>
-      </section>
-    </div>
-
-    <!-- Section 4: Typology Test Cohorts -->
-    <section class="blueprint-section">
-      <div class="section-title-row">
-        <Cpu size={20} color="#f59e0b" />
-        <h2>5-Bill Typology Empirical Audit Tests</h2>
-      </div>
-      <div class="assembly-grid">
-        {#each bp.typology_tests as test}
-          <div class="card test-card">
-            <div class="test-top">
-              <span class="badge badge-bicd">{test.bill_id}</span>
-              <span class="badge badge-live">{test.expected_stages_count} Stages</span>
+      <div class="variables-grid">
+        {#each allVariables() as varDef}
+          <div class="var-card">
+            <div class="var-header">
+              <code class="var-name">{varDef.key}</code>
+              <span class="badge tier-badge" class:tier-direct={varDef.provenance_tier === 'NATIVE_DIRECT'} class:tier-derived={varDef.provenance_tier === 'DERIVED_DETERMINISTIC'} class:tier-human={varDef.provenance_tier === 'DERIVED_HUMAN_CODED'} class:tier-gap={varDef.provenance_tier === 'UNAVAILABLE_HARD_GAP'}>
+                {varDef.provenance_tier}
+              </span>
             </div>
-            <h3 class="test-title">{test.title}</h3>
-            <p class="test-category">{test.typology_category}</p>
-            <p class="test-notes">{test.notes || ''}</p>
+
+            <div class="var-title">{varDef.name || varDef.key}</div>
+            <div class="var-entity">{varDef.entity} &bull; <span class="var-category">{varDef.scientific_category}</span></div>
+            
+            <p class="var-desc">{varDef.description || 'Native assembly field mapped to canonical schema.'}</p>
+
+            {#if varDef.allowed_values}
+              <div class="allowed-values-box">
+                <span class="box-label">Allowed Choice Values:</span>
+                <div class="values-list">
+                  {#each varDef.allowed_values as val}
+                    <span class="val-tag">{val}</span>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+
+            <div class="mapping-line">
+              <span class="map-label">Canonical Mapping:</span>
+              <code class="map-code">{varDef.canonical_mapping || 'Unmapped'}</code>
+            </div>
+
+            <!-- Per-Variable Action Buttons for Country Experts -->
+            <div class="var-actions">
+              <a 
+                href={`https://github.com/comparative-legislative-data/comparative-legislative-data/discussions/new?category=general&title=Feedback+on+${jurisdiction}+variable+${varDef.key}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                class="action-btn btn-github"
+              >
+                <MessageSquare size={13} /> Discuss on GitHub
+              </a>
+              <a 
+                href={`mailto:comparativelegislativedata@gmail.com?subject=Feedback on ${jurisdiction} Variable: ${varDef.key}`} 
+                class="action-btn btn-email"
+              >
+                <Mail size={13} /> Email Feedback
+              </a>
+            </div>
           </div>
         {/each}
       </div>
     </section>
-
-  {:else if data.content}
-    <!-- Raw Markdown Audit Fallback -->
-    <div class="card content-card prose">
-      <pre class="raw-markdown">{data.content}</pre>
-    </div>
-  {:else}
-    <!-- Placeholder Card -->
-    <div class="card placeholder-card">
-      <FileText size={48} color="#6366f1" />
-      <h3>{data.jurisdiction} Audit Profile</h3>
-      <p>{data.message}</p>
-      <a href="/atlas" class="btn-secondary">Return to Atlas Directory</a>
-    </div>
   {/if}
 </div>
 
 <style>
-  .page-padding { padding: 3rem 1.5rem; }
+  .page-padding { padding-top: 2rem; padding-bottom: 5rem; }
+  .mt-8 { margin-top: 2rem; }
+  .mt-10 { margin-top: 2.5rem; }
+  .mb-6 { margin-bottom: 1.5rem; }
+  .text-muted { color: var(--text-muted); font-size: 0.95rem; }
 
   .back-link {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    font-weight: 500;
+    gap: 0.4rem;
+    color: var(--accent-cyan);
     text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
     margin-bottom: 1.5rem;
-    transition: color 0.2s ease;
   }
-  .back-link:hover { color: var(--accent-cyan); }
+  .back-link:hover { text-decoration: underline; }
 
   .header-card {
-    margin-bottom: 2rem;
-    background: linear-gradient(135deg, rgba(31, 41, 55, 0.9) 0%, rgba(17, 24, 39, 0.95) 100%);
+    background: var(--bg-glass);
     border: 1px solid var(--border-subtle);
+    border-radius: 0.75rem;
+    padding: 1.75rem;
   }
 
   .header-top {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    margin-bottom: 1.25rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 
-  .badge-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-  .schema-version-badge { font-size: 0.8rem; color: var(--text-dim); }
+  .badge-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
 
-  .audit-title { font-size: 2.25rem; margin-bottom: 0.5rem; }
-  .audit-sub { color: var(--text-muted); font-size: 1.05rem; margin-bottom: 1.75rem; }
+  .badge-bicd { background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
+  .badge-live { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+  .badge-direct { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+
+  .schema-version-badge {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .audit-title {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+  }
+
+  .audit-sub {
+    font-size: 1rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 1.25rem;
+  }
 
   .audit-meta-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
-    background: rgba(11, 15, 25, 0.6);
-    border: 1px solid var(--border-subtle);
-    border-radius: 0.75rem;
-    padding: 1.25rem;
-  }
-
-  .meta-item { display: flex; flex-direction: column; gap: 0.25rem; }
-  .meta-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
-  .meta-value { font-size: 0.9rem; color: var(--text-main); font-weight: 500; }
-
-  .live-metrics-card {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(17, 24, 39, 0.95) 100%);
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    padding: 1.5rem;
-    margin-bottom: 2.5rem;
-  }
-
-  .live-metrics-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.25rem;
-  }
-
-  .title-with-icon { display: flex; align-items: center; gap: 0.65rem; }
-  .title-with-icon h3 { font-size: 1.15rem; color: #ffffff; }
-
-  .live-status-badge {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: rgba(16, 185, 129, 0.2);
-    color: #10b981;
-    border: 1px solid rgba(16, 185, 129, 0.4);
-    padding: 0.25rem 0.65rem;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-  }
-
-  .pulse-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background-color: #10b981;
-    box-shadow: 0 0 8px #10b981;
-  }
-
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1rem;
-    margin-bottom: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-subtle);
   }
 
-  .metric-box {
-    background: rgba(11, 15, 25, 0.6);
-    border: 1px solid var(--border-subtle);
-    border-radius: 0.65rem;
-    padding: 1rem;
+  .meta-item {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 0.25rem;
   }
 
-  .metric-num { font-size: 2rem; font-weight: 800; line-height: 1; }
-  .metric-title { font-size: 0.775rem; color: var(--text-muted); font-weight: 500; }
-
-  .text-success { color: #10b981; }
-  .text-warning { color: #f59e0b; }
-  .text-purple { color: #a855f7; }
-
-  .live-metrics-footer {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.825rem;
+  .meta-label {
+    font-size: 0.75rem;
     color: var(--text-dim);
-    border-top: 1px solid var(--border-subtle);
-    padding-top: 0.85rem;
+    text-transform: uppercase;
   }
 
-  .blueprint-section { margin-bottom: 2.5rem; }
+  .meta-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-top: 0.15rem;
+  }
 
   .section-title-row {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
+    gap: 0.5rem;
     margin-bottom: 1rem;
   }
-  .section-title-row h2 { font-size: 1.35rem; }
 
-  .table-card { padding: 0; overflow-x: auto; }
+  .section-title-row h2 {
+    font-family: var(--font-heading);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #ffffff;
+  }
 
   .data-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.875rem;
-    text-align: left;
   }
 
   .data-table th, .data-table td {
-    padding: 0.85rem 1.25rem;
+    padding: 0.75rem 1rem;
+    text-align: left;
     border-bottom: 1px solid var(--border-subtle);
   }
 
   .data-table th {
-    background: #0d1117;
+    background: rgba(15, 23, 42, 0.8);
     color: var(--text-muted);
     font-weight: 600;
+    font-size: 0.775rem;
     text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.04em;
   }
 
-  .font-mono { font-family: monospace; }
-  .font-bold { font-weight: 600; }
-  .text-accent { color: var(--accent-cyan); }
-  .text-subtle { color: var(--text-muted); font-size: 0.825rem; }
-  .url-code { background: #0d1117; padding: 0.2rem 0.4rem; border-radius: 0.35rem; color: #38bdf8; font-size: 0.825rem; }
-  .confidence-tag { background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 0.15rem 0.5rem; border-radius: 0.35rem; font-size: 0.75rem; font-weight: 600; }
-
-  .two-col-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
-    margin-bottom: 2.5rem;
+  .url-code {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--accent-cyan);
+    word-break: break-all;
   }
 
-  .spec-box { display: flex; flex-direction: column; gap: 0.85rem; padding: 1.25rem; }
-  .spec-line { display: flex; justify-content: space-between; font-size: 0.875rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem; }
-  .spec-label { color: var(--text-muted); }
-
-  .notes-list { list-style: none; display: flex; flex-direction: column; gap: 0.65rem; }
-  .notes-list li { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.875rem; color: var(--text-main); }
-
-  .assembly-grid {
+  .variables-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
     gap: 1.25rem;
   }
 
-  .test-card { display: flex; flex-direction: column; gap: 0.5rem; }
-  .test-top { display: flex; align-items: center; justify-content: space-between; }
-  .test-title { font-size: 1.05rem; color: #ffffff; }
-  .test-category { font-size: 0.8rem; color: var(--accent-cyan); font-weight: 500; }
-  .test-notes { font-size: 0.825rem; color: var(--text-muted); }
+  .var-card {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.65rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+  }
 
-  .content-card { padding: 2.5rem; }
-  .raw-markdown { white-space: pre-wrap; font-family: var(--font-body); font-size: 0.95rem; line-height: 1.7; color: #e5e7eb; background: transparent; border: none; padding: 0; }
-  .placeholder-card { text-align: center; padding: 4rem 2rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+  .var-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+  }
 
-  @media (max-width: 1024px) {
-    .audit-meta-grid, .two-col-grid, .assembly-grid, .metrics-grid { grid-template-columns: 1fr; }
+  .var-name {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    background: rgba(56, 189, 248, 0.1);
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.25rem;
+    word-break: break-all;
+  }
+
+  .tier-badge {
+    font-size: 0.675rem;
+    font-weight: 700;
+    padding: 0.15rem 0.45rem;
+    border-radius: 0.25rem;
+  }
+  .tier-direct { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+  .tier-derived { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+  .tier-human { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+  .tier-gap { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+  .var-title {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 0.2rem;
+  }
+
+  .var-entity {
+    font-size: 0.75rem;
+    color: var(--accent-purple);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .var-category {
+    color: var(--accent-gold);
+  }
+
+  .var-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+    margin-bottom: 0.75rem;
+  }
+
+  .allowed-values-box {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .box-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+  }
+
+  .values-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .val-tag {
+    font-family: var(--font-mono);
+    font-size: 0.675rem;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.2rem;
+  }
+
+  .mapping-line {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .map-label { font-weight: 600; }
+  .map-code { font-family: var(--font-mono); color: var(--accent-indigo); }
+
+  .var-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .action-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    font-size: 0.725rem;
+    font-weight: 600;
+    padding: 0.35rem 0.45rem;
+    border-radius: 0.375rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .btn-github {
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    color: #818cf8;
+  }
+  .btn-github:hover {
+    background: rgba(99, 102, 241, 0.2);
+    color: #ffffff;
+  }
+
+  .btn-email {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+  }
+  .btn-email:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
   }
 </style>

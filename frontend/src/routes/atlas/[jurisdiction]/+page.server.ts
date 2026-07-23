@@ -30,26 +30,11 @@ export const load: PageServerLoad = async ({ params }) => {
     }
   }
 
-  // Simulated / Server-side DB metrics for vertical slice
-  let liveDatasetMetrics: any = null;
-  if (code === 'GB-SCT') {
-    liveDatasetMetrics = {
-      status: 'PHASE_1_INGESTED',
-      total_bills_cohort: 101,
-      enacted_acts: 89,
-      pending_bills: 12,
-      cohort_window: '2019–2024 (Session 5 & 6)',
-      last_ingestion_sync: '2026-07-22 21:11 UTC',
-      provenance_hashes_count: 101,
-      license: 'Open Government Licence v3.0 / Open Data Senedd/Holyrood'
-    };
-  }
-
   return {
     jurisdiction: code,
     blueprint,
     content: rawContent,
-    liveDatasetMetrics,
+    liveDatasetMetrics: null,
     message: blueprint || rawContent ? null : `Audit blueprint for ${code} is currently being compiled under Phase 0.`
   };
 };

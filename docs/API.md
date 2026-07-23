@@ -2,13 +2,13 @@
 
 **Comparative Legislative Data Platform**  
 *RESTful & Audit Inspection API Standard*  
-*Version 2.2.0 (7-Tier Provenance, Government Formation & Temporal Affiliation Specification)*
+*Version 2.3.0 (Master Wishlist & 6-Tier Provenance Specification)*
 
 ---
 
 ## 1. API Architecture Overview
 
-The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints for querying canonical legislative datasets, auditing 7-tier data availability across assemblies, querying decision-point member affiliations, and inspecting raw host JSON/XML payloads.
+The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints for querying canonical legislative datasets, auditing 6-tier data availability across assemblies, querying decision-point member affiliations, and inspecting raw host JSON/XML payloads.
 
 ---
 
@@ -16,7 +16,7 @@ The Platform API (`https://legislativedata.org/api/v2`) provides open endpoints 
 
 ### 1. Global Assembly Audit Summaries
 `GET /api/v2/atlas`
-* **Description:** Returns the list of tracked legislative assemblies and their 7-tier variable coverage matrix.
+* **Description:** Returns the list of tracked legislative assemblies and their 6-tier variable coverage matrix.
 
 ```json
 {

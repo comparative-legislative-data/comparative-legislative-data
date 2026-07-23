@@ -2,7 +2,7 @@
 
 **Comparative Legislative Data Platform**  
 *Pydantic v2 Canonical Models & Database Schema Standard*  
-*Version 2.2.0 (7-Tier Provenance, Government Typologies & Temporal Decision-Point Specification)*
+*Version 2.3.0 (Master Wishlist & 6-Tier Data Provenance Spectrum)*
 
 ---
 
@@ -11,8 +11,7 @@
 The **Canonical Data Schema** defines the core Pydantic v2 models and database relational structures for storing, querying, and auditing legislative data across global parliamentary and presidential assemblies.
 
 ### Key Schema Features
-1. **7-Tier Data Availability & Provenance Tagging:** Every record and variable is explicitly assigned a provenance tier:
-   - `CANONICAL_WISHLIST_TARGET`
+1. **Separation of Wishlist vs Provenance:** The Master Wishlist defines target variables; every variable value is tagged with a provenance tier:
    - `NATIVE_DIRECT`
    - `DERIVED_DETERMINISTIC`
    - `DERIVED_HUMAN_CODED` *(Manual expert/PhD hand-coding)*
@@ -20,8 +19,8 @@ The **Canonical Data Schema** defines the core Pydantic v2 models and database r
    - `LINKED_EXTERNAL_AUTHORITY` *(Linked from ParlGov, Wikidata, CAP, MARPOR)*
    - `UNAVAILABLE_HARD_GAP` *(Institutional data omission)*
 2. **Temporal Decision-Point Member Affiliation Engine:** Evaluates politician party affiliation, party role, and floor seat shares at **every decision point** (bill introduction date, amendment tabling date, division vote date).
-3. **AI Validation Lifecycle Metadata:** Tier 5 (`DERIVED_SYNTHETIC_AI`) data includes an explicit validation status: `UNVERIFIED_DRAFT`, `SAMPLE_VALIDATED`, `GOLD_BENCHMARKED`.
-4. **Hard Gap Sub-Taxonomy:** Tier 7 (`UNAVAILABLE_HARD_GAP`) carries sub-reason codes: `NOT_RECORDED_BY_ASSEMBLY`, `RECORDED_BUT_UNDIGITIZED`, `RESTRICTED_ACCESS`, `COST_PROHIBITIVE`.
+3. **AI Validation Lifecycle Metadata:** Tier 4 (`DERIVED_SYNTHETIC_AI`) data includes an explicit validation status: `UNVERIFIED_DRAFT`, `SAMPLE_VALIDATED`, `GOLD_BENCHMARKED`.
+4. **Hard Gap Sub-Taxonomy:** Tier 6 (`UNAVAILABLE_HARD_GAP`) carries sub-reason codes: `NOT_RECORDED_BY_ASSEMBLY`, `RECORDED_BUT_UNDIGITIZED`, `RESTRICTED_ACCESS`, `COST_PROHIBITIVE`.
 
 ---
 
@@ -36,7 +35,6 @@ from datetime import date, datetime
 # --- ENUM DEFINITIONS ---
 
 class ProvenanceTier(str, Enum):
-    CANONICAL_WISHLIST_TARGET = "CANONICAL_WISHLIST_TARGET"
     NATIVE_DIRECT = "NATIVE_DIRECT"
     DERIVED_DETERMINISTIC = "DERIVED_DETERMINISTIC"
     DERIVED_HUMAN_CODED = "DERIVED_HUMAN_CODED"
@@ -104,11 +102,11 @@ class VotingCoalitionType(str, Enum):
 class VariableProvenance(BaseModel):
     tier: ProvenanceTier
     confidence: str = Field(default="HIGH", description="HIGH, MEDIUM, or LOW")
-    ai_validation_status: Optional[AIValidationStatus] = Field(default=None, description="For Tier 5 DERIVED_SYNTHETIC_AI")
-    hard_gap_reason: Optional[HardGapReason] = Field(default=None, description="For Tier 7 UNAVAILABLE_HARD_GAP")
+    ai_validation_status: Optional[AIValidationStatus] = Field(default=None, description="For Tier 4 DERIVED_SYNTHETIC_AI")
+    hard_gap_reason: Optional[HardGapReason] = Field(default=None, description="For Tier 6 UNAVAILABLE_HARD_GAP")
     linked_authority_source: Optional[str] = Field(default=None, description="ParlGov, Wikidata, CAP, MARPOR")
     source_feed: Optional[str] = Field(default=None, description="Raw feed, API endpoint, or paper source")
-    citation: Optional[str] = Field(default=None, description="Academic paper or PhD dataset reference for Tier 4")
+    citation: Optional[str] = Field(default=None, description="Academic paper or PhD dataset reference for Tier 3 DERIVED_HUMAN_CODED")
 
 # --- TEMPORAL MEMBER AFFILIATION ENGINE MODEL ---
 
@@ -216,7 +214,6 @@ class CanonicalBill(BaseModel):
 
 ```sql
 CREATE TYPE provenance_tier_enum AS ENUM (
-    'CANONICAL_WISHLIST_TARGET',
     'NATIVE_DIRECT',
     'DERIVED_DETERMINISTIC',
     'DERIVED_HUMAN_CODED',

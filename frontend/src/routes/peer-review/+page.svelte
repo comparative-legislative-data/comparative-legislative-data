@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { BookOpen, CheckCircle, FileText, Mail, Layers, ShieldCheck, HelpCircle } from 'lucide-svelte';
+  import { BookOpen, CheckCircle, FileText, Mail, Layers, ShieldCheck, HelpCircle, MessageSquare } from 'lucide-svelte';
 
   const title = "Peer Review Commission Brief & Evaluation Guidelines";
   const description = "Self-contained peer review briefing document for external academic reviewers, legislative scholars, and data engineering experts.";
@@ -10,6 +10,21 @@
   <meta name="description" content={description} />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
+  <script src="https://giscus.app/client.js"
+        data-repo="comparative-legislative-data/comparative-legislative-data"
+        data-repo-id="R_kgDORXbA_A"
+        data-category="Announcements"
+        data-category-id="DIC_kwDORXbA_M4C1234"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="transparent_dark"
+        data-lang="en"
+        crossorigin="anonymous"
+        async>
+  </script>
 </svelte:head>
 
 <div class="container py-8">
@@ -20,15 +35,18 @@
     <h1>Peer Review Commission Brief & Evaluation Guidelines</h1>
     <p class="lead">
       A self-contained briefing document for external academic reviewers, legislative scholars, political scientists, and quantitative data experts. 
-      <strong>No GitHub repository access or technical setup is required to complete this review.</strong>
+      <strong>No GitHub repository setup is required to submit a review.</strong>
     </p>
 
     <div class="action-bar">
-      <a href="mailto:peer-review@legislativedata.org" class="btn btn-primary">
-        <Mail size={16} /> Submit Written Peer Review Report
+      <a href="mailto:comparativelegislativedata@gmail.com" class="btn btn-primary">
+        <Mail size={16} /> Submit Written Review via Email
+      </a>
+      <a href="https://github.com/comparative-legislative-data/comparative-legislative-data/discussions" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+        <MessageSquare size={16} /> Join GitHub Discussion
       </a>
       <a href="https://github.com/comparative-legislative-data/comparative-legislative-data" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
-        <svg size="16" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg> View GitHub Repository
+        <svg size="16" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg> View Repository
       </a>
     </div>
   </div>
@@ -123,7 +141,7 @@
   </section>
 
   <!-- Section 4: Submission Guidelines -->
-  <section class="card submission-card">
+  <section class="card submission-card mb-8">
     <h2 class="section-title"><FileText size={20} color="#22c55e" /> 4. Report Submission Guidelines</h2>
     <p>
       Expert reviewers are requested to compile their findings into a <strong>Written Peer Review Report</strong> (PDF or Word document format) and submit it directly to the project team:
@@ -131,7 +149,11 @@
     <div class="contact-box">
       <div class="contact-item">
         <strong>Primary Submission Email:</strong> 
-        <a href="mailto:peer-review@legislativedata.org">peer-review@legislativedata.org</a>
+        <a href="mailto:comparativelegislativedata@gmail.com">comparativelegislativedata@gmail.com</a>
+      </div>
+      <div class="contact-item">
+        <strong>GitHub Organization Discussions:</strong> 
+        <a href="https://github.com/comparative-legislative-data/comparative-legislative-data/discussions" target="_blank" rel="noopener noreferrer">https://github.com/comparative-legislative-data/comparative-legislative-data/discussions</a>
       </div>
       <div class="contact-item">
         <strong>Project Portal:</strong> 
@@ -139,12 +161,22 @@
       </div>
     </div>
   </section>
+
+  <!-- Section 5: Live GitHub Discussion & Comments -->
+  <section class="card">
+    <h2 class="section-title"><MessageSquare size={20} color="#38bdf8" /> 5. Public Academic Discussion & Comments</h2>
+    <p class="mb-4 text-muted">
+      Sign in with your GitHub account below to leave feedback, questions, or methodological suggestions. All comments automatically sync with our GitHub Organization Discussions board.
+    </p>
+    <div class="giscus"></div>
+  </section>
 </div>
 
 <style>
   .py-8 { padding-top: 2rem; padding-bottom: 4rem; }
   .mb-8 { margin-bottom: 2rem; }
   .mb-4 { margin-bottom: 1rem; }
+  .text-muted { color: var(--text-muted); font-size: 0.9rem; }
 
   .page-header {
     margin-bottom: 2.5rem;
@@ -333,4 +365,9 @@
     text-decoration: none;
   }
   .contact-item a:hover { text-decoration: underline; }
+
+  .giscus {
+    margin-top: 1rem;
+    min-height: 150px;
+  }
 </style>

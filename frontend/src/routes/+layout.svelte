@@ -13,6 +13,7 @@
     'name': 'Comparative Legislative Data Project',
     'url': 'https://legislativedata.org',
     'logo': 'https://legislativedata.org/favicon.svg',
+    'email': 'comparativelegislativedata@gmail.com',
     'description': 'An open academic research infrastructure standardising, auditing, and mapping quantitative legislative data across international parliamentary and presidential assemblies.'
   };
 
@@ -107,12 +108,12 @@
         <ul>
           <li>
             <a href="https://github.com/comparative-legislative-data/comparative-legislative-data" target="_blank" rel="noopener noreferrer" class="footer-icon-link">
-              <svg size="14" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg> GitHub Repository
+              <svg size="14" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg> GitHub Organization Repository
             </a>
           </li>
           <li>
-            <a href="mailto:peer-review@legislativedata.org" class="footer-icon-link">
-              <Mail size={14} /> peer-review@legislativedata.org
+            <a href="mailto:comparativelegislativedata@gmail.com" class="footer-icon-link">
+              <Mail size={14} /> comparativelegislativedata@gmail.com
             </a>
           </li>
         </ul>

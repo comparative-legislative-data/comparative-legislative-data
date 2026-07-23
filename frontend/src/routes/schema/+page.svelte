@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Layers, Search, Globe, Tag, Info } from 'lucide-svelte';
+  import { Layers, Search, Globe, Tag, Info, MessageSquare, Mail } from 'lucide-svelte';
 
   let searchQuery = $state('');
   let selectedDomain = $state('ALL');
@@ -93,6 +93,21 @@
 <svelte:head>
   <title>Master Canonical Variable Catalog — Comparative Legislative Data</title>
   <meta name="description" content="Master Wishlist Catalog defining ~40 target quantitative research variables across 8 legislative domains." />
+  <script src="https://giscus.app/client.js"
+        data-repo="comparative-legislative-data/comparative-legislative-data"
+        data-repo-id="R_kgDORXbA_A"
+        data-category="Announcements"
+        data-category-id="DIC_kwDORXbA_M4C1234"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="transparent_dark"
+        data-lang="en"
+        crossorigin="anonymous"
+        async>
+  </script>
 </svelte:head>
 
 <div class="container py-8">
@@ -163,13 +178,41 @@
             <Tag size={12} /> {varDef.notes}
           </div>
         {/if}
+
+        <!-- Per-Variable Action Buttons -->
+        <div class="var-actions">
+          <a 
+            href={`https://github.com/comparative-legislative-data/comparative-legislative-data/discussions/new?category=general&title=Feedback+on+variable+${varDef.name}`} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            class="action-btn btn-github"
+          >
+            <MessageSquare size={13} /> Discuss on GitHub
+          </a>
+          <a 
+            href={`mailto:comparativelegislativedata@gmail.com?subject=Feedback on Variable: ${varDef.name}`} 
+            class="action-btn btn-email"
+          >
+            <Mail size={13} /> Email Feedback
+          </a>
+        </div>
       </div>
     {/each}
   </div>
+
+  <!-- Embedded GitHub Comment Section -->
+  <section class="card comment-section mt-12">
+    <h2 class="section-title"><MessageSquare size={20} color="#38bdf8" /> General Methodological Feedback & Comments</h2>
+    <p class="mb-4 text-muted">
+      Leave questions, proposals for new quantitative variables, or suggestions for definition adjustments. Comments automatically sync to our GitHub Organization Discussions.
+    </p>
+    <div class="giscus"></div>
+  </section>
 </div>
 
 <style>
   .py-8 { padding-top: 2rem; padding-bottom: 4rem; }
+  .mt-12 { margin-top: 3rem; }
   
   .page-header { margin-bottom: 2rem; }
 
@@ -373,5 +416,72 @@
     padding: 0.35rem 0.5rem;
     border-radius: 0.25rem;
     margin-top: 0.75rem;
+  }
+
+  .var-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .action-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.35rem 0.5rem;
+    border-radius: 0.375rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .btn-github {
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    color: #818cf8;
+  }
+  .btn-github:hover {
+    background: rgba(99, 102, 241, 0.2);
+    color: #ffffff;
+  }
+
+  .btn-email {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+  }
+  .btn-email:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+  }
+
+  .comment-section {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.75rem;
+    padding: 1.75rem;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 0.5rem;
+  }
+
+  .text-muted { color: var(--text-muted); font-size: 0.9rem; }
+
+  .giscus {
+    margin-top: 1rem;
+    min-height: 150px;
   }
 </style>

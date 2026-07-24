@@ -1,24 +1,33 @@
 # Scottish Parliament (GB-SCT) Audit Variable Summary
 
 **Specification Version:** 2.8.0  
-**Audit Stage:** Pass 1 Audit Complete (Structured Native API Feeds & Relational Joins) — Pass 2 Pending  
+**Audit Baseline:** Pass 1 Complete (Empirical API Ground Truth) | Pass 2 Candidate Assessment  
 **Last Updated:** July 24, 2026
 
 ---
 
-## Pass 1 Audit Provenance Breakdown
+## 2-Pass Audit Framework & Provenance Methodology
 
-All **119 institutional research variables** across 4 core entities (`CanonicalBill`, `CanonicalAmendment`, `CommitteeContext`, `ParsedProceedings`) and procedural hard gaps were evaluated against the 13 official Scottish Parliament Open Data API endpoints (`data.parliament.scot/api`) and Official Report Chamber Voting Logs.
+Our dataset provenance auditing follows a strict 2-pass scientific methodology to prevent premature labeling or data hallucination:
+
+1. **Pass 1 — Empirical Ground Truth (Binary Baseline):**
+   * **`NATIVE_DIRECT` (51 Variables — 42.9%):** Raw fields served directly out-of-the-box in official host API JSON payloads (`data.parliament.scot/api`).
+   * **`DERIVED_DETERMINISTIC` (21 Variables — 17.6%):** Variables calculated with 100% mathematical certainty and 0% parsing ambiguity using relational joins or date arithmetic directly on raw host API keys.
+
+2. **Pass 2 — Candidate Assessment (Provisional Hypotheses):**
+   * **`NOT_YET_CATEGORISED` (47 Variables — 39.5%):** Variables requiring document text parsing, PDF extraction, Hansard speech analytics, external crosswalks, or procedural hard gap verification.
+   * Rather than making unverified claims, all 47 variables carry a **Candidate Method Specification** (`validation_status: PROVISIONAL_HYPOTHESIS`) defining target source files, proposed extraction algorithms, and technical risk factors.
+   * A variable is **only promoted** to its final tier after an extraction script is built, executed, and benchmarked against historical records with verified 100% repeatability.
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────┐
-│                    PASS 1 AUDIT DISTRIBUTION SUMMARY                       │
+│                    GB-SCT AUDIT PROVENANCE SUMMARY                        │
 ├───────────────────────────┬───────────────┬───────────────────────────────┤
 │ PROVENANCE TIER           │ COUNT         │ PERCENTAGE                    │
 ├───────────────────────────┼───────────────┼───────────────────────────────┤
-│ NATIVE_DIRECT             │ 51 Variables  │ 42.9%                         │
-│ DERIVED_DETERMINISTIC     │ 21 Variables  │ 17.6%                         │
-│ NOT_YET_CATEGORISED       │ 47 Variables  │ 39.5% (Pending Pass 2 Audit)  │
+│ NATIVE_DIRECT             │ 51 Variables  │ 42.9% (Empirical Baseline)    │
+│ DERIVED_DETERMINISTIC     │ 21 Variables  │ 17.6% (Empirical Baseline)    │
+│ NOT_YET_CATEGORISED       │ 47 Variables  │ 39.5% (Provisional Candidate) │
 ├───────────────────────────┼───────────────┼───────────────────────────────┤
 │ TOTAL AUDITED             │ 119 Variables │ 100.0%                        │
 └───────────────────────────┴───────────────┴───────────────────────────────┘
@@ -26,28 +35,27 @@ All **119 institutional research variables** across 4 core entities (`CanonicalB
 
 ---
 
-## 1. `NATIVE_DIRECT` (51 Variables — 42.9%)
-Variables served directly raw out-of-the-box in the official API feeds:
-- **Assembly & Executive Context:** `jurisdiction_code`, `name`, `chamber_type`, `statutory_seats_total`, `presiding_officer_neutral_count`, `parliament_term`, `term_start_date`, `term_end_date`, `devolved_executive_name`
-- **Bill Sponsorship & Origin:** `local_bill_id`, `title_canonical`, `official_long_title`, `third_party_organisation`, `initiator_organisation_name`, `msp_birth_date`, `msp_gender`, `msp_photo_url`, `party_abbreviation`
-- **Progression & Timelines:** `date_introduced`, `date_final_outcome`, `royal_assent_date`, `stage_1_lead_committee_report_date`, `stage_1_debate_start_date`, `stage_1_debate_end_date`, `stage_2_committee_start_date`, `stage_2_committee_end_date`, `stage_3_plenary_debate_start_date`, `stage_3_plenary_debate_end_date`
-- **Financial Resolutions & Voting:** `financial_resolution_vote_date`, `financial_resolution_aye_count`, `financial_resolution_no_count`, `financial_resolution_abstain_count`
-- **Document Stage Prints:** `doc_as_introduced_url`, `doc_as_amended_stage_2_url`, `doc_as_amended_stage_3_url`, `doc_as_passed_url`, `policy_memorandum_url`, `financial_memorandum_url`, `revised_financial_memorandum_url`, `explanatory_notes_url`, `combined_financial_explanatory_notes_url`, `delegated_powers_memorandum_url`, `stage_1_lead_committee_report_url`, `marshalled_list_url`
-- **Committee Context:** `committee_id`, `committee_name`, `committee_membership_roster`
-- **Debate Proceedings API:** `official_report_plenary_api_url`, `official_report_committee_api_url`, `official_report_publication_url`
+## Pass 2 Candidate Breakdown (47 Provisional Hypotheses)
 
----
+### A. Document Text & Word Count Analytics (8 Candidate Variables)
+- `bill_as_introduced_word_count` (`CANDIDATE_DERIVED_EXTRACTED`) — Target: Stage 1 Bill HTML/PDF print. Method: Plain text tokenization stripping headers/footers.
+- `bill_as_amended_stage_2_word_count` (`CANDIDATE_DERIVED_EXTRACTED`) — Target: Stage 2 As Amended HTML/PDF print.
+- `bill_as_amended_stage_3_word_count` (`CANDIDATE_DERIVED_EXTRACTED`) — Target: Stage 3 As Amended HTML/PDF print.
+- `bill_as_enacted_word_count` (`CANDIDATE_DERIVED_EXTRACTED`) — Target: Legislation.gov.uk Act text print.
+- `text_expansion_ratio` (`CANDIDATE_DERIVED_EXTRACTED`) — Target: Derived math ratio of enacted vs introduced word counts.
+- `fiscal_impact_flag` (`CANDIDATE_DERIVED_EXTRACTED` / `HUMAN_CODED`) — Target: Financial Memorandum print. Method: Heading regex vs qualitative summary evaluation.
+- `emergency_procedure_flag` (`CANDIDATE_DERIVED_EXTRACTED`) — Target: Business Motion API. Method: Regex match on "Emergency Bill" motions.
+- `section_35_order_triggered_flag` (`CANDIDATE_DERIVED_EXTRACTED`) — Target: UK Cabinet Office Section 35 Order Register.
 
-## 2. `DERIVED_DETERMINISTIC` (21 Variables — 17.6%)
-Variables created 100% deterministically via relational joins, temporal date arithmetic, or roster lookups directly from structured native API JSON feeds (0% parsing risk):
-- **Executive Arrangement:** `government_type`, `governing_parties_list` (evaluated on decision date $T$)
-- **Sponsorship & Portfolio:** `initiator_type` (relational join on `/api/billtypes`), `initiator_party_governance_role` (relational lookup on `/api/memberparties`), `ministerial_portfolio_title` (relational lookup on `/api/MemberGovernmentRoles`)
-- **Stage Timelines:** `duration_calendar_days`, `duration_sitting_days`, `stage_1_debate_days_count`, `stage_3_debate_days_count`
-- **Voting Coalitions:** `financial_resolution_required_flag`, `financial_resolution_approved_flag`, `decision_point_motion_type`, `effective_majority_margin_at_event_date`, `party_dissent_rate_at_event_date`, `voting_coalition_type`
-- **Committee Structure:** `committee_type`, `committee_convener_member_id`, `committee_deputy_convener_member_id`
-- **Macro Disposition:** `final_status`, `termination_mechanism`
+### B. Macro & Micro Amendment Extractions (27 Candidate Variables)
+- `amendments_tabled_count`, `amendments_agreed_count`, `amendments_non_executive_count`, `committee_amendments_executive_acceptance_rate`, `bill_text_alteration_score` (`CANDIDATE_DERIVED_EXTRACTED`). Target: PDF Marshalled Lists & Official Report Voting Supplements.
+- **22 Micro Amendment Fields:** `canonical_amendment_id`, `local_amendment_number`, `bill_id`, `stage_canonical`, `stage_raw`, `date_tabled`, `date_decided`, `sponsor_name`, `sponsor_party_on_tabling_date`, `sponsor_party_leadership_role`, `sponsor_governance_role`, `co_sponsors_count`, `target_clause_or_schedule`, `amendment_action_type`, `government_position`, `disposition_canonical`, `decision_mechanism`, `division_id`, `aye_count`, `no_count`, `abstain_count`, `party_dissent_rate_on_amendment` (`CANDIDATE_DERIVED_EXTRACTED`). Target: PDF Marshalled Amendment Lists & Roll-Call Voting Logs.
 
----
+### C. Hansard Debate & Speech Analytics (5 Candidate Variables)
+- `proceedings_total_word_count`, `proceedings_interventions_count`, `proceedings_msps_speaking_count`, `executive_ministers_word_count_share`, `backbench_msps_word_count_share` (`CANDIDATE_DERIVED_EXTRACTED`). Target: Official Report HTML `Text` tags in `/api/orsplenarymeeting` and `/api/orscommitteemeeting`.
 
-## 3. `NOT_YET_CATEGORISED` (47 Variables — 39.5%)
-Variables requiring non-API sources (PDF document extractions, Marshalled List regex parsing, Hansard transcript word counts, human coding, AI extractions, or hard gap verifications), left uncategorised at Pass 1 to avoid premature guessing.
+### D. Linked External Authorities & Hard Gaps (7 Candidate Variables)
+- `parlgov_cabinet_id` (`CANDIDATE_LINKED_EXTERNAL`) — Target: ParlGov Cabinet Dataset crosswalk.
+- `initiator_member_id`, `initiator_convener_member_id`, `sponsor_member_id` (`CANDIDATE_LINKED_EXTERNAL`) — Target: Wikidata QID entity matching.
+- `cap_topic_code` (`CANDIDATE_LINKED_EXTERNAL` / `HUMAN_CODED`) — Target: Comparative Agendas Project policy classification.
+- `programme_motion_flag`, `guillotine_invoked_flag` (`CANDIDATE_UNAVAILABLE_HARD_GAP`) — Target: Holyrood Standing Orders (procedural non-equivalence).

@@ -26,3 +26,4 @@ dist/
 PeerReview/
 archive/
 *.scratch.md
+etl/mirrors/*.db

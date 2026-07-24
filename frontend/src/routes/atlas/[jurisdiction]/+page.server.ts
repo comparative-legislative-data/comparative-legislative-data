@@ -5,7 +5,7 @@ import path from 'path';
 import type { PageServerLoad } from './$types';
 
 // Vite eager raw imports — bundles YAML audit blueprints directly into production JS!
-const yamlModules = import.meta.glob('../../../../docs/audits/*.yaml', { query: '?raw', eager: true }) as Record<string, { default: string } | string>;
+const yamlModules = import.meta.glob('../../../../institutions/*/AUDIT_BLUEPRINT.yaml', { query: '?raw', eager: true }) as Record<string, { default: string } | string>;
 
 export const load: PageServerLoad = async ({ params }) => {
   const { jurisdiction } = params;
@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ params }) => {
   let blueprint: any = null;
 
   // 1. Try Vite static bundle import (Production safe)
-  const globKey = `../../../../docs/audits/${code}.yaml`;
+  const globKey = `../../../../institutions/${code}/AUDIT_BLUEPRINT.yaml`;
   const rawGlob = yamlModules[globKey];
 
   if (rawGlob) {
@@ -29,9 +29,13 @@ export const load: PageServerLoad = async ({ params }) => {
   // 2. Fallback to filesystem resolution if running in local dev or VPS
   if (!blueprint) {
     const candidatePaths = [
+      path.resolve(process.cwd(), '../institutions', code, 'AUDIT_BLUEPRINT.yaml'),
+      path.resolve(process.cwd(), 'institutions', code, 'AUDIT_BLUEPRINT.yaml'),
+      path.resolve(process.cwd(), '../../institutions', code, 'AUDIT_BLUEPRINT.yaml'),
+      path.resolve('/home/chessadmin/comparativelegislativedata/institutions', code, 'AUDIT_BLUEPRINT.yaml'),
+      // Fallback legacy paths
       path.resolve(process.cwd(), '../docs/audits', `${code}.yaml`),
       path.resolve(process.cwd(), 'docs/audits', `${code}.yaml`),
-      path.resolve(process.cwd(), '../../docs/audits', `${code}.yaml`),
       path.resolve('/home/chessadmin/comparativelegislativedata/docs/audits', `${code}.yaml`)
     ];
 

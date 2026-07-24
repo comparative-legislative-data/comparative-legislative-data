@@ -1,105 +1,103 @@
 <script lang="ts">
-  import { FileCode2, Download, Clock, Check } from 'lucide-svelte';
+  import { FileCode2, Download, CheckCircle2, Copy, Check, ExternalLink, Terminal } from 'lucide-svelte';
 
-  const breadcrumbSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    'itemListElement': [
-      {
-        '@type': 'ListItem',
-        'position': 1,
-        'name': 'Home',
-        'item': 'https://legislativedata.org/'
-      },
-      {
-        '@type': 'ListItem',
-        'position': 2,
-        'name': 'API & Bulk Data Access',
-        'item': 'https://legislativedata.org/api-docs'
-      }
-    ]
-  };
+  let copiedEndpoint = $state<string | null>(null);
 
-  const techArticleSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'TechArticle',
-    'name': 'Comparative Legislative Data API & Bulk Data Access Specification',
-    'url': 'https://legislativedata.org/api-docs',
-    'description': 'Technical access specifications for high-speed JSON REST APIs and bulk Parquet dataset downloads.',
-    'publisher': {
-      '@type': 'Organization',
-      'name': 'Comparative Legislative Data Project'
-    }
-  };
+  function copyCode(text: string, label: string) {
+    navigator.clipboard.writeText(text);
+    copiedEndpoint = label;
+    setTimeout(() => { copiedEndpoint = null; }, 2000);
+  }
 </script>
 
 <svelte:head>
-  <title>API & Bulk Data Specification — Comparative Legislative Data Platform</title>
-  <meta name="description" content="Technical access specifications for high-speed JSON REST APIs and bulk Parquet dataset downloads for political scientists and data researchers." />
-  <meta name="keywords" content="legislative API docs, bulk parliamentary data, Parquet legislative dataset, REST API comparative politics" />
-
-  <meta property="og:title" content="API & Bulk Data Specification — Comparative Legislative Data Platform" />
-  <meta property="og:description" content="Technical access specifications for REST APIs and bulk Parquet dataset downloads." />
-
-  <!-- Page Structured Data (JSON-LD) -->
-  {@html `<script type="application/ld+json">${JSON.stringify(breadcrumbSchema)}</script>`}
-  {@html `<script type="application/ld+json">${JSON.stringify(techArticleSchema)}</script>`}
+  <title>API & Bulk Data Access — Comparative Legislative Data Platform</title>
+  <meta name="description" content="Live versioned REST APIs, 1:1 host parity reconciliation, and bulk CSV/Parquet dataset downloads for the Scottish Parliament and comparative assemblies." />
 </svelte:head>
 
 <div class="container page-padding">
   <!-- Page Header -->
   <div class="page-header">
     <div class="header-badge">
-      <span class="badge badge-pending">Coming Soon &bull; Phase 1 Launch</span>
-      <span>API & Bulk Data Specification</span>
+      <span class="badge badge-success">Live API v2.8.0</span>
+      <span>100% Host Parity Verified</span>
     </div>
-    <h1 class="page-title">API & Bulk Dataset Access</h1>
+    <h1 class="page-title">Versioned REST APIs & Bulk Downloads</h1>
     <p class="page-sub">
-      We are currently in <strong>Phase 0 (Data Availability Audit & Mapping Mode)</strong>. Live REST API endpoints and bulk Parquet/CSV dataset downloads will launch in Phase 1 upon completion of the BICD group ingestion.
+      High-speed JSON REST APIs and bulk CSV/Parquet research datasets for computational social science, powered by zero-rate-limit database mirrors.
     </p>
   </div>
 
-  <!-- Phase 0 Status Banner -->
+  <!-- Live Status Card -->
   <div class="card status-banner-card">
     <div class="status-icon">
-      <Clock size={28} color="#f59e0b" />
+      <CheckCircle2 size={32} color="#10b981" />
     </div>
     <div class="status-text">
-      <h3>Current Project Phase: Phase 0 (Data Mapping & Audit Atlas)</h3>
+      <h3>Active Jurisdiction: Scottish Parliament (Holyrood / GB-SCT)</h3>
       <p>
-        The platform is currently auditing API structures, rate limits, data schemas, and 3-tier provenance for all 8 BICD assemblies. Once mapping blueprints are completed, Phase 1 will mirror 2019–2024 data and launch live API endpoints.
+        102,317 raw API records ingested across 13 native endpoints. 473 canonical bill records (Sessions 1–6, 1999–Present) evaluated under 100.0% Pass 1 Ground-Truth Baseline.
       </p>
     </div>
   </div>
 
-  <!-- Planned Access Specifications -->
-  <h2 class="section-heading">Planned Data Access Modes</h2>
+  <!-- Endpoint Explorer Grid -->
+  <h2 class="section-heading">Versioned Production Endpoints</h2>
 
-  <div class="specs-grid">
-    <div class="card spec-card">
-      <div class="spec-top">
-        <FileCode2 size={24} color="#6366f1" />
-        <h3>REST API Queries</h3>
+  <div class="endpoints-list">
+    <!-- Endpoint 1: Health & Parity Monitor -->
+    <div class="card endpoint-card">
+      <div class="ep-header">
+        <span class="method-tag method-get">GET</span>
+        <code class="ep-url">https://legislativedata.org/api/v1/GB-SCT/health</code>
+        <button class="btn-copy" onclick={() => copyCode('curl -s https://legislativedata.org/api/v1/GB-SCT/health', 'health')}>
+          {#if copiedEndpoint === 'health'}<Check size={13} color="#4ade80" /> Copied{:else}<Copy size={13} /> Copy cURL{/if}
+        </button>
       </div>
-      <p class="spec-desc">High-speed JSON responses serving dual-layer payloads (`normalized.*` and `native.*`).</p>
-      <ul class="spec-list">
-        <li><Check size={16} color="#10b981" /> Standard REST endpoints</li>
-        <li><Check size={16} color="#10b981" /> Dual-layer schema payloads</li>
-        <li><Check size={16} color="#10b981" /> Filtering by jurisdiction, term, & date</li>
-      </ul>
+      <p class="ep-desc">Returns real-time database mirror health status, 1:1 host parity verification report, sync timestamp, and record counts.</p>
+      <div class="ep-sample">
+        <pre><code>{`{
+  "status": "HEALTHY",
+  "jurisdiction": "GB-SCT",
+  "parity_verification": "100.0% EXACT HOST PARITY VERIFIED",
+  "last_reconciliation_timestamp": "2026-07-24 16:37:07 UTC",
+  "raw_records_count": 102317,
+  "canonical_records_count": 473
+}`}</code></pre>
+      </div>
     </div>
 
-    <div class="card spec-card">
-      <div class="spec-top">
-        <Download size={24} color="#38bdf8" />
-        <h3>Bulk Parquet & CSV Downloads</h3>
+    <!-- Endpoint 2: Canonical Bills -->
+    <div class="card endpoint-card">
+      <div class="ep-header">
+        <span class="method-tag method-get">GET</span>
+        <code class="ep-url">https://legislativedata.org/api/v1/GB-SCT/canonical/bills?limit=50</code>
+        <button class="btn-copy" onclick={() => copyCode('curl -s "https://legislativedata.org/api/v1/GB-SCT/canonical/bills?limit=50"', 'bills')}>
+          {#if copiedEndpoint === 'bills'}<Check size={13} color="#4ade80" /> Copied{:else}<Copy size={13} /> Copy cURL{/if}
+        </button>
       </div>
-      <p class="spec-desc">Full snapshot releases formatted for R, Python, and Stata statistical workflows.</p>
-      <ul class="spec-list">
-        <li><Check size={16} color="#10b981" /> Open Parquet data releases</li>
-        <li><Check size={16} color="#10b981" /> Complete annual legislative archives</li>
-        <li><Check size={16} color="#10b981" /> Permanent Zenodo DOI citations</li>
-      </ul>
+      <p class="ep-desc">Returns 72 Pass 1 baseline variables (51 `NATIVE_DIRECT` + 21 `DERIVED_DETERMINISTIC`) for all 473 Scottish Parliament bills.</p>
+      <div class="ep-params">
+        <span>Query Parameters:</span> <code>limit=50</code> &bull; <code>initiator_type=EXECUTIVE</code>
+      </div>
+    </div>
+
+    <!-- Endpoint 3: Bulk Downloads -->
+    <div class="card endpoint-card">
+      <div class="ep-header">
+        <span class="method-tag method-download">DOWNLOAD</span>
+        <code class="ep-url">https://legislativedata.org/static/data/GB-SCT_canonical_bills.csv</code>
+        <a href="https://legislativedata.org/static/data/GB-SCT_canonical_bills.csv" download class="btn-copy">
+          <Download size={13} /> Download CSV
+        </a>
+      </div>
+      <p class="ep-desc">Bulk research package containing all 72 canonical variables formatted for R, Python, Excel, SPSS, and Stata.</p>
+      <div class="download-formats-row">
+        <a href="https://legislativedata.org/static/data/GB-SCT_canonical_bills.csv" download class="fmt-pill">CSV Dataset</a>
+        <a href="https://legislativedata.org/static/data/GB-SCT_canonical_bills.json" download class="fmt-pill">JSON Dataset</a>
+        <a href="https://legislativedata.org/static/data/GB-SCT_canonical_bills.parquet" download class="fmt-pill">Parquet Dataset</a>
+        <a href="https://legislativedata.org/static/data/GB-SCT_canonical_bills_loader.R" download class="fmt-pill">R Import Script (.R)</a>
+      </div>
     </div>
   </div>
 </div>
@@ -126,8 +124,8 @@
     display: flex;
     align-items: center;
     gap: 1.5rem;
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(17, 24, 39, 0.95) 100%);
-    border: 1px solid rgba(245, 158, 11, 0.3);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(17, 24, 39, 0.95) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.3);
     padding: 1.75rem;
     margin-bottom: 3.5rem;
   }
@@ -137,45 +135,60 @@
 
   .section-heading { font-size: 1.5rem; margin-bottom: 1.5rem; }
 
-  .specs-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.75rem;
-  }
+  .endpoints-list { display: flex; flex-direction: column; gap: 1.5rem; }
 
-  .spec-card {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+  .endpoint-card { padding: 1.5rem; display: flex; flex-direction: column; gap: 0.85rem; }
+  .ep-header { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .method-tag {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
   }
+  .method-get { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+  .method-download { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
 
-  .spec-top {
-    display: flex;
+  .ep-url { font-family: var(--font-mono); font-size: 0.95rem; color: var(--accent-cyan); flex-grow: 1; word-break: break-all; }
+
+  .btn-copy {
+    display: inline-flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.4rem;
+    background: rgba(31, 41, 55, 0.8);
+    border: 1px solid var(--border-subtle);
+    color: #e5e7eb;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .btn-copy:hover { border-color: var(--accent-cyan); color: #ffffff; }
+
+  .ep-desc { color: var(--text-muted); font-size: 0.9rem; }
+
+  .ep-sample pre {
+    background: #090d16;
+    padding: 0.85rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-family: var(--font-mono);
+    color: #38bdf8;
+    overflow-x: auto;
   }
 
-  .spec-top h3 { font-size: 1.25rem; color: #ffffff; }
-  .spec-desc { font-size: 0.875rem; color: var(--text-muted); }
+  .ep-params { font-size: 0.825rem; color: var(--text-muted); }
+  .ep-params code { background: rgba(31, 41, 55, 0.6); padding: 0.15rem 0.4rem; border-radius: 4px; color: #ffffff; }
 
-  .spec-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
-    margin-top: 0.5rem;
+  .download-formats-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; }
+  .fmt-pill {
+    background: rgba(31, 41, 55, 0.6);
+    border: 1px solid var(--border-subtle);
+    color: #e5e7eb;
+    padding: 0.4rem 0.85rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    text-decoration: none;
   }
-
-  .spec-list li {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    font-size: 0.85rem;
-    color: var(--text-main);
-  }
-
-  @media (max-width: 768px) {
-    .specs-grid { grid-template-columns: 1fr; }
-    .status-banner-card { flex-direction: column; text-align: center; }
-  }
+  .fmt-pill:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
 </style>

@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this software or data architecture in academic research, please cite it as below."
+authors:
+  - family-names: "Comparative Legislative Data Project"
+    given-names: "Research Infrastructure Team"
+title: "Global Parliamentary Data Platform & Dual-Layer Legislative Architecture"
+version: 2.8.0
+date-released: 2026-07-24
+url: "https://legislativedata.org"
+repository-code: "https://github.com/comparative-legislative-data/comparative-legislative-data"
+keywords:
+  - comparative politics
+  - legislative data
+  - open science
+  - parliamentary debates
+  - DA*RT compliance
+  - WebAssembly
+license: CC-BY-4.0

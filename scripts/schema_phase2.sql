@@ -1,5 +1,7 @@
 -- Comparative Legislative Data Phase 2: PostgreSQL Schema definitions for raw GB-SCT OData mirroring
--- All column names are in lowercase to match OData field keys 1:1 and eliminate name-mapping guesswork.
+-- Following ELT best practices, raw staging tables (Layer A) contain plain types and performance indexes,
+-- but do not enforce strict foreign key constraints. This prevents ingestion failures due to upstream OData gaps
+-- and enables resilient staged test runs.
 
 -- 1. DROP EXISTING TABLES
 DROP TABLE IF EXISTS raw_gb_sct_sync_logs CASCADE;
@@ -59,15 +61,15 @@ CREATE TABLE raw_gb_sct_bills (
     reference VARCHAR(100),
     shortname VARCHAR(255),
     fullname TEXT,
-    billtypeid INT REFERENCES raw_gb_sct_billtypes(id),
+    billtypeid INT,
     personid INT,
     thirdpartyorganisation TEXT
 );
 
 CREATE TABLE raw_gb_sct_billstages (
     id INT PRIMARY KEY,
-    billid INT REFERENCES raw_gb_sct_bills(id),
-    billstagetypeid INT REFERENCES raw_gb_sct_billstagetypes(id),
+    billid INT,
+    billstagetypeid INT,
     stagedate TIMESTAMP
 );
 
@@ -85,8 +87,8 @@ CREATE TABLE raw_gb_sct_members (
 
 CREATE TABLE raw_gb_sct_memberparties (
     id INT PRIMARY KEY,
-    personid INT REFERENCES raw_gb_sct_members(personid),
-    partyid INT REFERENCES raw_gb_sct_parties(id),
+    personid INT,
+    partyid INT,
     validfromdate TIMESTAMP,
     validuntildate TIMESTAMP
 );
@@ -104,9 +106,9 @@ CREATE TABLE raw_gb_sct_committees (
 
 CREATE TABLE raw_gb_sct_personcommitteeroles (
     id INT PRIMARY KEY,
-    personid INT REFERENCES raw_gb_sct_members(personid),
-    committeeroleid INT REFERENCES raw_gb_sct_committeeroles(id),
-    committeeid INT REFERENCES raw_gb_sct_committees(id),
+    personid INT,
+    committeeroleid INT,
+    committeeid INT,
     validfromdate TIMESTAMP,
     validuntildate TIMESTAMP,
     notes TEXT
@@ -173,7 +175,7 @@ CREATE TABLE raw_gb_sct_sync_logs (
     error_message TEXT
 );
 
--- 6. CREATE INDEXES FOR RELATIONSHIPS
+-- 6. CREATE INDEXES FOR RELATIONSHIPS (keeps analytical performance fast)
 CREATE INDEX idx_raw_gb_sct_billstages_bill ON raw_gb_sct_billstages(billid);
 CREATE INDEX idx_raw_gb_sct_memberparties_person ON raw_gb_sct_memberparties(personid);
 CREATE INDEX idx_raw_gb_sct_personcommitteeroles_person ON raw_gb_sct_personcommitteeroles(personid);

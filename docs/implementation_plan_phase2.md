@@ -176,7 +176,7 @@ CREATE TABLE raw_gb_sct_committee_reports (
 ## 2. Ingestion & ELT Pipeline Engine
 
 ### Ingestion Script Design (`scripts/sync_gb_sct.py`)
-A single, resilient Python script managed via systemd timer/cron.
+A single, resilient Python script that supports modular run-modes, rate-limiting, and resuming.
 
 - **Idempotency:** Uses `INSERT ... ON CONFLICT (id) DO UPDATE` to allow safe, repeated runs without duplicating records.
 - **Keyset Pagination Strategy:**
@@ -192,7 +192,7 @@ A single, resilient Python script managed via systemd timer/cron.
       upsert_to_db(records)
       last_id = records[-1]['UniqueID']
   ```
-- **Yearly Partition loop:**
+- **Yearly Partition Loop:**
   For `votesmotion`, `orsplenarymeeting`, and `orscommitteemeeting`:
   ```python
   for year in range(1999, datetime.now().year + 1):
@@ -203,7 +203,43 @@ A single, resilient Python script managed via systemd timer/cron.
 
 ---
 
-## 3. Reconciliation & Parity Auditing
+## 3. Staged Testing & Ingestion Plan
+
+To prevent "one-shot" failures and ensure data integrity, the pipeline will be executed in three incremental stages:
+
+### Stage 1: Dry-Run Validation (`--dry-run`)
+*   **Action:** Probe all 14 endpoints for 1 sample record each.
+*   **Checks:** Parse the fields, map the datatypes, and verify that they fit within the PostgreSQL table definitions without writing any data.
+*   **Result:** Outputs a validation report to stdout. If any new or unexpected schema key is found, the dry-run fails.
+
+### Stage 2: Small Integration Seed (`--test-seed`)
+*   **Action:** Initialize database tables and write exactly 10 records per endpoint.
+*   **Checks:** Verify that constraints, relationships, indexes, and primary key inserts function correctly in PostgreSQL.
+*   **Result:** Confirm that local queries return correct types.
+
+### Stage 3: throttled Full Production Sync (`--full-sync`)
+*   **Action:** Run the complete backfill on the VPS.
+*   **Result:** 100% database mirroring.
+
+---
+
+## 4. Critical Operational Safeguards
+
+To prevent host server rate-limiting, VPS resource starvation, or database corruption:
+
+1.  **Rate Throttling:** Enforce a minimum **250ms sleep** between HTTP requests to avoid triggering security blocks on the parliament servers.
+2.  **Exponential Backoff:** If the host returns a `429 Too Many Requests` or `5xx Server Error`, the script will pause and retry:
+    *   Retry sequence: `2s -> 4s -> 8s -> 16s -> 32s` (maximum 5 retries before logging failure).
+3.  **Transactional Commit Batching:** Records are committed in transactional batches of **200 rows**. If a network error occurs mid-sync, the active batch is rolled back to prevent partially corrupted records.
+4.  **Resume Capability:** Before calling high-volume endpoints, the script queries the database for `MAX(id)` or completed years and requests only newer records. This allows syncs to resume after interruption instead of dropping tables.
+5.  **Strict Type Casting:** The sync script will parse and cast values explicitly:
+    *   Empty/whitespace strings are cast to SQL `NULL`.
+    *   Date strings are parsed and validated as proper ISO-8601 timestamps.
+    *   Nested objects are serialized to JSON strings for `JSONB` fields.
+
+---
+
+## 5. Reconciliation & Parity Auditing
 
 To guarantee 100% academic parity, every sync task executes a reconciliation audit:
 
@@ -223,7 +259,7 @@ To guarantee 100% academic parity, every sync task executes a reconciliation aud
 
 ---
 
-## 4. Verification Plan
+## 6. Verification Plan
 
 ### Automated Database Tests
 *   **Audit Script:** Write `tests/test_reconciliation.py` to compare OData endpoints against our database counts and log any mismatched IDs.

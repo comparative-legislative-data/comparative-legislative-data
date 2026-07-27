@@ -116,9 +116,9 @@
       </a>
 
       <nav class="main-nav">
-        <span class="nav-link text-muted" style="cursor: not-allowed; opacity: 0.6;">
-          <Database size={16} /> Native Explorer (Offline)
-        </span>
+        <a href="/pilot/gb-sct" class="nav-link">
+          <Database size={16} /> GB-SCT Native Explorer
+        </a>
         
         <!-- Auth & Admin Controls -->
         {#if user?.is_super_user}

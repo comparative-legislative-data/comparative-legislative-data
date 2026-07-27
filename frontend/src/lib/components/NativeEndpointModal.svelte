@@ -1,0 +1,616 @@
+<script lang="ts">
+  import { X, Copy, Check, Terminal, ExternalLink, Play } from 'lucide-svelte';
+
+  let { isOpen = $bindable(false), endpoint } = $props();
+
+  let activeTab = $state('schema'); // 'schema', 'preview', 'snippets'
+  let loading = $state(false);
+  let error = $state<string | null>(null);
+  let rawData = $state<any>(null);
+  
+  // Custom query parameters edited by the user
+  let queryParams = $state('');
+
+  // Hashed state to show "Copied" message
+  let copiedText = $state<string | null>(null);
+
+  $effect(() => {
+    if (isOpen && endpoint) {
+      activeTab = 'schema';
+      error = null;
+      rawData = null;
+      queryParams = endpoint.params || '';
+      triggerFetch();
+    }
+  });
+
+  async function triggerFetch() {
+    if (!endpoint) return;
+    loading = true;
+    error = null;
+    rawData = null;
+
+    try {
+      // Build the proxy path using our un-gated proxy URL
+      const pathWithParams = endpoint.path + (queryParams ? queryParams : '');
+      const proxyUrl = `/api/v2/proxy/gb-sct/${pathWithParams}`;
+      
+      const res = await fetch(proxyUrl);
+      if (!res.ok) {
+        throw new Error(`HTTP Error ${res.status}: Failed to fetch through proxy.`);
+      }
+      
+      const data = await res.json();
+      rawData = data;
+    } catch (e: any) {
+      error = e.message || 'Unknown fetch failure';
+    } finally {
+      loading = false;
+    }
+  }
+
+  // Recursive schema introspector to flatten nested JSON structures
+  function introspectSchema(obj: any, prefix = ''): Array<{ path: string; type: string; val: string }> {
+    if (!obj) return [];
+    
+    let fields: Array<{ path: string; type: string; val: string }> = [];
+    
+    // Resolve array of objects to inspect the first element
+    if (Array.isArray(obj)) {
+      if (obj.length === 0) return [];
+      return introspectSchema(obj[0], prefix);
+    }
+
+    if (typeof obj === 'object') {
+      for (const [key, value] of Object.entries(obj)) {
+        const currentPath = prefix ? `${prefix}.${key}` : key;
+        
+        if (value === null) {
+          fields.push({ path: currentPath, type: 'null', val: 'null' });
+        } else if (Array.isArray(value)) {
+          if (value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
+            // Document array of objects by traversing first item
+            fields.push({ path: `${currentPath}[]`, type: 'Array of Objects', val: '' });
+            fields = [...fields, ...introspectSchema(value[0], `${currentPath}[]`)];
+          } else {
+            const itemType = value.length > 0 ? typeof value[0] : 'unknown';
+            fields.push({ path: currentPath, type: `Array of ${itemType}`, val: JSON.stringify(value.slice(0, 3)) });
+          }
+        } else if (typeof value === 'object') {
+          fields.push({ path: currentPath, type: 'Object', val: '' });
+          fields = [...fields, ...introspectSchema(value, currentPath)];
+        } else {
+          fields.push({ 
+            path: currentPath, 
+            type: typeof value, 
+            val: typeof value === 'string' && value.length > 60 ? value.substring(0, 60) + '...' : String(value) 
+          });
+        }
+      }
+    }
+    
+    return fields;
+  }
+
+  // Derive schema records from raw data
+  let schemaRecords = $derived.by(() => {
+    if (!rawData) return [];
+    return introspectSchema(rawData);
+  });
+
+  // Derive preview data (limit to first 5 items)
+  let previewData = $derived.by(() => {
+    if (!rawData) return null;
+    if (Array.isArray(rawData)) {
+      return rawData.slice(0, 5);
+    }
+    return rawData;
+  });
+
+  function copyToClipboard(text: string, key: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      copiedText = key;
+      setTimeout(() => {
+        if (copiedText === key) copiedText = null;
+      }, 2000);
+    });
+  }
+
+  // Helper to escape Svelte curly braces
+  const ob = '{';
+  const cb = '}';
+</script>
+
+{#if isOpen && endpoint}
+  <!-- Backdrop -->
+  <div class="modal-backdrop" onclick={() => isOpen = false} role="presentation"></div>
+
+  <!-- Modal Window -->
+  <div class="modal-window">
+    <header class="modal-header">
+      <div class="modal-title-col">
+        <div class="modal-badge">NATIVE_DIRECT</div>
+        <h2>{endpoint.name}</h2>
+        <code class="modal-path">GET https://data.parliament.scot/api/{endpoint.path}</code>
+      </div>
+      <button class="btn-close" onclick={() => isOpen = false} aria-label="Close modal">
+        <X size={20} />
+      </button>
+    </header>
+
+    <!-- Query Editor Panel -->
+    <section class="query-panel">
+      <div class="query-input-row">
+        <span class="query-label">Edit Query Parameters:</span>
+        <input 
+          type="text" 
+          class="query-input" 
+          bind:value={queryParams} 
+          placeholder="e.g. ?$top=5 or ?year=2024"
+        />
+        <button class="btn-run" onclick={triggerFetch} disabled={loading}>
+          <Play size={12} fill="currentColor" /> Run Query
+        </button>
+      </div>
+      <span class="text-xs text-slate-400">
+        Direct Host API Endpoint: 
+        <a 
+          href="https://data.parliament.scot/api/{endpoint.path}{queryParams}" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="external-link"
+        >
+          https://data.parliament.scot/api/{endpoint.path}{queryParams} <ExternalLink size={10} />
+        </a>
+      </span>
+    </section>
+
+    <!-- Tab Bar -->
+    <nav class="tab-bar">
+      <button 
+        class="tab-btn" 
+        class:active={activeTab === 'schema'} 
+        onclick={() => activeTab = 'schema'}
+      >
+        Dynamic Schema ({schemaRecords.length} fields)
+      </button>
+      <button 
+        class="tab-btn" 
+        class:active={activeTab === 'preview'} 
+        onclick={() => activeTab = 'preview'}
+      >
+        JSON Payload Preview
+      </button>
+      <button 
+        class="tab-btn" 
+        class:active={activeTab === 'snippets'} 
+        onclick={() => activeTab = 'snippets'}
+      >
+        Replication Snippets
+      </button>
+    </nav>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      {#if loading}
+        <div class="status-box text-indigo-400">
+          <div class="spinner"></div> Introspecting live assembly payload...
+        </div>
+      {:else if error}
+        <div class="status-box text-rose-400">
+          <strong>Introspection Failed:</strong> {error}
+        </div>
+      {:else if rawData}
+        
+        <!-- Tab: Schema -->
+        {#if activeTab === 'schema'}
+          <div class="table-container">
+            <table class="schema-table">
+              <thead>
+                <tr>
+                  <th>Field Path</th>
+                  <th>JavaScript Type</th>
+                  <th>Live Sample Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {#each schemaRecords as field}
+                  <tr>
+                    <td class="font-mono text-indigo-300">{field.path}</td>
+                    <td class="font-mono text-cyan-400">{field.type}</td>
+                    <td class="text-slate-300">{field.val}</td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+        {/if}
+
+        <!-- Tab: Preview -->
+        {#if activeTab === 'preview'}
+          <div class="preview-container">
+            <div class="preview-header">
+              <span class="text-xs text-slate-400">Displaying sample records directly from passthrough proxy</span>
+              <button 
+                class="btn-copy" 
+                onclick={() => copyToClipboard(JSON.stringify(rawData, null, 2), 'json')}
+              >
+                {#if copiedText === 'json'}<Check size={14} /> Copied{:else}<Copy size={14} /> Copy JSON{/if}
+              </button>
+            </div>
+            <pre class="json-code"><code>{JSON.stringify(previewData, null, 2)}</code></pre>
+          </div>
+        {/if}
+
+        <!-- Tab: Snippets -->
+        {#if activeTab === 'snippets'}
+          <div class="snippets-container">
+            <!-- cURL -->
+            <div class="snippet-box">
+              <div class="snippet-header">
+                <span>cURL (HTTP Get Request)</span>
+                <button 
+                  class="btn-copy" 
+                  onclick={() => copyToClipboard(`curl -X GET "https://data.parliament.scot/api/${endpoint.path}${queryParams}" -H "Accept: application/json"`, 'curl')}
+                >
+                  {#if copiedText === 'curl'}<Check size={14} /> Copied{:else}<Copy size={14} /> Copy{/if}
+                </button>
+              </div>
+              <pre class="snippet-code"><code>curl -X GET "https://data.parliament.scot/api/{endpoint.path}{queryParams}" \
+  -H "Accept: application/json"</code></pre>
+            </div>
+
+            <!-- Python -->
+            <div class="snippet-box mt-4">
+              <div class="snippet-header">
+                <span>Python (requests)</span>
+                <button 
+                  class="btn-copy" 
+                  onclick={() => copyToClipboard(`import requests\n\nurl = "https://data.parliament.scot/api/${endpoint.path}${queryParams}"\nheaders = ${ob}"Accept": "application/json"${cb}\nresponse = requests.get(url, headers=headers)\ndata = response.json()\nprint(f"Retrieved ${ob}len(data)${cb} records.")`, 'python')}
+                >
+                  {#if copiedText === 'python'}<Check size={14} /> Copied{:else}<Copy size={14} /> Copy{/if}
+                </button>
+              </div>
+              <pre class="snippet-code"><code>import requests
+
+url = "https://data.parliament.scot/api/{endpoint.path}{queryParams}"
+headers = {ob}"Accept": "application/json"{cb}
+
+response = requests.get(url, headers=headers)
+data = response.json()
+print(f"Retrieved {ob}len(data){cb} records.")</code></pre>
+            </div>
+
+            <!-- R -->
+            <div class="snippet-box mt-4">
+              <div class="snippet-header">
+                <span>R (httr / jsonlite)</span>
+                <button 
+                  class="btn-copy" 
+                  onclick={() => copyToClipboard(`library(httr)\nlibrary(jsonlite)\n\nurl <- "https://data.parliament.scot/api/${endpoint.path}${queryParams}"\nresponse <- GET(url, add_headers(Accept = "application/json"))\ndata <- fromJSON(content(response, "text"))\n\nprint(paste("Retrieved", nrow(data), "records."))`, 'r')}
+                >
+                  {#if copiedText === 'r'}<Check size={14} /> Copied{:else}<Copy size={14} /> Copy{/if}
+                </button>
+              </div>
+              <pre class="snippet-code"><code>library(httr)
+library(jsonlite)
+
+url &lt;- "https://data.parliament.scot/api/{endpoint.path}{queryParams}"
+response &lt;- GET(url, add_headers(Accept = "application/json"))
+data &lt;- fromJSON(content(response, "text"))
+
+print(paste("Retrieved", nrow(data), "records."))</code></pre>
+            </div>
+          </div>
+        {/if}
+
+      {/if}
+    </div>
+  </div>
+{/if}
+
+<style>
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(2, 6, 23, 0.8);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+  }
+
+  .modal-window {
+    position: fixed;
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 950px;
+    height: 85vh;
+    background: #0b0f19;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    z-index: 1001;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+  }
+
+  .modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .modal-title-col h2 {
+    font-family: var(--font-heading);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0.35rem 0;
+  }
+
+  .modal-badge {
+    background: rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 0.15rem 0.45rem;
+    border-radius: 0.25rem;
+    display: inline-block;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+  }
+
+  .modal-path {
+    font-family: var(--font-mono);
+    color: #94a3b8;
+    font-size: 0.8rem;
+  }
+
+  .btn-close {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s ease;
+  }
+  .btn-close:hover {
+    color: #ffffff;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .query-panel {
+    background: rgba(0,0,0,0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .query-input-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .query-label {
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .query-input {
+    background: #020617;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-radius: 0.375rem;
+    padding: 0.35rem 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    flex: 1;
+  }
+  .query-input:focus {
+    border-color: #4f46e5;
+    outline: none;
+  }
+
+  .btn-run {
+    background: #4f46e5;
+    color: #ffffff;
+    border: none;
+    padding: 0.35rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: background 0.2s;
+  }
+  .btn-run:hover { background: #4338ca; }
+
+  .external-link {
+    color: #818cf8;
+    text-decoration: none;
+  }
+  .external-link:hover { text-decoration: underline; }
+
+  .tab-bar {
+    display: flex;
+    background: #080b12;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 0 1.5rem;
+  }
+
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    padding: 1rem 1.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+  }
+  .tab-btn:hover { color: #ffffff; }
+  .tab-btn.active {
+    color: #818cf8;
+    border-bottom-color: #818cf8;
+  }
+
+  .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    background: #070a12;
+  }
+
+  .status-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    height: 200px;
+    font-size: 0.95rem;
+  }
+
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(129, 140, 248, 0.2);
+    border-top-color: #818cf8;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .table-container {
+    overflow-x: auto;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+  }
+
+  .schema-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+  }
+
+  .schema-table th, .schema-table td {
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  .schema-table th {
+    background: rgba(15, 23, 42, 0.6);
+    color: #94a3b8;
+    font-weight: 600;
+  }
+
+  .schema-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.01);
+  }
+
+  .font-mono { font-family: var(--font-mono); }
+  .text-indigo-300 { color: #a5b4fc; }
+  .text-cyan-400 { color: #22d4bf; }
+  .text-slate-300 { color: #cbd5e1; }
+  .text-rose-400 { color: #fb7185; }
+  .text-xs { font-size: 0.75rem; }
+
+  .preview-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    height: 100%;
+  }
+
+  .preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .btn-copy {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #cbd5e1;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: all 0.2s;
+  }
+  .btn-copy:hover {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.35);
+    color: #a5b4fc;
+  }
+
+  .json-code {
+    background: #020617;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.825rem;
+    color: #cbd5e1;
+    overflow-x: auto;
+    max-height: 480px;
+    margin: 0;
+  }
+
+  .snippets-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .snippet-box {
+    background: rgba(15, 23, 42, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .snippet-header {
+    background: rgba(2, 6, 23, 0.6);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #94a3b8;
+  }
+
+  .snippet-code {
+    padding: 1.25rem;
+    background: #020617;
+    margin: 0;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.825rem;
+    color: #cbd5e1;
+  }
+</style>

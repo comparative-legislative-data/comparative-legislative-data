@@ -251,8 +251,7 @@ def sync_endpoint(conn, name, ep, mode):
     # 1. Fetch data based on strategy
     if strategy == "lookup":
         records = fetch_with_backoff(ep["url"])
-        if mode == "test" and records:
-            records = records[:10]
+        # Keep lookup tables complete even in test mode to satisfy foreign key relationships
             
     elif strategy == "keyset":
         if mode == "dry-run":
@@ -311,6 +310,10 @@ def sync_endpoint(conn, name, ep, mode):
     if not isinstance(records, list):
         records = [records]
 
+    # Truncate transactional tables python-side to 10 rows in test mode if host ignored OData $top
+    if mode == "test" and strategy != "lookup" and records:
+        records = records[:10]
+
     # 2. Database Upserts in transactional batches of 200
     if mode == "dry-run":
         print(f"Dry-run verification: parsed sample record from {name} successfully.")
@@ -326,6 +329,9 @@ def sync_endpoint(conn, name, ep, mode):
             with conn.transaction():
                 with conn.cursor() as cur:
                     for rec in batch:
+                        if not isinstance(rec, dict):
+                            print(f"Skipping malformed record (not a dict) in {table}: {rec}")
+                            continue
                         params = []
                         for col, t_type in fields.items():
                             val = rec.get(col)

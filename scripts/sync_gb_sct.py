@@ -222,8 +222,6 @@ def build_upsert_query(table, fields, key_col):
     
     for col, t_type in fields.items():
         db_col = col.lower()
-        if db_col == 'uniqueid':
-            db_col = 'unique_id'
         
         col_names.append(db_col)
         placeholders.append("%s")
@@ -232,7 +230,7 @@ def build_upsert_query(table, fields, key_col):
             
     cols_str = ", ".join(col_names)
     placeholders_str = ", ".join(placeholders)
-    conflict_key = 'unique_id' if key_col.lower() == 'uniqueid' else key_col.lower()
+    conflict_key = key_col.lower()
     
     if updates:
         updates_str = ", ".join(updates)
@@ -268,7 +266,7 @@ def sync_endpoint(conn, name, ep, mode):
             last_id = 0
             # Resume Check: Get current max ID from database
             with conn.cursor() as cur:
-                conflict_key = 'unique_id' if key_col.lower() == 'uniqueid' else key_col.lower()
+                conflict_key = key_col.lower()
                 cur.execute(f"SELECT MAX({conflict_key}) FROM {table};")
                 res = cur.fetchone()
                 if res and res[0] is not None:
@@ -277,7 +275,7 @@ def sync_endpoint(conn, name, ep, mode):
             
             while True:
                 top_limit = 500
-                url = f"{ep['url']}?\$filter={key_col} gt {last_id}&\$orderby={key_col}&\$top={top_limit}"
+                url = f"{ep['url']}?$filter={key_col} gt {last_id}&$orderby={key_col}&$top={top_limit}"
                 chunk = fetch_with_backoff(url)
                 if not chunk:
                     break
@@ -289,10 +287,10 @@ def sync_endpoint(conn, name, ep, mode):
                 
     elif strategy == "yearly":
         if mode == "dry-run":
-            url = f"{ep['url']}?year=2025&\$top=1"
+            url = f"{ep['url']}?year=2025&$top=1"
             records = fetch_with_backoff(url)
         elif mode == "test":
-            url = f"{ep['url']}?year=2025&\$top=10"
+            url = f"{ep['url']}?year=2025&$top=10"
             records = fetch_with_backoff(url)
         else:
             # Full sync year-by-year loop

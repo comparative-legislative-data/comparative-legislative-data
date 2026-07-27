@@ -1,6 +1,7 @@
 -- Comparative Legislative Data Phase 2: PostgreSQL Schema definitions for raw GB-SCT OData mirroring
+-- All column names are in lowercase to match OData field keys 1:1 and eliminate name-mapping guesswork.
 
--- 1. DROP EXISTING RAW TABLES (IF ANY)
+-- 1. DROP EXISTING TABLES
 DROP TABLE IF EXISTS raw_gb_sct_sync_logs CASCADE;
 DROP TABLE IF EXISTS raw_gb_sct_committee_reports CASCADE;
 DROP TABLE IF EXISTS raw_gb_sct_plenary_reports CASCADE;
@@ -27,18 +28,18 @@ CREATE TABLE raw_gb_sct_billtypes (
 CREATE TABLE raw_gb_sct_billstagetypes (
     id INT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    bill_type_id INT,
+    billtypeid INT,
     sequence INT
 );
 
 CREATE TABLE raw_gb_sct_parties (
     id INT PRIMARY KEY,
     abbreviation VARCHAR(50),
-    actual_name VARCHAR(255),
-    preferred_name VARCHAR(255),
+    actualname VARCHAR(255),
+    preferredname VARCHAR(255),
     notes TEXT,
-    valid_from_date TIMESTAMP,
-    valid_until_date TIMESTAMP
+    validfromdate TIMESTAMP,
+    validuntildate TIMESTAMP
 );
 
 CREATE TABLE raw_gb_sct_committeeroles (
@@ -56,75 +57,75 @@ CREATE TABLE raw_gb_sct_committeetypes (
 CREATE TABLE raw_gb_sct_bills (
     id INT PRIMARY KEY,
     reference VARCHAR(100),
-    short_name VARCHAR(255),
-    full_name TEXT,
-    bill_type_id INT REFERENCES raw_gb_sct_billtypes(id),
-    person_id INT,
-    third_party_organisation TEXT
+    shortname VARCHAR(255),
+    fullname TEXT,
+    billtypeid INT REFERENCES raw_gb_sct_billtypes(id),
+    personid INT,
+    thirdpartyorganisation TEXT
 );
 
 CREATE TABLE raw_gb_sct_billstages (
     id INT PRIMARY KEY,
-    bill_id INT REFERENCES raw_gb_sct_bills(id),
-    bill_stage_type_id INT REFERENCES raw_gb_sct_billstagetypes(id),
-    stage_date TIMESTAMP
+    billid INT REFERENCES raw_gb_sct_bills(id),
+    billstagetypeid INT REFERENCES raw_gb_sct_billstagetypes(id),
+    stagedate TIMESTAMP
 );
 
 CREATE TABLE raw_gb_sct_members (
-    person_id INT PRIMARY KEY,
-    photo_url TEXT,
+    personid INT PRIMARY KEY,
+    photourl TEXT,
     notes TEXT,
-    birth_date TIMESTAMP,
-    birth_date_is_protected BOOLEAN,
-    parliamentary_name VARCHAR(255),
-    preferred_name VARCHAR(255),
-    gender_type_id INT,
-    is_current BOOLEAN
+    birthdate TIMESTAMP,
+    birthdateisprotected BOOLEAN,
+    parliamentaryname VARCHAR(255),
+    preferredname VARCHAR(255),
+    gendertypeid INT,
+    iscurrent BOOLEAN
 );
 
 CREATE TABLE raw_gb_sct_memberparties (
     id INT PRIMARY KEY,
-    person_id INT REFERENCES raw_gb_sct_members(person_id),
-    party_id INT REFERENCES raw_gb_sct_parties(id),
-    valid_from_date TIMESTAMP,
-    valid_until_date TIMESTAMP
+    personid INT REFERENCES raw_gb_sct_members(personid),
+    partyid INT REFERENCES raw_gb_sct_parties(id),
+    validfromdate TIMESTAMP,
+    validuntildate TIMESTAMP
 );
 
 CREATE TABLE raw_gb_sct_committees (
     id INT PRIMARY KEY,
-    short_name VARCHAR(100),
+    shortname VARCHAR(100),
     name VARCHAR(255),
     description TEXT,
-    committee_email_address VARCHAR(255),
-    committee_telephone VARCHAR(100),
-    valid_from_date TIMESTAMP,
-    valid_until_date TIMESTAMP
+    committeeemailaddress VARCHAR(255),
+    committeetelephone VARCHAR(100),
+    validfromdate TIMESTAMP,
+    validuntildate TIMESTAMP
 );
 
 CREATE TABLE raw_gb_sct_personcommitteeroles (
     id INT PRIMARY KEY,
-    person_id INT REFERENCES raw_gb_sct_members(person_id),
-    committee_role_id INT REFERENCES raw_gb_sct_committeeroles(id),
-    committee_id INT REFERENCES raw_gb_sct_committees(id),
-    valid_from_date TIMESTAMP,
-    valid_until_date TIMESTAMP,
+    personid INT REFERENCES raw_gb_sct_members(personid),
+    committeeroleid INT REFERENCES raw_gb_sct_committeeroles(id),
+    committeeid INT REFERENCES raw_gb_sct_committees(id),
+    validfromdate TIMESTAMP,
+    validuntildate TIMESTAMP,
     notes TEXT
 );
 
 -- 4. CREATE COMPLEX TRANSACTIONAL TABLES
 CREATE TABLE raw_gb_sct_motions (
-    unique_id INT PRIMARY KEY,
-    event_id VARCHAR(100),
-    event_type_id INT,
-    event_sub_type_id INT,
-    msp_id INT,
+    uniqueid INT PRIMARY KEY,
+    eventid VARCHAR(100),
+    eventtypeid INT,
+    eventsubtypeid INT,
+    mspid INT,
     party VARCHAR(100),
-    region_id INT,
-    constituency_id INT,
-    approved_date TIMESTAMP,
-    submission_date_time TIMESTAMP,
+    regionid INT,
+    constituencyid INT,
+    approveddate TIMESTAMP,
+    submissiondatetime TIMESTAMP,
     title VARCHAR(255),
-    item_text TEXT
+    itemtext TEXT
 );
 
 CREATE TABLE raw_gb_sct_votes (
@@ -133,7 +134,7 @@ CREATE TABLE raw_gb_sct_votes (
     motion JSONB NOT NULL,
     person JSONB NOT NULL,
     time JSONB NOT NULL,
-    updated_elastic_date TIMESTAMP
+    updatedelasticdate TIMESTAMP
 );
 
 CREATE TABLE raw_gb_sct_plenary_reports (
@@ -141,25 +142,25 @@ CREATE TABLE raw_gb_sct_plenary_reports (
     meeting JSONB NOT NULL,
     committee JSONB NOT NULL,
     time JSONB NOT NULL,
-    item_of_business JSONB NOT NULL,
+    itemofbusiness JSONB NOT NULL,
     person JSONB NOT NULL,
     detail JSONB NOT NULL,
-    updated_elastic_date TIMESTAMP
+    updatedelasticdate TIMESTAMP
 );
 
 CREATE TABLE raw_gb_sct_committee_reports (
     id VARCHAR(100) PRIMARY KEY,
-    record_type VARCHAR(100),
-    sub_type VARCHAR(100),
+    recordtype VARCHAR(100),
+    subtype VARCHAR(100),
     meeting JSONB NOT NULL,
     committee JSONB NOT NULL,
     time JSONB NOT NULL,
-    item_of_business JSONB NOT NULL,
+    itemofbusiness JSONB NOT NULL,
     person JSONB NOT NULL,
     detail JSONB NOT NULL,
     location JSONB,
-    updated_date TIMESTAMP,
-    updated_elastic_date TIMESTAMP
+    updateddate TIMESTAMP,
+    updatedelasticdate TIMESTAMP
 );
 
 -- 5. CREATE SYNC LOG TABLE
@@ -168,12 +169,12 @@ CREATE TABLE raw_gb_sct_sync_logs (
     sync_time TIMESTAMP DEFAULT NOW(),
     endpoint_name VARCHAR(100) NOT NULL,
     records_fetched INT,
-    reconciliation_status VARCHAR(50), -- 'PARITY_MATCH', 'GAP_DETECTED', 'SYNC_FAIL'
+    reconciliation_status VARCHAR(50),
     error_message TEXT
 );
 
--- 6. CREATE INDEXES FOR RELATIONSHIPS (to ensure fast joins and explorer performance)
-CREATE INDEX idx_raw_gb_sct_billstages_bill ON raw_gb_sct_billstages(bill_id);
-CREATE INDEX idx_raw_gb_sct_memberparties_person ON raw_gb_sct_memberparties(person_id);
-CREATE INDEX idx_raw_gb_sct_personcommitteeroles_person ON raw_gb_sct_personcommitteeroles(person_id);
-CREATE INDEX idx_raw_gb_sct_personcommitteeroles_committee ON raw_gb_sct_personcommitteeroles(committee_id);
+-- 6. CREATE INDEXES FOR RELATIONSHIPS
+CREATE INDEX idx_raw_gb_sct_billstages_bill ON raw_gb_sct_billstages(billid);
+CREATE INDEX idx_raw_gb_sct_memberparties_person ON raw_gb_sct_memberparties(personid);
+CREATE INDEX idx_raw_gb_sct_personcommitteeroles_person ON raw_gb_sct_personcommitteeroles(personid);
+CREATE INDEX idx_raw_gb_sct_personcommitteeroles_committee ON raw_gb_sct_personcommitteeroles(committeeid);

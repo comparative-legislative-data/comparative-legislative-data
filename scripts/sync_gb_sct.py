@@ -333,17 +333,21 @@ def sync_endpoint(conn, name, ep, mode):
     try:
         for i in range(0, len(records), batch_size):
             batch = records[i:i + batch_size]
-            with conn.transaction():
-                with conn.cursor() as cur:
-                    for rec in batch:
-                        if not isinstance(rec, dict):
-                            print(f"Skipping malformed record (not a dict) in {table}: {rec}")
-                            continue
-                        params = []
-                        for col, t_type in fields.items():
-                            val = rec.get(col)
-                            params.append(cast_field(val, t_type))
-                        cur.execute(upsert_query, params)
+            params_list = []
+            for rec in batch:
+                if not isinstance(rec, dict):
+                    print(f"Skipping malformed record (not a dict) in {table}: {rec}")
+                    continue
+                params = []
+                for col, t_type in fields.items():
+                    val = rec.get(col)
+                    params.append(cast_field(val, t_type))
+                params_list.append(params)
+            
+            if params_list:
+                with conn.transaction():
+                    with conn.cursor() as cur:
+                        cur.executemany(upsert_query, params_list)
             records_inserted += len(batch)
             print(f"Committed {records_inserted} / {len(records)} records to {table}...")
             

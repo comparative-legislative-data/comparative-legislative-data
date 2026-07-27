@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ShieldCheck, Database, ArrowRight, ExternalLink, HelpCircle, AlertTriangle } from 'lucide-svelte';
+  import { ShieldCheck, Database, ArrowRight, ExternalLink, HelpCircle, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-svelte';
   import NativeEndpointModal from '$lib/components/NativeEndpointModal.svelte';
 
   let isModalOpen = $state(false);
@@ -122,6 +122,23 @@
     }
   ];
 
+  let expandedHubs = $state<Record<string, boolean>>({
+    'bills': false,
+    'committees': false,
+    'motions': false
+  });
+
+  const hubKeys: Record<string, string> = {
+    '🏛️ Bills Hub': 'bills',
+    '👥 Committees Hub': 'committees',
+    '🗳️ Motions & Transcripts Hub': 'motions'
+  };
+
+  function toggleHub(title: string) {
+    const key = hubKeys[title];
+    expandedHubs[key] = !expandedHubs[key];
+  }
+
   function openEndpoint(endpoint: any) {
     selectedEndpoint = endpoint;
     isModalOpen = true;
@@ -163,13 +180,24 @@
     <!-- Entity Hubs Grid -->
     <div class="hubs-layout mt-12">
       {#each hubs as hub}
+        {@const key = hubKeys[hub.title]}
         <section class="hub-card">
-          <div class="hub-header">
-            <h2>{hub.title}</h2>
-            <p class="hub-desc">{hub.description}</p>
+          <div class="hub-header-row">
+            <div class="hub-header">
+              <h2>{hub.title}</h2>
+              <p class="hub-desc">{hub.description}</p>
+            </div>
+            <button class="btn-toggle" onclick={() => toggleHub(hub.title)}>
+              {#if expandedHubs[key]}
+                Hide Endpoints <ChevronUp size={16} />
+              {:else}
+                Show Endpoints <ChevronDown size={16} />
+              {/if}
+            </button>
           </div>
 
-          <div class="endpoints-list">
+          {#if expandedHubs[key]}
+            <div class="endpoints-list">
             {#each hub.endpoints as ep}
               <button class="endpoint-item" onclick={() => openEndpoint(ep)}>
                 <div class="endpoint-main">
@@ -198,7 +226,8 @@
                 </div>
               </button>
             {/each}
-          </div>
+            </div>
+          {/if}
         </section>
       {/each}
     </div>
@@ -325,6 +354,34 @@
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 0.85rem;
     padding: 2rem;
+  }
+
+  .hub-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .btn-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(99, 102, 241, 0.1);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  .btn-toggle:hover {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: #818cf8;
+    color: #ffffff;
   }
 
   .hub-header h2 {

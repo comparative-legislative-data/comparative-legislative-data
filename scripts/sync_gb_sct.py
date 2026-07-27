@@ -53,7 +53,7 @@ ENDPOINTS = {
     "bills": {
         "url": "https://data.parliament.scot/api/bills",
         "table": "raw_gb_sct_bills",
-        "strategy": "keyset",
+        "strategy": "lookup",
         "key": "ID",
         "fields": {
             "ID": "int", "Reference": "str", "ShortName": "str", 
@@ -63,14 +63,14 @@ ENDPOINTS = {
     "billstages": {
         "url": "https://data.parliament.scot/api/billstages",
         "table": "raw_gb_sct_billstages",
-        "strategy": "keyset",
+        "strategy": "lookup",
         "key": "ID",
         "fields": {"ID": "int", "BillID": "int", "BillStageTypeID": "int", "StageDate": "timestamp"}
     },
     "members": {
         "url": "https://data.parliament.scot/api/members",
         "table": "raw_gb_sct_members",
-        "strategy": "keyset",
+        "strategy": "lookup",
         "key": "PersonID",
         "fields": {
             "PersonID": "int", "PhotoURL": "str", "Notes": "str", "BirthDate": "timestamp", 
@@ -81,14 +81,14 @@ ENDPOINTS = {
     "memberparties": {
         "url": "https://data.parliament.scot/api/memberparties",
         "table": "raw_gb_sct_memberparties",
-        "strategy": "keyset",
+        "strategy": "lookup",
         "key": "ID",
         "fields": {"ID": "int", "PersonID": "int", "PartyID": "int", "ValidFromDate": "timestamp", "ValidUntilDate": "timestamp"}
     },
     "committees": {
         "url": "https://data.parliament.scot/api/committees",
         "table": "raw_gb_sct_committees",
-        "strategy": "keyset",
+        "strategy": "lookup",
         "key": "ID",
         "fields": {
             "ID": "int", "ShortName": "str", "Name": "str", "Description": "str", 
@@ -98,7 +98,7 @@ ENDPOINTS = {
     "personcommitteeroles": {
         "url": "https://data.parliament.scot/api/personcommitteeroles",
         "table": "raw_gb_sct_personcommitteeroles",
-        "strategy": "keyset",
+        "strategy": "lookup",
         "key": "ID",
         "fields": {
             "ID": "int", "PersonID": "int", "CommitteeRoleID": "int", "CommitteeID": "int", 
@@ -110,7 +110,7 @@ ENDPOINTS = {
     "motions": {
         "url": "https://data.parliament.scot/api/motionsquestionsanswersmotions",
         "table": "raw_gb_sct_motions",
-        "strategy": "keyset",
+        "strategy": "lookup",
         "key": "UniqueID",
         "fields": {
             "UniqueID": "int", "EventID": "str", "EventTypeID": "int", "EventSubTypeID": "int", 
@@ -314,8 +314,11 @@ def sync_endpoint(conn, name, ep, mode):
     if not isinstance(records, list):
         records = [records]
 
-    # Truncate transactional tables python-side to 10 rows in test mode if host ignored OData $top
-    if mode == "test" and strategy != "lookup" and records:
+    # Define primary lookup/catalog reference tables that should never be truncated in test seeds
+    lookups = {"billtypes", "billstagetypes", "parties", "committeeroles", "committeetypes"}
+
+    # Truncate transactional/large relationship tables python-side to 10 rows in test mode
+    if mode == "test" and name not in lookups and records:
         records = records[:10]
 
     # 2. Database Upserts in transactional batches of 200

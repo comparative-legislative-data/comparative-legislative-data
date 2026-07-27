@@ -170,6 +170,10 @@ def get_connection():
 def fetch_with_backoff(url):
     retries = 5
     backoff = 2
+    
+    # Safely URL-encode spaces in OData query parameters to prevent control character errors
+    url = url.replace(" ", "%20")
+    
     req = urllib.request.Request(url, headers={'User-Agent': 'Academic Mirror Sync Engine'})
     
     # 250ms Rate Throttling Guardrail

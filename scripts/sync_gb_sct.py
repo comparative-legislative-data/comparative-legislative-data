@@ -48,6 +48,16 @@ ENDPOINTS = {
         "key": "ID",
         "fields": {"ID": "int", "Name": "str"}
     },
+    "sessions": {
+        "url": "https://data.parliament.scot/api/sessions",
+        "table": "raw_gb_sct_sessions",
+        "strategy": "lookup",
+        "key": "ID",
+        "fields": {
+            "ID": "int", "ShortName": "str", "Name": "str", 
+            "StartDate": "timestamp", "EndDate": "timestamp"
+        }
+    },
 
     # Main Relational Tables (Keyset Pagination)
     "bills": {
@@ -298,6 +308,9 @@ def sync_endpoint(conn, name, ep, mode):
         else:
             # Full sync year-by-year loop
             start_year = 1999
+            if os.environ.get("RECENT_ONLY") == "true":
+                start_year = datetime.now().year - 1
+                print(f"Incremental mode: only syncing years {start_year} to {datetime.now().year}")
             end_year = datetime.now().year + 1
             for year in range(start_year, end_year):
                 print(f"Fetching year {year} for {name}...")

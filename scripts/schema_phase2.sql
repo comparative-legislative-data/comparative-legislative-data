@@ -20,8 +20,17 @@ DROP TABLE IF EXISTS raw_gb_sct_committeeroles CASCADE;
 DROP TABLE IF EXISTS raw_gb_sct_parties CASCADE;
 DROP TABLE IF EXISTS raw_gb_sct_billstagetypes CASCADE;
 DROP TABLE IF EXISTS raw_gb_sct_billtypes CASCADE;
+DROP TABLE IF EXISTS raw_gb_sct_sessions CASCADE;
 
 -- 2. CREATE LOOKUP TABLES
+CREATE TABLE raw_gb_sct_sessions (
+    id INT PRIMARY KEY,
+    shortname VARCHAR(50),
+    name VARCHAR(255),
+    startdate TIMESTAMP,
+    enddate TIMESTAMP
+);
+
 CREATE TABLE raw_gb_sct_billtypes (
     id INT PRIMARY KEY,
     name VARCHAR(255) NOT NULL

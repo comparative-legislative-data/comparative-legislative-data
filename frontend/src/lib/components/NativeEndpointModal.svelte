@@ -1,7 +1,14 @@
 <script lang="ts">
   import { X, Copy, Check, Terminal, ExternalLink, Play } from 'lucide-svelte';
+  
+  const UNCOMPRESSED_ENDPOINTS = [
+    "billtypes", "billstagetypes", "parties", "committeeroles", 
+    "committeetypes", "bills", "members", "committees"
+  ];
 
   let { isOpen = $bindable(false), endpoint } = $props();
+
+  let apiSource = $state('mirror');
 
   let activeTab = $state('schema'); // 'schema', 'preview', 'snippets'
   let loading = $state(false);
@@ -14,11 +21,27 @@
   // Hashed state to show "Copied" message
   let copiedText = $state<string | null>(null);
 
+  // Derived request URL for snippets and links
+  let requestUrl = $derived.by(() => {
+    if (!endpoint) return '';
+    const host = typeof window !== 'undefined' ? window.location.origin : 'http://legislativedata.org';
+    if (endpoint.isCanonical) {
+      return `${host}/api/v2/canonical/gb-sct/${endpoint.path}${queryParams}`;
+    }
+    const base = apiSource === 'mirror' ? `${host}/api/v2/mirror/gb-sct` : 'https://data.parliament.scot/api';
+    return `${base}/${endpoint.path}${queryParams}`;
+  });
+
+  // Derived state to check if endpoint CSV should be uncompressed
+  let isUncompressed = $derived(endpoint ? UNCOMPRESSED_ENDPOINTS.includes(endpoint.path) : false);
+  let csvExt = $derived(isUncompressed ? 'csv' : 'csv.gz');
+
   $effect(() => {
     if (isOpen && endpoint) {
       activeTab = 'schema';
       error = null;
       rawData = null;
+      apiSource = endpoint.isCanonical ? 'canonical' : 'mirror'; // Default to canonical or optimized mirror
       queryParams = endpoint.params || '';
       triggerFetch();
     }
@@ -31,13 +54,19 @@
     rawData = null;
 
     try {
-      // Build the proxy path using our un-gated proxy URL
+      // Build the fetch URL using local mirror, proxy, or canonical base
       const pathWithParams = endpoint.path + (queryParams ? queryParams : '');
-      const proxyUrl = `/api/v2/proxy/gb-sct/${pathWithParams}`;
+      let baseEndpoint = '/api/v2/mirror/gb-sct';
+      if (endpoint.isCanonical) {
+        baseEndpoint = '/api/v2/canonical/gb-sct';
+      } else if (apiSource === 'proxy') {
+        baseEndpoint = '/api/v2/proxy/gb-sct';
+      }
+      const fetchUrl = `${baseEndpoint}/${pathWithParams}`;
       
-      const res = await fetch(proxyUrl);
+      const res = await fetch(fetchUrl);
       if (!res.ok) {
-        throw new Error(`HTTP Error ${res.status}: Failed to fetch through proxy.`);
+        throw new Error(`HTTP Error ${res.status}: Failed to fetch.`);
       }
       
       const data = await res.json();
@@ -129,9 +158,21 @@
   <div class="modal-window">
     <header class="modal-header">
       <div class="modal-title-col">
-        <div class="modal-badge">NATIVE_DIRECT</div>
+        {#if endpoint.isCanonical}
+          <div class="modal-badge badge-canonical">DATABASE_CANONICAL (OPTIMIZED)</div>
+        {:else if apiSource === 'mirror'}
+          <div class="modal-badge badge-mirror">DATABASE_MIRROR (OPTIMIZED)</div>
+        {:else}
+          <div class="modal-badge badge-proxy">PROXY_PASSTHROUGH (LIVE)</div>
+        {/if}
         <h2>{endpoint.name}</h2>
-        <code class="modal-path">GET https://data.parliament.scot/api/{endpoint.path}</code>
+        {#if endpoint.isCanonical}
+          <code class="modal-path">GET /api/v2/canonical/gb-sct/{endpoint.path}</code>
+        {:else if apiSource === 'mirror'}
+          <code class="modal-path">GET /api/v2/mirror/gb-sct/{endpoint.path}</code>
+        {:else}
+          <code class="modal-path">GET https://data.parliament.scot/api/{endpoint.path}</code>
+        {/if}
       </div>
       <button class="btn-close" onclick={() => isOpen = false} aria-label="Close modal">
         <X size={20} />
@@ -141,6 +182,83 @@
     <!-- Query Editor Panel -->
     <section class="query-panel">
       <div class="query-input-row">
+        <span class="query-label">API Data Source:</span>
+        <div class="source-select-container">
+          <select class="source-select" bind:value={apiSource} onchange={triggerFetch}>
+            {#if endpoint.isCanonical}
+              <option value="canonical">Local PostgreSQL Database B Canonical Research (Optimized)</option>
+            {:else}
+              <option value="mirror">Local PostgreSQL Database Mirror (Optimized)</option>
+              <option value="proxy">Scottish Parliament Proxy API (Live)</option>
+            {/if}
+          </select>
+        </div>
+      </div>
+      {#if apiSource === 'mirror' || apiSource === 'canonical'}
+        <div class="query-input-row downloads-row">
+          <div class="bulk-downloads-row">
+            <span class="bulk-download-title">Bulk Downloads:</span>
+            {#if endpoint.isCanonical}
+              <a 
+                href="/downloads/gb-sct/canonical_{endpoint.path}.{csvExt}?v=2" 
+                download 
+                class="btn-bulk-download"
+                title={isUncompressed ? "Download complete canonical table as plain CSV" : "Download complete canonical table as compressed CSV.GZ"}
+              >
+                CSV{isUncompressed ? '' : '.GZ'}
+              </a>
+              <a 
+                href="/downloads/gb-sct/canonical_{endpoint.path}.parquet?v=2" 
+                download 
+                class="btn-bulk-download btn-parquet"
+                title="Download complete canonical table as snappy-compressed Parquet"
+              >
+                Parquet
+              </a>
+              <a 
+                href="/downloads/gb-sct/gb_sct_canonical.sqlite.gz?v=2" 
+                download 
+                class="btn-bulk-download btn-sqlite"
+                title="Download entire research database as compressed SQLite.GZ"
+              >
+                Canonical SQLite DB
+              </a>
+            {:else}
+              <a 
+                href="/downloads/gb-sct/{endpoint.path}.{csvExt}?v=2" 
+                download 
+                class="btn-bulk-download"
+                title={isUncompressed ? "Download complete mirrored table as plain CSV" : "Download complete mirrored table as compressed CSV.GZ"}
+              >
+                CSV{isUncompressed ? '' : '.GZ'}
+              </a>
+              <a 
+                href="/downloads/gb-sct/{endpoint.path}.parquet?v=2" 
+                download 
+                class="btn-bulk-download btn-parquet"
+                title="Download complete mirrored table as snappy-compressed Parquet"
+              >
+                Parquet
+              </a>
+              <a 
+                href="/downloads/gb-sct/gb_sct_mirror.sqlite.gz?v=2" 
+                download 
+                class="btn-bulk-download btn-sqlite"
+                title="Download entire 15-table relational database as compressed SQLite.GZ"
+              >
+                Full SQLite DB
+              </a>
+            {/if}
+          </div>
+          <div class="decompression-help">
+            💡 Gzip (.gz) archives can be extracted using 
+            <a href="https://7-zip.org/" target="_blank" rel="noopener noreferrer">7-Zip</a> (Win/Linux) or 
+            <a href="https://www.keka.io/" target="_blank" rel="noopener noreferrer">Keka</a> (macOS). 
+            If your browser automatically decompresses the download, you can open it directly or rename it to .csv / .sqlite.
+          </div>
+        </div>
+      {/if}
+      <div class="query-input-row mt-2">
         <span class="query-label">Edit Query Parameters:</span>
         <input 
           type="text" 
@@ -153,15 +271,27 @@
         </button>
       </div>
       <span class="text-xs text-slate-400">
-        Direct Host API Endpoint: 
-        <a 
-          href="https://data.parliament.scot/api/{endpoint.path}{queryParams}" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          class="external-link"
-        >
-          https://data.parliament.scot/api/{endpoint.path}{queryParams} <ExternalLink size={10} />
-        </a>
+        {#if apiSource === 'mirror'}
+          Local Database Mirror Endpoint: 
+          <a 
+            href={requestUrl} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            class="external-link"
+          >
+            {requestUrl} <ExternalLink size={10} />
+          </a>
+        {:else}
+          Direct Host API Endpoint: 
+          <a 
+            href={requestUrl} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            class="external-link"
+          >
+            {requestUrl} <ExternalLink size={10} />
+          </a>
+        {/if}
       </span>
     </section>
 
@@ -230,7 +360,13 @@
         {#if activeTab === 'preview'}
           <div class="preview-container">
             <div class="preview-header">
-              <span class="text-xs text-slate-400">Displaying sample records directly from passthrough proxy</span>
+            <span class="text-xs text-slate-400">
+              {#if apiSource === 'mirror'}
+                Displaying sample records directly from optimized local database mirror
+              {:else}
+                Displaying sample records directly from passthrough proxy
+              {/if}
+            </span>
               <button 
                 class="btn-copy" 
                 onclick={() => copyToClipboard(JSON.stringify(rawData, null, 2), 'json')}
@@ -251,12 +387,12 @@
                 <span>cURL (HTTP Get Request)</span>
                 <button 
                   class="btn-copy" 
-                  onclick={() => copyToClipboard(`curl -X GET "https://data.parliament.scot/api/${endpoint.path}${queryParams}" -H "Accept: application/json"`, 'curl')}
+                  onclick={() => copyToClipboard(`curl -X GET "${requestUrl}" -H "Accept: application/json"`, 'curl')}
                 >
                   {#if copiedText === 'curl'}<Check size={14} /> Copied{:else}<Copy size={14} /> Copy{/if}
                 </button>
               </div>
-              <pre class="snippet-code"><code>curl -X GET "https://data.parliament.scot/api/{endpoint.path}{queryParams}" \
+              <pre class="snippet-code"><code>curl -X GET "{requestUrl}" \
   -H "Accept: application/json"</code></pre>
             </div>
 
@@ -266,14 +402,14 @@
                 <span>Python (requests)</span>
                 <button 
                   class="btn-copy" 
-                  onclick={() => copyToClipboard(`import requests\n\nurl = "https://data.parliament.scot/api/${endpoint.path}${queryParams}"\nheaders = ${ob}"Accept": "application/json"${cb}\nresponse = requests.get(url, headers=headers)\ndata = response.json()\nprint(f"Retrieved ${ob}len(data)${cb} records.")`, 'python')}
+                  onclick={() => copyToClipboard(`import requests\n\nurl = "${requestUrl}"\nheaders = ${ob}"Accept": "application/json"${cb}\nresponse = requests.get(url, headers=headers)\ndata = response.json()\nprint(f"Retrieved ${ob}len(data)${cb} records.")`, 'python')}
                 >
                   {#if copiedText === 'python'}<Check size={14} /> Copied{:else}<Copy size={14} /> Copy{/if}
                 </button>
               </div>
               <pre class="snippet-code"><code>import requests
 
-url = "https://data.parliament.scot/api/{endpoint.path}{queryParams}"
+url = "{requestUrl}"
 headers = {ob}"Accept": "application/json"{cb}
 
 response = requests.get(url, headers=headers)
@@ -287,7 +423,7 @@ print(f"Retrieved {ob}len(data){cb} records.")</code></pre>
                 <span>R (httr / jsonlite)</span>
                 <button 
                   class="btn-copy" 
-                  onclick={() => copyToClipboard(`library(httr)\nlibrary(jsonlite)\n\nurl <- "https://data.parliament.scot/api/${endpoint.path}${queryParams}"\nresponse <- GET(url, add_headers(Accept = "application/json"))\ndata <- fromJSON(content(response, "text"))\n\nprint(paste("Retrieved", nrow(data), "records."))`, 'r')}
+                  onclick={() => copyToClipboard(`library(httr)\nlibrary(jsonlite)\n\nurl <- "${requestUrl}"\nresponse <- GET(url, add_headers(Accept = "application/json"))\ndata <- fromJSON(content(response, "text"))\n\nprint(paste("Retrieved", nrow(data), "records."))`, 'r')}
                 >
                   {#if copiedText === 'r'}<Check size={14} /> Copied{:else}<Copy size={14} /> Copy{/if}
                 </button>
@@ -295,7 +431,7 @@ print(f"Retrieved {ob}len(data){cb} records.")</code></pre>
               <pre class="snippet-code"><code>library(httr)
 library(jsonlite)
 
-url &lt;- "https://data.parliament.scot/api/{endpoint.path}{queryParams}"
+url &lt;- "{requestUrl}"
 response &lt;- GET(url, add_headers(Accept = "application/json"))
 data &lt;- fromJSON(content(response, "text"))
 
@@ -356,14 +492,134 @@ print(paste("Retrieved", nrow(data), "records."))</code></pre>
   }
 
   .modal-badge {
-    background: rgba(99, 102, 241, 0.15);
-    color: #818cf8;
     font-size: 0.65rem;
     font-weight: 800;
-    padding: 0.15rem 0.45rem;
+    padding: 0.15rem 0.5rem;
     border-radius: 0.25rem;
     display: inline-block;
-    border: 1px solid rgba(99, 102, 241, 0.25);
+    border: 1px solid transparent;
+  }
+  .badge-mirror {
+    background: rgba(52, 211, 153, 0.15);
+    color: #34d399;
+    border-color: rgba(52, 211, 153, 0.25);
+  }
+  .badge-proxy {
+    background: rgba(99, 102, 241, 0.15);
+    color: #818cf8;
+    border-color: rgba(99, 102, 241, 0.25);
+  }
+
+  .source-select-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .source-select {
+    background: rgba(52, 211, 153, 0.12);
+    color: #34d399;
+    border: 1px solid rgba(52, 211, 153, 0.25);
+    padding: 0.25rem 2.25rem 0.25rem 0.85rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    appearance: none;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+  .source-select:hover {
+    background: rgba(52, 211, 153, 0.2);
+    border-color: #34d399;
+    color: #ffffff;
+  }
+  .source-select-container::after {
+    content: "▼";
+    font-size: 0.55rem;
+    color: #34d399;
+    position: absolute;
+    right: 0.85rem;
+    pointer-events: none;
+  }
+
+  .mt-2 {
+    margin-top: 0.5rem;
+  }
+
+  .btn-bulk-download {
+    background: rgba(52, 211, 153, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-bulk-download:hover {
+    background: rgba(52, 211, 153, 0.25);
+    border-color: #34d399;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(52, 211, 153, 0.15);
+  }
+
+  .bulk-downloads-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .bulk-download-title {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-right: 0.25rem;
+  }
+  .btn-parquet {
+    background: rgba(56, 189, 248, 0.12) !important;
+    color: #38bdf8 !important;
+    border-color: rgba(56, 189, 248, 0.25) !important;
+  }
+  .btn-parquet:hover {
+    background: rgba(56, 189, 248, 0.2) !important;
+    border-color: #38bdf8 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+  }
+  .btn-sqlite {
+    background: rgba(251, 191, 36, 0.12) !important;
+    color: #fbbf24 !important;
+    border-color: rgba(251, 191, 36, 0.25) !important;
+  }
+  .btn-sqlite:hover {
+    background: rgba(251, 191, 36, 0.2) !important;
+    border-color: #fbbf24 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.15);
+  }
+
+  .decompression-help {
+    font-size: 0.7rem;
+    color: #64748b;
+    max-width: 480px;
+    text-align: right;
+    line-height: 1.25;
+  }
+  .decompression-help a {
+    color: #38bdf8;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .decompression-help a:hover {
+    text-decoration: underline;
   }
 
   .modal-path {
@@ -399,6 +655,13 @@ print(paste("Retrieved", nrow(data), "records."))</code></pre>
     display: flex;
     align-items: center;
     gap: 1rem;
+  }
+  .downloads-row {
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
   }
 
   .query-label {

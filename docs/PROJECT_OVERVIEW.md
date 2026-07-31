@@ -1,63 +1,44 @@
-# Project Overview: Comparative Legislative Data Platform
+# Project Overview & Platform Vision (General)
+
+This document outlines the core ambition, vision, scientific guidelines, and general integration roadmap of the **Global Comparative Legislative Data Platform**.
+
+---
 
 ## 1. Ambition & Vision
 
-The ambition of the **Global Comparative Legislative Data Platform** is to create a high-integrity, academic-standard data portal mapping Bills and legislative processes across various national and regional assemblies.
+The ambition of the platform is to create a high-integrity, academic-standard data portal mapping Bills and legislative processes across various national and regional assemblies.
 
-Our primary pilot case-study is the **Scottish Parliament (Holyrood / `GB-SCT`)**, leveraging deep doctoral and professional-level understanding of its legislative systems. The Scottish Parliament pilot will establish a clean, reusable blueprint/template that can be adapted for other parliaments, accounting for structural variations in datasets, political procedures, and OData endpoints.
+Comparative legislative analysis has historically been obstructed by fragmented formats, changing terminology, and network limits of individual parliamentary OData or REST endpoints. By providing standardized, clean research databases alongside pristine raw mirrors, this platform enables researchers to query, analyze, and replicate legislative models across multiple parliaments.
 
 ---
 
 ## 2. Core Guardrails & Scientific Principles
 
-To prevent data dilution, duplication, and AI hallucinations, we operate under three absolute rules:
+To ensure the platform meets the strict replication standards of academic publications, all development complies with three absolute rules:
 
-### A. Academic Integrity & Transparency Over Speed
-Academics require absolute repeatability and empirical proof. If documentation is lacking, or if variables contain probabilistic guesses, researchers will abandon the platform. We value precision and clear documentation of limitations above fast feature delivery.
+### A. Academic Integrity & Transparency Over Feature Speed
+Empirical researchers require absolute repeatability and proof of data provenance. If documentation is lacking, or if variables contain undocumented heuristic cleaning, the data becomes scientifically useless. We prioritize detailed documentation, visual provenance badges, and clean database calculations above rapid feature deployment.
 
 ### B. The Repository as the Source of Truth
-No planning, database schema architecture, or data mappings will live solely in conversational memory or AI context. All active plans, system specifications, database schemas, and transformation rulebooks must be fully documented as files in this repository (e.g., in `/docs` and specific pilot subfolders).
+No architectural decisions, database schemas, or ETL mappings may reside solely in chat conversations or AI context. All active plans, schemas, and data normalizations must be committed as files in the repository.
 
-### C. Scope Restriction: Tier 1 & Tier 2 Data Only
-During this initial build phase, the database, API, and frontend will **only** surface:
+### C. Scope Restriction (Tier 1 & Tier 2 Variables Only)
+To eliminate data hallucination and ensure a deterministic baseline, the active database schemas and visual dashboards only expose:
 1.  **`NATIVE_DIRECT` (Tier 1):** Unmodified data points served directly from the official assembly endpoints.
-2.  **`DERIVED_DETERMINISTIC` (Tier 2):** Relational joins or arithmetic calculations computed via 100% rule-based database queries/views, with zero parsing ambiguity.
+2.  **`DERIVED_DETERMINISTIC` (Tier 2):** Relational joins, temporal lookups, or date arithmetic computed via 100% rule-based database SQL views, with zero parsing ambiguity.
 
-All probabilistic, document-scraped, or external authority data classes (Tiers 3 to 7) are deferred to future stages.
+For variables requiring document extraction (Tier 3) or external linking (Tier 6), they remain officially marked as candidates until extraction code has been verified and benchmarked against ground truth.
 
 ---
 
-## 3. Phased Roadmap (Scottish Parliament Pilot)
+## 3. General Assembly Integration Roadmap
 
-The pilot will be executed in five distinct, serial phases. Each phase requires a dedicated, repository-controlled implementation plan before code execution begins:
+Every assembly integrated into the platform follows a structured, staged roadmap:
+*   **Stage 1 (Raw Proxy):** Connecting to upstream OData/REST endpoints and establishing a CORS-unlocked passthrough server proxy.
+*   **Stage 2 (Database Mirror):** Building a local relational database replica on the server, running daily syncs, and verifying data parity with the upstream API.
+*   **Stage 3 (Canonical Compilation):** Mounting raw replicas via PostgreSQL Foreign Data Wrappers (FDW), compiling derived research tables via SQL view scripts, and exporting portable datasets (Parquet, SQLite, CSV).
+*   **Stage 4 (Visual Dashboard):** Constructing interactive charts, KPI counters, and sessional volume summaries.
+*   **Stage 5 (Regression Playground):** Deploying statistical modeling tools (OLS and Logistic regressions) to analyze sessional speed-up hypotheses.
 
-### Phase 1: Proxied Access & Academic Documentation
-- **Objective:** Map and connect to every relevant Scottish Parliament API containing data useful for analyzing the Bill lifecycle.
-- **Components:**
-  - Build a clean CORS-bypass passthrough server proxy.
-  - Implement a SvelteKit explorer UI that displays raw API payloads.
-  - Render actual, deterministically-extracted schemas (rather than hardcoded assumptions) alongside academic codebooks describing each endpoint's parameters, anomalies, and performance constraints.
-
-### Phase 2: In-Memory / Database Mirroring (ELT)
-- **Objective:** Build a resilient, high-performance local database mirror on the VPS to backfill raw data.
-- **Components:**
-  - Setup raw relational tables mapped exactly to the verified schemas from Phase 1.
-  - Write idempotent ingestion scripts with exponential backoff and loop-detection to resolve OData pagination quirks.
-  - Run automated count-based and hash-based reconciliation audits to guarantee 100% data parity between the VPS database and the live host.
-
-### Phase 3: Derived & Canonical Variables (Standardization & Export)
-- **Objective:** Synthesize variables of academic interest (e.g., sponsor party alignment, bill durations, outcomes) and provide multi-format downloads.
-- **Components:**
-  - Write deterministic SQL views to compute Tier 2 comparative variables.
-  - Implement export pipelines for standard research formats: **CSV**, **JSON**, **Apache Parquet**, and **R Data Frame (`.rds`)**.
-  - Embed copy-pasteable direct download code generators for **cURL**, **R**, **Python**, and **Stata**.
-
-### Phase 4: Example Visualizations
-- **Objective:** Design static, highly polished visual representations of the processed dataset.
-- **Components:**
-  - Render custom visual charts (e.g., timeline progressions, density curves of passage durations, and sponsor-party mappings) to showcase the analytical power of the clean baseline data.
-
-### Phase 5: The Interactive Data Playground
-- **Objective:** Embed a client-side visualization sandbox.
-- **Components:**
-  - Build UI tools allowing researchers to dynamically group, filter, and cross-tabulate variables to generate custom charts and download customized subsets without leaving the application.
+For individual assembly schemas, custom dates, and checklists, refer to the assembly-specific overview directories:
+*   [Scottish Parliament (GB-SCT) Project Overview](file:///home/steven/Documents/github/comparativelegislativedata/docs/gb-sct/PROJECT_OVERVIEW.md)
